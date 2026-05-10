@@ -1,4 +1,8 @@
 export function spendEnergy(state, amount) {
+  if (!isPositiveInteger(amount)) {
+    return { ok: false, reason: 'invalid_energy_amount', state };
+  }
+
   if (state.energy < amount) {
     return { ok: false, reason: 'not_enough_energy', state };
   }
@@ -18,23 +22,40 @@ export function refillEnergy(state, { nowSeconds, refillSeconds, maxEnergy }) {
   const gained = Math.floor(elapsed / refillSeconds);
 
   if (gained <= 0) {
+    if (state.lastEnergyAt === undefined || state.lastEnergyAt === null) {
+      return {
+        ...state,
+        lastEnergyAt: nowSeconds
+      };
+    }
+
     return state;
   }
 
+  const nextEnergy = Math.min(maxEnergy, state.energy + gained);
+
   return {
     ...state,
-    energy: Math.min(maxEnergy, state.energy + gained),
-    lastEnergyAt: nowSeconds
+    energy: nextEnergy,
+    lastEnergyAt: nextEnergy >= maxEnergy ? nowSeconds : lastEnergyAt + gained * refillSeconds
   };
 }
 
 export function canCompleteOrder(inventory, order) {
+  if (!hasValidRequirements(order)) {
+    return false;
+  }
+
   return order.requires.every((requirement) => {
     return (inventory[requirement.itemId] ?? 0) >= requirement.count;
   });
 }
 
 export function completeOrder({ inventory, state, order }) {
+  if (!hasValidRequirements(order)) {
+    return { ok: false, reason: 'invalid_order_requirement', inventory, state };
+  }
+
   if (!canCompleteOrder(inventory, order)) {
     return { ok: false, reason: 'requirements_missing', inventory, state };
   }
@@ -55,4 +76,14 @@ export function completeOrder({ inventory, state, order }) {
     state: nextState,
     completedOrderId: order.id
   };
+}
+
+function hasValidRequirements(order) {
+  return Array.isArray(order.requires) && order.requires.every((requirement) => {
+    return isPositiveInteger(requirement.count);
+  });
+}
+
+function isPositiveInteger(value) {
+  return Number.isInteger(value) && value > 0;
 }
