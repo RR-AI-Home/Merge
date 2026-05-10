@@ -2,6 +2,12 @@ function toIndex(board, position) {
   return position.y * board.width + position.x;
 }
 
+function assertPositiveInteger(value, name) {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new RangeError(`${name} must be a positive integer`);
+  }
+}
+
 function assertPosition(board, position) {
   if (
     !Number.isInteger(position.x) ||
@@ -15,13 +21,21 @@ function assertPosition(board, position) {
   }
 }
 
+function isSamePosition(source, target) {
+  return source.x === target.x && source.y === target.y;
+}
+
+function cloneCell(cell) {
+  return {
+    ...cell,
+    item: cell.item ? { ...cell.item } : null
+  };
+}
+
 function cloneBoard(board) {
   return {
     ...board,
-    cells: board.cells.map((cell) => ({
-      ...cell,
-      item: cell.item ? { ...cell.item } : null
-    }))
+    cells: board.cells.map((cell) => cloneCell(cell))
   };
 }
 
@@ -36,6 +50,9 @@ function findItemLevel(itemId, itemChains) {
 }
 
 export function createBoard({ width, height }) {
+  assertPositiveInteger(width, 'width');
+  assertPositiveInteger(height, 'height');
+
   const cells = [];
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
@@ -47,7 +64,7 @@ export function createBoard({ width, height }) {
 
 export function getCell(board, position) {
   assertPosition(board, position);
-  return board.cells[toIndex(board, position)];
+  return cloneCell(board.cells[toIndex(board, position)]);
 }
 
 export function placeItem(board, position, item) {
@@ -85,6 +102,10 @@ export function getNextItemId(itemId, itemChains) {
 export function mergeCells(board, move, itemChains) {
   const sourceCell = getCell(board, move.from);
   const targetCell = getCell(board, move.to);
+
+  if (isSamePosition(move.from, move.to)) {
+    return { ok: false, reason: 'source_and_target_must_differ', board };
+  }
 
   if (!sourceCell.item || !targetCell.item) {
     return { ok: false, reason: 'both_cells_must_contain_items', board };
