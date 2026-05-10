@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge Core Platform Concept</title>
+  <style>
+    :root {
+      --ink: #15171f;
+      --muted: #61677a;
+      --paper: #f7f3ec;
+      --panel: #fffaf2;
+      --line: #d8d0c3;
+      --accent: #196b69;
+      --accent-2: #bf4b3f;
+      --accent-3: #7651a8;
+      --gold: #d79a21;
+      --night: #22293d;
+      --lime: #9bcf53;
+      --sky: #3f82c4;
+      --shadow: 0 18px 50px rgba(32, 29, 23, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(25, 107, 105, 0.10), transparent 28%, transparent 72%, rgba(191, 75, 63, 0.10)),
+        var(--paper);
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(360px, 1fr) 330px;
+      gap: 22px;
+      padding: 24px;
+    }
+
+    .panel {
+      background: rgba(255, 250, 242, 0.96);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .side {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 48px);
+    }
+
+    .brand {
+      padding: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 25px;
+      line-height: 1.1;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    h3 {
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .theme-list {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+    }
+
+    .theme {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 11px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+    }
+
+    .theme.active {
+      border-color: var(--accent);
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+
+    .swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    .swatch.cyber {
+      background: linear-gradient(135deg, #1f2840 0%, #1f2840 45%, #00a3a3 46%, #d94747 100%);
+    }
+
+    .swatch.kingdom {
+      background: linear-gradient(135deg, #2f694f 0%, #2f694f 48%, #d89b2b 49%, #f2d487 100%);
+    }
+
+    .swatch.space {
+      background: linear-gradient(135deg, #26324f 0%, #26324f 45%, #79c6d8 46%, #e9eef7 100%);
+    }
+
+    .small {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .module-stack {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .module {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(216, 208, 195, 0.75);
+      font-size: 13px;
+    }
+
+    .module:last-child {
+      border-bottom: 0;
+    }
+
+    .status {
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(25, 107, 105, 0.12);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .stage {
+      display: grid;
+      place-items: center;
+      min-height: calc(100vh - 48px);
+      background:
+        linear-gradient(180deg, rgba(255, 250, 242, 0.75), rgba(255, 250, 242, 0.96)),
+        repeating-linear-gradient(0deg, rgba(25, 107, 105, 0.06) 0 1px, transparent 1px 38px),
+        repeating-linear-gradient(90deg, rgba(25, 107, 105, 0.06) 0 1px, transparent 1px 38px);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone {
+      width: min(390px, 92%);
+      min-height: 780px;
+      border: 12px solid #171a22;
+      border-radius: 34px;
+      background: #f4efe7;
+      box-shadow: 0 24px 60px rgba(12, 14, 20, 0.30);
+      overflow: hidden;
+    }
+
+    .app-top {
+      background: var(--night);
+      color: white;
+      padding: 18px 18px 14px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .world-title {
+      font-size: 20px;
+      font-weight: 850;
+    }
+
+    .currency {
+      display: flex;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.14);
+      white-space: nowrap;
+    }
+
+    .quest {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      margin: 14px 18px;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .quest strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 8px;
+      min-height: 36px;
+      padding: 0 12px;
+      background: var(--accent-2);
+      color: white;
+      font-weight: 850;
+      font-size: 12px;
+    }
+
+    .board-wrap {
+      margin: 0 14px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #dfd5c8;
+      border: 1px solid #c7bcad;
+    }
+
+    .board-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 850;
+      color: #4b4339;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 7px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #fbf6ed;
+      border: 1px solid rgba(97, 103, 122, 0.22);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .item {
+      width: 76%;
+      height: 76%;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+      box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.12), 0 5px 10px rgba(0, 0, 0, 0.16);
+    }
+
+    .i1 { background: var(--accent); }
+    .i2 { background: var(--sky); }
+    .i3 { background: var(--accent-2); }
+    .i4 { background: var(--gold); color: #2a2110; }
+    .i5 { background: var(--accent-3); }
+    .i6 { background: #38455f; }
+    .glow { outline: 3px solid rgba(215, 154, 33, 0.60); }
+
+    .producer {
+      margin: 12px 14px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .producer-card {
+      padding: 12px;
+      border-radius: 8px;
+      background: #fffaf2;
+      border: 1px solid var(--line);
+    }
+
+    .meter {
+      height: 8px;
+      border-radius: 8px;
+      background: #e2d8c9;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      background: var(--lime);
+    }
+
+    .bottom-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 14px;
+      padding: 10px 12px 14px;
+      background: #fffaf2;
+      border-top: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 850;
+      color: #5b534a;
+      text-align: center;
+    }
+
+    .right {
+      padding: 20px;
+      min-height: calc(100vh - 48px);
+    }
+
+    .blueprint {
+      display: grid;
+      gap: 12px;
+    }
+
+    .layer {
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+    }
+
+    .layer.core {
+      border-color: rgba(25, 107, 105, 0.55);
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+
+    .layer.theme {
+      border-color: rgba(191, 75, 63, 0.55);
+      box-shadow: inset 4px 0 0 var(--accent-2);
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      padding: 5px 7px;
+      border-radius: 6px;
+      background: #f0e6d7;
+      color: #4b4339;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .decision {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 8px;
+      background: #eaf3f2;
+      border: 1px solid rgba(25, 107, 105, 0.25);
+    }
+
+    .decision p {
+      margin-bottom: 0;
+      color: #274745;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1120px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .side,
+      .right,
+      .stage {
+        min-height: auto;
+      }
+
+      .phone {
+        margin: 22px 0;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .shell {
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .phone {
+        width: 100%;
+        min-height: 720px;
+        border-width: 8px;
+      }
+
+      .board {
+        gap: 5px;
+      }
+
+      .producer {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside class="panel side">
+      <section class="brand">
+        <p class="eyebrow">Merge operating system</p>
+        <h1>One tuned merge core, many themed games</h1>
+        <p>Retention systems stay stable. Theme packs change the fantasy, art, story, item chains, producer names, and event framing.</p>
+      </section>
+
+      <section class="theme-list" aria-label="Theme examples">
+        <article class="theme active">
+          <div class="swatch cyber"></div>
+          <div>
+            <h3>Cyber Syndicate</h3>
+            <p class="small">Tech parts, crews, districts, timed raids.</p>
+          </div>
+        </article>
+        <article class="theme">
+          <div class="swatch kingdom"></div>
+          <div>
+            <h3>Fantasy Kingdom</h3>
+            <p class="small">Crafting, heroes, villages, relic events.</p>
+          </div>
+        </article>
+        <article class="theme">
+          <div class="swatch space"></div>
+          <div>
+            <h3>Space Colony</h3>
+            <p class="small">Modules, crews, planets, colony contracts.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="module-stack">
+        <h2>Shared base</h2>
+        <div class="module"><span>Board rules</span><span class="status">Core</span></div>
+        <div class="module"><span>Energy pacing</span><span class="status">Core</span></div>
+        <div class="module"><span>Orders and quests</span><span class="status">Core</span></div>
+        <div class="module"><span>Reward cadence</span><span class="status">Core</span></div>
+        <div class="module"><span>Live events</span><span class="status">Core</span></div>
+      </section>
+    </aside>
+
+    <section class="stage" aria-label="Mobile game mockup">
+      <div class="phone">
+        <header class="app-top">
+          <div class="top-row">
+            <div>
+              <div class="world-title">Cyber Syndicate</div>
+              <p class="small" style="color: rgba(255,255,255,0.72); margin-top: 4px;">District 3: Neon Market</p>
+            </div>
+            <div class="currency">
+              <span class="pill">72 energy</span>
+              <span class="pill">340 coins</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="quest">
+          <div>
+            <strong>Order: Build a Signal Scrambler</strong>
+            <p class="small">Merge chips and antennas to unlock the next district scene.</p>
+          </div>
+          <button class="button">Claim</button>
+        </section>
+
+        <section class="board-wrap">
+          <div class="board-head">
+            <span>Merge Board</span>
+            <span>29 / 36 slots</span>
+          </div>
+          <div class="board" aria-label="Merge board">
+            <div class="cell"><div class="item i1">Chip I</div></div>
+            <div class="cell"><div class="item i1">Chip I</div></div>
+            <div class="cell"><div class="item i2 glow">Chip II</div></div>
+            <div class="cell"><div class="item i3">Wire</div></div>
+            <div class="cell"><div class="item i4">Cache</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i3">Wire</div></div>
+            <div class="cell"><div class="item i5">Drone</div></div>
+            <div class="cell"><div class="item i2">Chip II</div></div>
+            <div class="cell"><div class="item i6">Safe</div></div>
+            <div class="cell"><div class="item i4">Cache</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i1">Chip I</div></div>
+            <div class="cell"><div class="item i3">Wire</div></div>
+            <div class="cell"><div class="item i5">Drone</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i6">Safe</div></div>
+            <div class="cell"><div class="item i2">Chip II</div></div>
+            <div class="cell"><div class="item i4">Cache</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i1">Chip I</div></div>
+            <div class="cell"><div class="item i3">Wire</div></div>
+            <div class="cell"><div class="item i5">Drone</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i2">Chip II</div></div>
+            <div class="cell"><div class="item i1">Chip I</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i6">Safe</div></div>
+            <div class="cell"><div class="item i4">Cache</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i3">Wire</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i5">Drone</div></div>
+            <div class="cell"><div class="item i1">Chip I</div></div>
+            <div class="cell"></div>
+            <div class="cell"><div class="item i2">Chip II</div></div>
+          </div>
+        </section>
+
+        <section class="producer">
+          <article class="producer-card">
+            <h3>Black-Market Crate</h3>
+            <p class="small">12 taps left before cooldown.</p>
+            <div class="meter"><span style="width: 78%;"></span></div>
+          </article>
+          <article class="producer-card">
+            <h3>District Progress</h3>
+            <p class="small">3 orders until the reveal.</p>
+            <div class="meter"><span style="width: 64%;"></span></div>
+          </article>
+        </section>
+
+        <nav class="bottom-tabs" aria-label="App navigation">
+          <span>Board</span>
+          <span>Orders</span>
+          <span>World</span>
+          <span>Events</span>
+          <span>Shop</span>
+        </nav>
+      </div>
+    </section>
+
+    <aside class="panel right">
+      <p class="eyebrow">Viability shape</p>
+      <h2>The theme is not just a skin</h2>
+      <p>The board, economy, reward timing, ads, purchases, daily loop, and event framework are shared. Each theme still needs custom progression fantasy so it does not feel like pasted art.</p>
+
+      <section class="blueprint">
+        <article class="layer core">
+          <h3>Core layer</h3>
+          <p class="small">Reusable across every version.</p>
+          <div class="tags">
+            <span class="tag">merge rules</span>
+            <span class="tag">inventory pressure</span>
+            <span class="tag">energy</span>
+            <span class="tag">orders</span>
+            <span class="tag">events</span>
+            <span class="tag">analytics</span>
+          </div>
+        </article>
+
+        <article class="layer theme">
+          <h3>Theme layer</h3>
+          <p class="small">Changes per game or world.</p>
+          <div class="tags">
+            <span class="tag">items</span>
+            <span class="tag">producers</span>
+            <span class="tag">story</span>
+            <span class="tag">characters</span>
+            <span class="tag">audio</span>
+            <span class="tag">world map</span>
+          </div>
+        </article>
+
+        <article class="layer">
+          <h3>First prototype target</h3>
+          <p class="small">A mobile-first board with one theme pack, one producer, one order chain, basic energy, visible world progress, and satisfying merge feedback.</p>
+        </article>
+      </section>
+
+      <section class="decision">
+        <h3>Initial recommendation</h3>
+        <p>Build this as a themeable merge engine with Cyber Syndicate as the first proving theme, then add a second theme only after the core loop feels good.</p>
+      </section>
+    </aside>
+  </main>
+</body>
+</html>

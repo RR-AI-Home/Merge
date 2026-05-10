@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge Platform Repo Factory</title>
+  <style>
+    :root {
+      --ink: #161820;
+      --muted: #596174;
+      --paper: #f5f1e8;
+      --panel: #fffaf2;
+      --line: #d7cec0;
+      --teal: #146b68;
+      --red: #bd463b;
+      --violet: #6c54a3;
+      --gold: #d59a24;
+      --blue: #2f78b7;
+      --dark: #20283a;
+      --shadow: 0 18px 48px rgba(23, 24, 32, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(20, 107, 104, 0.10), transparent 35%, rgba(189, 70, 59, 0.08)),
+        var(--paper);
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 310px minmax(420px, 1fr) 350px;
+      gap: 22px;
+      padding: 24px;
+    }
+
+    .panel {
+      background: rgba(255, 250, 242, 0.96);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .pad { padding: 22px; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: 29px;
+      line-height: 1.08;
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: 19px;
+    }
+
+    h3 {
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .small {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .stack {
+      display: grid;
+      gap: 10px;
+      padding: 0 22px 22px;
+    }
+
+    .package {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+    }
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: white;
+      font-weight: 950;
+      box-shadow: inset 0 -7px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .teal { background: var(--teal); }
+    .red { background: var(--red); }
+    .gold { background: var(--gold); color: #2b220f; }
+    .violet { background: var(--violet); }
+    .blue { background: var(--blue); }
+    .dark { background: var(--dark); }
+
+    .stage {
+      display: grid;
+      align-content: center;
+      gap: 18px;
+      min-height: calc(100vh - 48px);
+      padding: 28px;
+      background:
+        repeating-linear-gradient(0deg, rgba(20, 107, 104, 0.06) 0 1px, transparent 1px 36px),
+        repeating-linear-gradient(90deg, rgba(20, 107, 104, 0.06) 0 1px, transparent 1px 36px),
+        rgba(255, 250, 242, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1.15fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .node {
+      min-height: 154px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .node.primary {
+      border-color: rgba(20, 107, 104, 0.50);
+      box-shadow: inset 4px 0 0 var(--teal), var(--shadow);
+    }
+
+    .node.theme {
+      border-color: rgba(189, 70, 59, 0.50);
+      box-shadow: inset 4px 0 0 var(--red), var(--shadow);
+    }
+
+    .arrow {
+      display: grid;
+      place-items: center;
+      min-width: 38px;
+      color: var(--teal);
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      padding: 5px 7px;
+      border-radius: 6px;
+      background: #efe5d6;
+      color: #4d4438;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .outputs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .app {
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .app-head {
+      padding: 14px;
+      color: white;
+      min-height: 104px;
+    }
+
+    .app-head h3 {
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+
+    .app-head p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 12px;
+    }
+
+    .mini-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      padding: 14px;
+      background: #e3d9ca;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      border-radius: 7px;
+      background: #fffaf2;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .filled { box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.10); }
+
+    .app-body {
+      padding: 14px;
+      margin-top: auto;
+    }
+
+    .meta {
+      display: grid;
+      gap: 7px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .rule {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(215, 206, 192, 0.85);
+    }
+
+    .rule:last-child { border-bottom: 0; }
+
+    .decision {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(20, 107, 104, 0.28);
+      background: #e8f2f1;
+    }
+
+    .decision p {
+      margin-bottom: 0;
+      color: #274947;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1180px) {
+      .shell { grid-template-columns: 1fr; }
+      .stage { min-height: auto; }
+      .flow { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); }
+    }
+
+    @media (max-width: 760px) {
+      .shell { padding: 12px; gap: 12px; }
+      .outputs { grid-template-columns: 1fr; }
+      .stage { padding: 14px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside class="panel">
+      <section class="pad">
+        <p class="eyebrow">Platform repo</p>
+        <h1>Make the engine hum, then ship separate games</h1>
+        <p>Each release is its own app with its own brand, package ID, store listing, player saves, economy tuning, live events, and analytics stream.</p>
+      </section>
+
+      <section class="stack" aria-label="Shared engine packages">
+        <article class="package">
+          <div class="icon teal">B</div>
+          <div>
+            <h3>Board Engine</h3>
+            <p class="small">Slots, movement, merge validation, spawn rules.</p>
+          </div>
+        </article>
+        <article class="package">
+          <div class="icon red">E</div>
+          <div>
+            <h3>Economy Engine</h3>
+            <p class="small">Energy, orders, scarcity, currency, boosts.</p>
+          </div>
+        </article>
+        <article class="package">
+          <div class="icon gold">R</div>
+          <div>
+            <h3>Retention Engine</h3>
+            <p class="small">Daily rewards, timers, events, streaks.</p>
+          </div>
+        </article>
+        <article class="package">
+          <div class="icon violet">T</div>
+          <div>
+            <h3>Theme Adapter</h3>
+            <p class="small">Item chains, producers, story, world map, assets.</p>
+          </div>
+        </article>
+      </section>
+    </aside>
+
+    <section class="stage" aria-label="Factory flow">
+      <div class="flow">
+        <article class="node primary">
+          <p class="eyebrow">Shared</p>
+          <h2>Merge Core</h2>
+          <p class="small">Reusable game systems built once and tuned hard.</p>
+          <div class="tags">
+            <span class="tag">merge rules</span>
+            <span class="tag">energy</span>
+            <span class="tag">orders</span>
+            <span class="tag">events</span>
+            <span class="tag">shop</span>
+          </div>
+        </article>
+
+        <div class="arrow">+</div>
+
+        <article class="node theme">
+          <p class="eyebrow">Per game</p>
+          <h2>Theme Pack</h2>
+          <p class="small">A complete product wrapper, not runtime switching.</p>
+          <div class="tags">
+            <span class="tag">art</span>
+            <span class="tag">chains</span>
+            <span class="tag">story</span>
+            <span class="tag">app ID</span>
+            <span class="tag">store copy</span>
+          </div>
+        </article>
+
+        <div class="arrow">=</div>
+
+        <article class="node">
+          <p class="eyebrow">Build output</p>
+          <h2>Standalone Game</h2>
+          <p class="small">Separate install, separate save data, separate store presence, shared engineering foundation.</p>
+          <div class="tags">
+            <span class="tag">unlinked</span>
+            <span class="tag">white-label</span>
+            <span class="tag">ship fast</span>
+          </div>
+        </article>
+      </div>
+
+      <section class="outputs" aria-label="Example standalone game outputs">
+        <article class="app">
+          <div class="app-head dark">
+            <h3>Merge Syndicate</h3>
+            <p>Cyber crime empire merge game.</p>
+          </div>
+          <div class="mini-board">
+            <div class="cell filled teal"></div><div class="cell filled teal"></div><div class="cell"></div><div class="cell filled red"></div>
+            <div class="cell filled blue"></div><div class="cell"></div><div class="cell filled violet"></div><div class="cell filled gold"></div>
+          </div>
+          <div class="app-body">
+            <h3>App output A</h3>
+            <div class="meta">
+              <span>Package: separate</span>
+              <span>Analytics: separate</span>
+              <span>Theme: cyber</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="app">
+          <div class="app-head teal">
+            <h3>Merge Kingdom</h3>
+            <p>Fantasy crafting and village growth.</p>
+          </div>
+          <div class="mini-board">
+            <div class="cell filled gold"></div><div class="cell"></div><div class="cell filled teal"></div><div class="cell filled gold"></div>
+            <div class="cell filled red"></div><div class="cell filled violet"></div><div class="cell"></div><div class="cell filled teal"></div>
+          </div>
+          <div class="app-body">
+            <h3>App output B</h3>
+            <div class="meta">
+              <span>Package: separate</span>
+              <span>Analytics: separate</span>
+              <span>Theme: fantasy</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="app">
+          <div class="app-head blue">
+            <h3>Merge Colony</h3>
+            <p>Space base and expedition merge game.</p>
+          </div>
+          <div class="mini-board">
+            <div class="cell"></div><div class="cell filled blue"></div><div class="cell filled blue"></div><div class="cell filled gold"></div>
+            <div class="cell filled dark"></div><div class="cell filled teal"></div><div class="cell"></div><div class="cell filled red"></div>
+          </div>
+          <div class="app-body">
+            <h3>App output C</h3>
+            <div class="meta">
+              <span>Package: separate</span>
+              <span>Analytics: separate</span>
+              <span>Theme: sci-fi</span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <aside class="panel pad">
+      <p class="eyebrow">Design rule</p>
+      <h2>No runtime theme switching</h2>
+
+      <section class="rule">
+        <h3>What stays shared</h3>
+        <p class="small">Core game math, persistence model, engine tests, board UX components, economy hooks, analytics schema, purchase plumbing, and liveops tools.</p>
+      </section>
+
+      <section class="rule">
+        <h3>What changes per game</h3>
+        <p class="small">App name, assets, item chains, producer fiction, progression map, onboarding copy, store listing, tuning overrides, event presentation, and package identity.</p>
+      </section>
+
+      <section class="rule">
+        <h3>First proving target</h3>
+        <p class="small">Ship one complete themed app from the platform, then create a second tiny theme pack to prove the engine can generate a separate unlinked game without rewriting systems.</p>
+      </section>
+
+      <section class="decision">
+        <h3>Practical implication</h3>
+        <p>The repo should optimize for repeatable app generation, clean theme boundaries, and shared tests. The player never sees a theme switcher.</p>
+      </section>
+    </aside>
+  </main>
+</body>
+</html>
