@@ -1,0 +1,18 @@
+[
+  {
+    "id": "wood",
+    "displayName": "Woodcraft",
+    "levels": [
+      { "id": "twig_1", "level": 1, "name": "Twig" },
+      { "id": "bundle_2", "level": 2, "name": "Wood Bundle" }
+    ]
+  },
+  {
+    "id": "ore",
+    "displayName": "Ore",
+    "levels": [
+      { "id": "ore_1", "level": 1, "name": "Ore Chunk" },
+      { "id": "ingot_2", "level": 2, "name": "Iron Ingot" }
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "slots": [
+    { "id": "harvest_day", "title": "Harvest Day", "type": "timed_orders" }
+  ]
+}

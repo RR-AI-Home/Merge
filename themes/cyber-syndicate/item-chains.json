@@ -1,0 +1,36 @@
+[
+  {
+    "id": "chips",
+    "displayName": "Signal Chips",
+    "levels": [
+      { "id": "chip_1", "level": 1, "name": "Chip I" },
+      { "id": "chip_2", "level": 2, "name": "Chip II" },
+      { "id": "chip_3", "level": 3, "name": "Signal Board" }
+    ]
+  },
+  {
+    "id": "wires",
+    "displayName": "Wire Kits",
+    "levels": [
+      { "id": "wire_1", "level": 1, "name": "Loose Wire" },
+      { "id": "wire_2", "level": 2, "name": "Cable Bundle" },
+      { "id": "wire_3", "level": 3, "name": "Relay Harness" }
+    ]
+  },
+  {
+    "id": "drones",
+    "displayName": "Drones",
+    "levels": [
+      { "id": "drone_1", "level": 1, "name": "Drone Shell" },
+      { "id": "drone_2", "level": 2, "name": "Scout Drone" }
+    ]
+  },
+  {
+    "id": "caches",
+    "displayName": "Caches",
+    "levels": [
+      { "id": "cache_1", "level": 1, "name": "Street Cache" },
+      { "id": "cache_2", "level": 2, "name": "Encrypted Cache" }
+    ]
+  }
+]

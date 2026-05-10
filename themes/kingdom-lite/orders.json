@@ -1,0 +1,11 @@
+[
+  {
+    "id": "repair_gate_1",
+    "title": "Repair the Village Gate",
+    "requires": [
+      { "itemId": "bundle_2", "count": 1 },
+      { "itemId": "ingot_2", "count": 1 }
+    ],
+    "rewards": { "coins": 30, "xp": 6 }
+  }
+]

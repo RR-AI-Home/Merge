@@ -1,0 +1,5 @@
+{
+  "energyMax": 50,
+  "energyRefillSeconds": 120,
+  "boardSlotsSoftLimit": 29
+}

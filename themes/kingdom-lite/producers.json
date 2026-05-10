@@ -1,0 +1,13 @@
+[
+  {
+    "id": "village_cart",
+    "name": "Village Cart",
+    "energyCost": 1,
+    "tapLimit": 8,
+    "cooldownSeconds": 240,
+    "drops": [
+      { "itemId": "twig_1", "weight": 60 },
+      { "itemId": "ore_1", "weight": 40 }
+    ]
+  }
+]

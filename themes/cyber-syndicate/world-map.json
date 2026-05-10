@@ -1,0 +1,6 @@
+{
+  "nodes": [
+    { "id": "neon_market", "title": "Neon Market", "unlocksAfterOrders": 0 },
+    { "id": "data_docks", "title": "Data Docks", "unlocksAfterOrders": 2 }
+  ]
+}

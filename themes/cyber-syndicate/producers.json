@@ -1,0 +1,15 @@
+[
+  {
+    "id": "black_market_crate",
+    "name": "Black-Market Crate",
+    "energyCost": 1,
+    "tapLimit": 12,
+    "cooldownSeconds": 300,
+    "drops": [
+      { "itemId": "chip_1", "weight": 45 },
+      { "itemId": "wire_1", "weight": 35 },
+      { "itemId": "drone_1", "weight": 12 },
+      { "itemId": "cache_1", "weight": 8 }
+    ]
+  }
+]

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "signal_scrambler_1",
+    "title": "Build a Signal Scrambler",
+    "requires": [
+      { "itemId": "chip_2", "count": 1 },
+      { "itemId": "wire_2", "count": 1 }
+    ],
+    "rewards": { "coins": 35, "xp": 8 }
+  },
+  {
+    "id": "drone_network_1",
+    "title": "Launch a Scout Drone",
+    "requires": [
+      { "itemId": "drone_2", "count": 1 }
+    ],
+    "rewards": { "coins": 55, "xp": 12 }
+  }
+]

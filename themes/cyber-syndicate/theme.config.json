@@ -1,0 +1,8 @@
+{
+  "id": "cyber-syndicate",
+  "displayName": "Merge Syndicate",
+  "appId": "com.mergeplatform.syndicate",
+  "version": 1,
+  "board": { "width": 6, "height": 6 },
+  "startingState": { "energy": 50, "coins": 0, "premium": 0 }
+}
