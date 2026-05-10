@@ -122,3 +122,58 @@ export function mergeCells(board, move, itemChains) {
 
   return { ok: true, board: next, createdItemId: nextItemId };
 }
+
+function firstEmptyCell(board) {
+  return board.cells.find((cell) => cell.item === null) ?? null;
+}
+
+function pickWeightedDrop(drops, random) {
+  const totalWeight = drops.reduce((sum, drop) => sum + drop.weight, 0);
+  const roll = random() * totalWeight;
+  let cursor = 0;
+
+  for (const drop of drops) {
+    cursor += drop.weight;
+    if (roll < cursor) {
+      return drop;
+    }
+  }
+
+  return drops[drops.length - 1];
+}
+
+export function tapProducer({
+  board,
+  producer,
+  producerState,
+  nowSeconds = Math.floor(Date.now() / 1000),
+  random = Math.random
+}) {
+  if (producerState.cooldownUntil && producerState.cooldownUntil > nowSeconds) {
+    return { ok: false, reason: 'producer_cooling_down', board, producerState };
+  }
+
+  if (producerState.tapsRemaining <= 0) {
+    return { ok: false, reason: 'producer_empty', board, producerState };
+  }
+
+  const emptyCell = firstEmptyCell(board);
+  if (!emptyCell) {
+    return { ok: false, reason: 'board_full', board, producerState };
+  }
+
+  const drop = pickWeightedDrop(producer.drops, random);
+  const nextBoard = placeItem(board, { x: emptyCell.x, y: emptyCell.y }, { itemId: drop.itemId });
+  const tapsRemaining = producerState.tapsRemaining - 1;
+
+  return {
+    ok: true,
+    board: nextBoard,
+    droppedItemId: drop.itemId,
+    energyCost: producer.energyCost,
+    producerState: {
+      tapsRemaining,
+      cooldownUntil: tapsRemaining === 0 ? nowSeconds + producer.cooldownSeconds : null
+    }
+  };
+}
