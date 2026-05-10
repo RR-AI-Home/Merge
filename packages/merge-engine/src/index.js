@@ -172,6 +172,7 @@ export function tapProducer({
     droppedItemId: drop.itemId,
     energyCost: producer.energyCost,
     producerState: {
+      ...producerState,
       tapsRemaining,
       cooldownUntil: tapsRemaining === 0 ? nowSeconds + producer.cooldownSeconds : null
     }
