@@ -32,9 +32,19 @@ function requirePositiveNumber(value, path, errors) {
 
 export function collectThemeItemIds(itemChains) {
   const ids = new Set();
-  for (const chain of itemChains ?? []) {
-    for (const level of chain.levels ?? []) {
-      ids.add(level.id);
+  if (!Array.isArray(itemChains)) {
+    return ids;
+  }
+
+  for (const chain of itemChains) {
+    if (!isObject(chain) || !Array.isArray(chain.levels)) {
+      continue;
+    }
+
+    for (const level of chain.levels) {
+      if (isObject(level) && typeof level.id === 'string' && level.id.trim() !== '') {
+        ids.add(level.id);
+      }
     }
   }
   return ids;
@@ -75,60 +85,118 @@ export function validateThemeBundle(theme) {
 
   const itemIds = collectThemeItemIds(theme.itemChains);
 
-  for (const chain of theme.itemChains ?? []) {
-    requireString(chain.id, `itemChains.${chain?.id ?? '<missing>'}.id`, errors);
-    requireString(chain.displayName, `itemChains.${chain?.id ?? '<missing>'}.displayName`, errors);
-    if (requireArray(chain.levels, `itemChains.${chain?.id ?? '<missing>'}.levels`, errors)) {
-      for (const level of chain.levels) {
-        requireString(level.id, `itemChains.${chain.id}.levels.id`, errors);
-        requirePositiveNumber(level.level, `itemChains.${chain.id}.levels.${level.id}.level`, errors);
-        requireString(level.name, `itemChains.${chain.id}.levels.${level.id}.name`, errors);
+  if (Array.isArray(theme.itemChains)) {
+    for (const [chainIndex, chain] of theme.itemChains.entries()) {
+      if (!requireObject(chain, `itemChains.${chainIndex}`, errors)) {
+        continue;
       }
-    }
-  }
 
-  for (const producer of theme.producers ?? []) {
-    requireString(producer.id, 'producers.id', errors);
-    requireString(producer.name, `producers.${producer?.id ?? '<missing>'}.name`, errors);
-    requirePositiveNumber(producer.energyCost, `producers.${producer?.id ?? '<missing>'}.energyCost`, errors);
-    requirePositiveNumber(producer.tapLimit, `producers.${producer?.id ?? '<missing>'}.tapLimit`, errors);
-    requirePositiveNumber(producer.cooldownSeconds, `producers.${producer?.id ?? '<missing>'}.cooldownSeconds`, errors);
-    if (requireArray(producer.drops, `producers.${producer?.id ?? '<missing>'}.drops`, errors)) {
-      for (const drop of producer.drops) {
-        if (!itemIds.has(drop.itemId)) {
-          errors.push(`producer ${producer.id} references missing item ${drop.itemId}`);
-        }
-        requirePositiveNumber(drop.weight, `producers.${producer.id}.drops.${drop.itemId}.weight`, errors);
-      }
-    }
-  }
+      const chainPath = typeof chain.id === 'string' && chain.id.trim() !== ''
+        ? `itemChains.${chain.id}`
+        : `itemChains.${chainIndex}`;
+      requireString(chain.id, `${chainPath}.id`, errors);
+      requireString(chain.displayName, `${chainPath}.displayName`, errors);
+      if (requireArray(chain.levels, `${chainPath}.levels`, errors)) {
+        for (const [levelIndex, level] of chain.levels.entries()) {
+          if (!requireObject(level, `${chainPath}.levels.${levelIndex}`, errors)) {
+            continue;
+          }
 
-  for (const order of theme.orders ?? []) {
-    requireString(order.id, 'orders.id', errors);
-    requireString(order.title, `orders.${order?.id ?? '<missing>'}.title`, errors);
-    if (requireArray(order.requires, `orders.${order?.id ?? '<missing>'}.requires`, errors)) {
-      for (const requirement of order.requires) {
-        if (!itemIds.has(requirement.itemId)) {
-          errors.push(`order ${order.id} requires missing item ${requirement.itemId}`);
-        }
-        requirePositiveNumber(requirement.count, `orders.${order.id}.requires.${requirement.itemId}.count`, errors);
-      }
-    }
-    if (requireObject(order.rewards, `orders.${order?.id ?? '<missing>'}.rewards`, errors)) {
-      for (const [key, value] of Object.entries(order.rewards)) {
-        if (typeof value !== 'number' || value < 0) {
-          errors.push(`orders.${order.id}.rewards.${key} must be a non-negative number`);
+          const levelPath = typeof level.id === 'string' && level.id.trim() !== ''
+            ? `${chainPath}.levels.${level.id}`
+            : `${chainPath}.levels.${levelIndex}`;
+          requireString(level.id, `${levelPath}.id`, errors);
+          requirePositiveNumber(level.level, `${levelPath}.level`, errors);
+          requireString(level.name, `${levelPath}.name`, errors);
         }
       }
     }
   }
 
-  if (theme.worldMap?.nodes) {
-    requireArray(theme.worldMap.nodes, 'worldMap.nodes', errors);
+  if (Array.isArray(theme.producers)) {
+    for (const [producerIndex, producer] of theme.producers.entries()) {
+      if (!requireObject(producer, `producers.${producerIndex}`, errors)) {
+        continue;
+      }
+
+      const producerPath = typeof producer.id === 'string' && producer.id.trim() !== ''
+        ? `producers.${producer.id}`
+        : `producers.${producerIndex}`;
+      requireString(producer.id, `${producerPath}.id`, errors);
+      requireString(producer.name, `${producerPath}.name`, errors);
+      requirePositiveNumber(producer.energyCost, `${producerPath}.energyCost`, errors);
+      requirePositiveNumber(producer.tapLimit, `${producerPath}.tapLimit`, errors);
+      requirePositiveNumber(producer.cooldownSeconds, `${producerPath}.cooldownSeconds`, errors);
+      if (requireArray(producer.drops, `${producerPath}.drops`, errors)) {
+        for (const [dropIndex, drop] of producer.drops.entries()) {
+          if (!requireObject(drop, `${producerPath}.drops.${dropIndex}`, errors)) {
+            continue;
+          }
+
+          const dropPath = typeof drop.itemId === 'string' && drop.itemId.trim() !== ''
+            ? `${producerPath}.drops.${drop.itemId}`
+            : `${producerPath}.drops.${dropIndex}`;
+          requireString(drop.itemId, `${dropPath}.itemId`, errors);
+          if (typeof drop.itemId === 'string' && drop.itemId.trim() !== '' && !itemIds.has(drop.itemId)) {
+            errors.push(`producer ${producer.id} references missing item ${drop.itemId}`);
+          }
+          requirePositiveNumber(drop.weight, `${dropPath}.weight`, errors);
+        }
+      }
+    }
   }
 
-  if (theme.events?.slots) {
-    requireArray(theme.events.slots, 'events.slots', errors);
+  if (Array.isArray(theme.orders)) {
+    for (const [orderIndex, order] of theme.orders.entries()) {
+      if (!requireObject(order, `orders.${orderIndex}`, errors)) {
+        continue;
+      }
+
+      const orderPath = typeof order.id === 'string' && order.id.trim() !== ''
+        ? `orders.${order.id}`
+        : `orders.${orderIndex}`;
+      requireString(order.id, `${orderPath}.id`, errors);
+      requireString(order.title, `${orderPath}.title`, errors);
+      if (requireArray(order.requires, `${orderPath}.requires`, errors)) {
+        for (const [requirementIndex, requirement] of order.requires.entries()) {
+          if (!requireObject(requirement, `${orderPath}.requires.${requirementIndex}`, errors)) {
+            continue;
+          }
+
+          const requirementPath = typeof requirement.itemId === 'string' && requirement.itemId.trim() !== ''
+            ? `${orderPath}.requires.${requirement.itemId}`
+            : `${orderPath}.requires.${requirementIndex}`;
+          requireString(requirement.itemId, `${requirementPath}.itemId`, errors);
+          if (typeof requirement.itemId === 'string' && requirement.itemId.trim() !== '' && !itemIds.has(requirement.itemId)) {
+            errors.push(`order ${order.id} requires missing item ${requirement.itemId}`);
+          }
+          requirePositiveNumber(requirement.count, `${requirementPath}.count`, errors);
+        }
+      }
+      if (requireObject(order.rewards, `${orderPath}.rewards`, errors)) {
+        for (const [key, value] of Object.entries(order.rewards)) {
+          if (typeof value !== 'number' || value < 0) {
+            errors.push(`${orderPath}.rewards.${key} must be a non-negative number`);
+          }
+        }
+      }
+    }
+  }
+
+  if (isObject(theme.worldMap) && theme.worldMap.nodes) {
+    if (requireArray(theme.worldMap.nodes, 'worldMap.nodes', errors)) {
+      for (const [nodeIndex, node] of theme.worldMap.nodes.entries()) {
+        requireObject(node, `worldMap.nodes.${nodeIndex}`, errors);
+      }
+    }
+  }
+
+  if (isObject(theme.events) && theme.events.slots) {
+    if (requireArray(theme.events.slots, 'events.slots', errors)) {
+      for (const [slotIndex, slot] of theme.events.slots.entries()) {
+        requireObject(slot, `events.slots.${slotIndex}`, errors);
+      }
+    }
   }
 
   for (const key of ['energyMax', 'energyRefillSeconds', 'boardSlotsSoftLimit']) {

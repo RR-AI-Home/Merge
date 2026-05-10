@@ -86,3 +86,45 @@ test('validateThemeBundle rejects orders that require missing items', () => {
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /ghost_part/);
 });
+
+test('validateThemeBundle reports malformed array entries without throwing', () => {
+  const invalid = structuredClone(validTheme);
+  invalid.itemChains = [
+    null,
+    {
+      id: 'broken_chain',
+      displayName: 'Broken Chain',
+      levels: [null, { id: '', level: 1, name: 'Blank ID' }]
+    }
+  ];
+  invalid.producers = [
+    null,
+    {
+      id: 'broken_producer',
+      name: 'Broken Producer',
+      energyCost: 1,
+      tapLimit: 1,
+      cooldownSeconds: 1,
+      drops: [null, { itemId: '', weight: 1 }]
+    }
+  ];
+  invalid.orders = [
+    null,
+    {
+      id: 'broken_order',
+      title: 'Broken Order',
+      requires: [null, { itemId: '', count: 1 }],
+      rewards: { coins: 1 }
+    }
+  ];
+
+  assert.doesNotThrow(() => validateThemeBundle(invalid));
+
+  const result = validateThemeBundle(invalid);
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /itemChains\.0 must be an object/);
+  assert.match(result.errors.join('\n'), /producers\.0 must be an object/);
+  assert.match(result.errors.join('\n'), /orders\.0 must be an object/);
+  assert.match(result.errors.join('\n'), /itemId must be a non-empty string/);
+});
