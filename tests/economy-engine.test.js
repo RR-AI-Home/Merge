@@ -137,6 +137,49 @@ test('completeOrder rejects missing requirements without mutating originals', ()
   assert.deepEqual(state, { energy: 5, coins: 0, premium: 0, xp: 0 });
 });
 
+test('duplicate requirements cannot exceed combined inventory count', () => {
+  const inventory = { chip_2: 1 };
+  const state = { energy: 5, coins: 0, premium: 0, xp: 0 };
+  const order = {
+    id: 'duplicate_chip_order',
+    requires: [
+      { itemId: 'chip_2', count: 1 },
+      { itemId: 'chip_2', count: 1 }
+    ],
+    rewards: { coins: 35, xp: 8 }
+  };
+
+  assert.equal(canCompleteOrder(inventory, order), false);
+
+  const result = completeOrder({ inventory, state, order });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'requirements_missing');
+  assert.equal(result.inventory, inventory);
+  assert.equal(result.state, state);
+  assert.deepEqual(inventory, { chip_2: 1 });
+});
+
+test('duplicate requirements complete when combined inventory is available', () => {
+  const inventory = { chip_2: 2 };
+  const state = { energy: 5, coins: 0, premium: 0, xp: 0 };
+  const order = {
+    id: 'duplicate_chip_order',
+    requires: [
+      { itemId: 'chip_2', count: 1 },
+      { itemId: 'chip_2', count: 1 }
+    ],
+    rewards: { coins: 35, xp: 8 }
+  };
+
+  assert.equal(canCompleteOrder(inventory, order), true);
+
+  const result = completeOrder({ inventory, state, order });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.inventory, { chip_2: 0 });
+});
+
 test('orders with invalid requirement counts cannot be completed', () => {
   const inventory = { chip_2: 1 };
   const state = { energy: 5, coins: 0, premium: 0, xp: 0 };

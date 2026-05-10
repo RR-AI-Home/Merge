@@ -42,27 +42,35 @@ export function refillEnergy(state, { nowSeconds, refillSeconds, maxEnergy }) {
 }
 
 export function canCompleteOrder(inventory, order) {
-  if (!hasValidRequirements(order)) {
+  const requiredCounts = getRequiredCounts(order);
+
+  if (!requiredCounts) {
     return false;
   }
 
-  return order.requires.every((requirement) => {
-    return (inventory[requirement.itemId] ?? 0) >= requirement.count;
+  return Object.entries(requiredCounts).every(([itemId, count]) => {
+    return (inventory[itemId] ?? 0) >= count;
   });
 }
 
 export function completeOrder({ inventory, state, order }) {
-  if (!hasValidRequirements(order)) {
+  const requiredCounts = getRequiredCounts(order);
+
+  if (!requiredCounts) {
     return { ok: false, reason: 'invalid_order_requirement', inventory, state };
   }
 
-  if (!canCompleteOrder(inventory, order)) {
+  const hasInventory = Object.entries(requiredCounts).every(([itemId, count]) => {
+    return (inventory[itemId] ?? 0) >= count;
+  });
+
+  if (!hasInventory) {
     return { ok: false, reason: 'requirements_missing', inventory, state };
   }
 
   const nextInventory = { ...inventory };
-  for (const requirement of order.requires) {
-    nextInventory[requirement.itemId] = (nextInventory[requirement.itemId] ?? 0) - requirement.count;
+  for (const [itemId, count] of Object.entries(requiredCounts)) {
+    nextInventory[itemId] = (nextInventory[itemId] ?? 0) - count;
   }
 
   const nextState = { ...state };
@@ -78,10 +86,21 @@ export function completeOrder({ inventory, state, order }) {
   };
 }
 
-function hasValidRequirements(order) {
-  return Array.isArray(order.requires) && order.requires.every((requirement) => {
-    return isPositiveInteger(requirement.count);
-  });
+function getRequiredCounts(order) {
+  if (!Array.isArray(order.requires)) {
+    return null;
+  }
+
+  const requiredCounts = {};
+  for (const requirement of order.requires) {
+    if (!isPositiveInteger(requirement.count)) {
+      return null;
+    }
+
+    requiredCounts[requirement.itemId] = (requiredCounts[requirement.itemId] ?? 0) + requirement.count;
+  }
+
+  return requiredCounts;
 }
 
 function isPositiveInteger(value) {
