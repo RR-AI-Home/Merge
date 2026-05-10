@@ -1,0 +1,19 @@
+{
+  "name": "merge-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "validate:themes": "node scripts/validate-all-themes.mjs",
+    "smoke:apps": "node scripts/smoke-app.mjs",
+    "verify": "npm test && npm run validate:themes && npm run smoke:apps"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
