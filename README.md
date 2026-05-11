@@ -35,6 +35,7 @@ npm run verify
 ## Local Workspace Notes
 
 - Use `E:\tmp` for temporary local dry runs, generated scratch output, and other disposable workspace files.
+- Avoid OneDrive for Unity projects, APK builds, large generated outputs, caches, and anything that may lock or rewrite many files. Use `E:\Projects` with project-specific directories instead, for example `E:\Projects\Merge\Builds\Android` for APK outputs.
 
 ## Creating a New Standalone Game
 

@@ -101,6 +101,20 @@ Accept the SDK licenses when prompted. The latest recorded setup accepted all li
 PS C:\Users\badn3\AppData\Local\Android\Sdk\cmdline-tools>
 ```
 
+## OneDrive And Build Output Note
+
+Avoid placing Unity projects, APK builds, Gradle outputs, Library folders, caches, and other large/generated Unity artifacts inside OneDrive. OneDrive file sync can interfere with file locks, frequent rewrites, generated metadata, and long build output paths.
+
+Use `E:\Projects` for Unity workspaces and build outputs. Create project-specific directories as needed, for example:
+
+```text
+E:\Projects\Merge\Unity\
+E:\Projects\Merge\Builds\Android\
+E:\Projects\Merge\Exports\
+```
+
+APK and AAB outputs should go under an `E:\Projects` build directory, not inside the OneDrive repo path.
+
 ## Compatibility Rule
 
 Every engine or contract update must continue to validate:
