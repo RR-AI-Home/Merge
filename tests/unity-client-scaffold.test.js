@@ -43,13 +43,14 @@ test('Unity MergeClient controller contains production HUD, orders, and producer
   assert.match(controller, /CanvasScaler\.ScaleMode\.ScaleWithScreenSize/);
 });
 
-test('Unity project manifest includes uGUI for production UI components', async () => {
+test('Unity project manifest includes uGUI and TextMeshPro for production UI components', async () => {
   const manifest = JSON.parse(await readFile(
     path.join('unity', 'MergeClient', 'Packages', 'manifest.json'),
     'utf8'
   ));
 
   assert.equal(manifest.dependencies['com.unity.ugui'], '2.0.0');
+  assert.equal(manifest.dependencies['com.unity.textmeshpro'], '3.2.0');
 });
 
 test('Unity MergeClient screen is sized for mobile portrait without side panels', async () => {
@@ -238,13 +239,23 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
     'utf8'
   );
 
-  assert.match(controller, /text\.resizeTextForBestFit = false;/);
-  assert.match(controller, /text\.verticalOverflow = VerticalWrapMode\.Overflow;/);
+  assert.match(controller, /using TMPro;/);
+  assert.match(controller, /using UnityEngine\.TextCore\.LowLevel;/);
+  assert.match(controller, /private TextMeshProUGUI energyLabel;/);
+  assert.match(controller, /private TMP_FontAsset uiFontAsset;/);
+  assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(SourceUiFont, 72, 9, GlyphRenderMode\.SDFAA, 2048, 2048, AtlasPopulationMode\.Dynamic, true\)/);
+  assert.match(controller, /text\.enableAutoSizing = false;/);
+  assert.match(controller, /text\.overflowMode = TextOverflowModes\.Overflow;/);
+  assert.match(controller, /text\.fontStyle = FontStyles\.Bold;/);
+  assert.match(controller, /text\.isTextObjectScaleStatic = true;/);
+  assert.match(controller, /typeof\(TextMeshProUGUI\)/);
   assert.match(controller, /CreateText\("Order Title"[\s\S]*13[\s\S]*new Vector2\(-44f, 23f\)[\s\S]*new Vector2\(248f, 20f\)/);
   assert.match(controller, /CreateText\("Order Requirements"[\s\S]*10[\s\S]*new Vector2\(-44f, 4f\)[\s\S]*new Vector2\(248f, 16f\)/);
   assert.match(controller, /CreateText\("Order Reward"[\s\S]*10[\s\S]*new Vector2\(-44f, -17f\)[\s\S]*new Vector2\(248f, 16f\)/);
   assert.match(controller, /CreateText\("District Progress"[\s\S]*9[\s\S]*new Vector2\(0f, -59f\)[\s\S]*new Vector2\(340f, 14f\)/);
   assert.doesNotMatch(controller, /resizeTextMinSize/);
+  assert.doesNotMatch(controller, /typeof\(Text\)/);
+  assert.doesNotMatch(controller, /private Text /);
 });
 
 test('Unity MergeClient uses a stronger cyber font and larger non-overlapping mobile labels', async () => {
@@ -253,9 +264,14 @@ test('Unity MergeClient uses a stronger cyber font and larger non-overlapping mo
     'utf8'
   );
 
-  assert.match(controller, /Font\.CreateDynamicFontFromOSFont\(new\[\] \{ "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" \}, 16\)/);
-  assert.match(controller, /text\.fontStyle = FontStyle\.Bold;/);
-  assert.match(controller, /text\.alignByGeometry = true;/);
+  assert.match(controller, /private static readonly string\[\] UiFontNames = \{ "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" \};/);
+  assert.match(controller, /Font\.CreateDynamicFontFromOSFont\(UiFontNames, 32\)/);
+  assert.match(controller, /canvas\.pixelPerfect = true;/);
+  assert.match(controller, /scaler\.screenMatchMode = CanvasScaler\.ScreenMatchMode\.MatchWidthOrHeight;/);
+  assert.match(controller, /scaler\.referencePixelsPerUnit = 100f;/);
+  assert.match(controller, /scaler\.dynamicPixelsPerUnit = 1f;/);
+  assert.match(controller, /PixelPerfect\(position\)/);
+  assert.match(controller, /PixelPerfect\(size\)/);
   assert.match(controller, /CreatePanel\(\$"Order \{order\.id\}"[\s\S]*new Vector2\(0f, -24f - index \* 82f\)[\s\S]*new Vector2\(356f, 76f\)/);
   assert.match(controller, /CreatePanel\("Order Progress Track"[\s\S]*new Vector2\(-44f, 7f\)[\s\S]*new Vector2\(248f, 4f\)/);
   assert.match(controller, /CreatePanel\("Order Action Button"[\s\S]*new Vector2\(-12f, 0f\)[\s\S]*new Vector2\(80f, 48f\)/);

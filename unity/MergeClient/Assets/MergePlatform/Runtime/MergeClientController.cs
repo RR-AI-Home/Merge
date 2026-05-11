@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.TextCore.LowLevel;
 using UnityEngine.UI;
 
 namespace MergePlatform.Client
@@ -19,6 +21,7 @@ namespace MergePlatform.Client
         private const float BoardPadding = 8f;
         private const int VisibleOrderLimit = 2;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
+        private static readonly string[] UiFontNames = { "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" };
 
         private readonly Dictionary<string, ItemLevel> itemLookup = new Dictionary<string, ItemLevel>();
         private readonly Dictionary<string, ItemChain> chainByItemId = new Dictionary<string, ItemChain>();
@@ -34,12 +37,13 @@ namespace MergePlatform.Client
         private RectTransform dragLayer;
         private RectTransform mergeFeedbackLayer;
         private RectTransform ordersPanel;
-        private Text energyLabel;
-        private Text coinsLabel;
-        private Text premiumLabel;
-        private Text districtLabel;
-        private Text statusLabel;
-        private Font uiFont;
+        private TextMeshProUGUI energyLabel;
+        private TextMeshProUGUI coinsLabel;
+        private TextMeshProUGUI premiumLabel;
+        private TextMeshProUGUI districtLabel;
+        private TextMeshProUGUI statusLabel;
+        private Font sourceUiFont;
+        private TMP_FontAsset uiFontAsset;
         private AudioSource feedbackAudio;
         private AudioClip mergeSound;
         private ItemTile selectedTile;
@@ -56,18 +60,33 @@ namespace MergePlatform.Client
         private int boardHeight;
         private float boardPixelSize;
 
-        private Font UiFont
+        private Font SourceUiFont
         {
             get
             {
-                if (uiFont == null)
+                if (sourceUiFont == null)
                 {
-                    uiFont = Font.CreateDynamicFontFromOSFont(new[] { "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" }, 16);
-                    uiFont ??= Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                    uiFont ??= Resources.GetBuiltinResource<Font>("Arial.ttf");
+                    sourceUiFont = Font.CreateDynamicFontFromOSFont(UiFontNames, 32);
+                    sourceUiFont ??= Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                    sourceUiFont ??= Resources.GetBuiltinResource<Font>("Arial.ttf");
                 }
 
-                return uiFont;
+                return sourceUiFont;
+            }
+        }
+
+        private TMP_FontAsset UiFontAsset
+        {
+            get
+            {
+                if (uiFontAsset == null)
+                {
+                    uiFontAsset = TMP_FontAsset.CreateFontAsset(SourceUiFont, 72, 9, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
+                    uiFontAsset.name = "Merge UI Runtime SDF";
+                    uiFontAsset.enableMultiAtlasSupport = true;
+                }
+
+                return uiFontAsset;
             }
         }
 
@@ -178,11 +197,15 @@ namespace MergePlatform.Client
             Canvas canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 10;
+            canvas.pixelPerfect = true;
 
             CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.referenceResolution = new Vector2(MobileReferenceWidth, MobileReferenceHeight);
             scaler.matchWidthOrHeight = 0f;
+            scaler.referencePixelsPerUnit = 100f;
+            scaler.dynamicPixelsPerUnit = 1f;
 
             canvasRoot = canvasObject.GetComponent<RectTransform>();
             canvasRoot.anchorMin = Vector2.zero;
@@ -212,7 +235,7 @@ namespace MergePlatform.Client
             premiumLabel.text = $"GEMS {currentPremium}";
         }
 
-        private Text CreateStatPill(RectTransform parent, string label, Vector2 position, Color accent)
+        private TextMeshProUGUI CreateStatPill(RectTransform parent, string label, Vector2 position, Color accent)
         {
             RectTransform pill = CreatePanel($"Stat {label}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), position, new Vector2(116f, 30f), new Color(0.09f, 0.11f, 0.16f, 1f));
             Image accentBar = CreateImage($"{label} Accent", pill, accent);
@@ -1552,24 +1575,42 @@ namespace MergePlatform.Client
             return rectObject.GetComponent<RectTransform>();
         }
 
-        private Text CreateText(string name, Transform parent, string value, int size, Color color, TextAnchor alignment, Vector2 position, Vector2 dimensions)
+        private TextMeshProUGUI CreateText(string name, Transform parent, string value, int size, Color color, TextAnchor alignment, Vector2 position, Vector2 dimensions)
         {
-            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
             textObject.transform.SetParent(parent, false);
-            Text text = textObject.GetComponent<Text>();
-            text.font = UiFont;
+            TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
+            text.font = UiFontAsset;
             text.text = value;
             text.fontSize = size;
             text.color = color;
-            text.alignment = alignment;
-            text.fontStyle = FontStyle.Bold;
-            text.alignByGeometry = true;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
-            text.resizeTextForBestFit = false;
+            text.alignment = ToTextAlignment(alignment);
+            text.fontStyle = FontStyles.Bold;
+            text.enableAutoSizing = false;
+            text.enableWordWrapping = true;
+            text.overflowMode = TextOverflowModes.Overflow;
+            text.extraPadding = false;
+            text.isTextObjectScaleStatic = true;
             text.raycastTarget = false;
             SetRect(text.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, dimensions);
             return text;
+        }
+
+        private static TextAlignmentOptions ToTextAlignment(TextAnchor alignment)
+        {
+            return alignment switch
+            {
+                TextAnchor.UpperLeft => TextAlignmentOptions.TopLeft,
+                TextAnchor.UpperCenter => TextAlignmentOptions.Top,
+                TextAnchor.UpperRight => TextAlignmentOptions.TopRight,
+                TextAnchor.MiddleLeft => TextAlignmentOptions.Left,
+                TextAnchor.MiddleCenter => TextAlignmentOptions.Center,
+                TextAnchor.MiddleRight => TextAlignmentOptions.Right,
+                TextAnchor.LowerLeft => TextAlignmentOptions.BottomLeft,
+                TextAnchor.LowerCenter => TextAlignmentOptions.Bottom,
+                TextAnchor.LowerRight => TextAlignmentOptions.BottomRight,
+                _ => TextAlignmentOptions.Center
+            };
         }
 
         private static void SetRect(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 position, Vector2 size)
@@ -1577,8 +1618,13 @@ namespace MergePlatform.Client
             rect.anchorMin = anchorMin;
             rect.anchorMax = anchorMax;
             rect.pivot = pivot;
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
+            rect.anchoredPosition = PixelPerfect(position);
+            rect.sizeDelta = PixelPerfect(size);
+        }
+
+        private static Vector2 PixelPerfect(Vector2 value)
+        {
+            return new Vector2(Mathf.Round(value.x), Mathf.Round(value.y));
         }
 
         private static void Stretch(RectTransform rect)
