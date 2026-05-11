@@ -2,7 +2,7 @@ import { bootMergeBrowserApp } from '../../../packages/merge-browser-shell/src/i
 import * as session from '../src/gameSession.js';
 
 bootMergeBrowserApp({
-  themeRoot: new URL('../../../themes/cyber-syndicate/', import.meta.url),
-  saveKey: 'merge-syndicate-prototype-save',
+  themeRoot: new URL('../../../themes/kingdom-lite/', import.meta.url),
+  saveKey: 'merge-kingdom-lite-prototype-save',
   session
 });

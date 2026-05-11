@@ -1,17 +1,12 @@
 import { createMergeGameSession } from '../../../packages/merge-app-session/src/index.js';
-import { syndicateIdentity } from './appIdentity.js';
+import { kingdomLiteIdentity } from './appIdentity.js';
 
 const session = createMergeGameSession({
-  identity: syndicateIdentity,
-  initialDropQueue: ['chip_1', 'chip_1', 'wire_1', 'wire_1'],
-  orderDropQueues: {
-    signal_scrambler_1: ['drone_1', 'drone_1']
-  },
+  identity: kingdomLiteIdentity,
+  initialDropQueue: ['twig_1', 'twig_1', 'ore_1', 'ore_1'],
   itemIcons: {
-    chips: '◇',
-    wires: '≋',
-    drones: '✦',
-    caches: '▣'
+    wood: '♢',
+    ore: '◆'
   }
 });
 

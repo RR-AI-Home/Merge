@@ -13,17 +13,20 @@ test('browser prototype ships the required static assets', () => {
 test('browser prototype boots the Merge Syndicate app module', () => {
   const index = readFileSync(new URL('index.html', WEB_ROOT), 'utf8');
   const script = readFileSync(new URL('app.js', WEB_ROOT), 'utf8');
+  const sharedShell = readFileSync(new URL('../packages/merge-browser-shell/src/index.js', import.meta.url), 'utf8');
 
   assert.match(index, /<script type="module" src="\.\/app\.js"><\/script>/);
   assert.match(index, /id="merge-board"/);
   assert.match(index, /id="session-goal"/);
   assert.match(index, /id="chapter-progress"/);
   assert.match(index, /id="event-status"/);
-  assert.match(script, /createInitialSave/);
-  assert.match(script, /tapPrimaryProducer/);
-  assert.match(script, /completeOrderFromBoard/);
-  assert.match(script, /getChapterProgress/);
-  assert.match(script, /getEventRail/);
-  assert.match(script, /getSessionGoal/);
-  assert.match(script, /feedback-pop/);
+  assert.match(script, /bootMergeBrowserApp/);
+  assert.match(script, /merge-syndicate-prototype-save/);
+  assert.match(sharedShell, /createInitialSave/);
+  assert.match(sharedShell, /tapPrimaryProducer/);
+  assert.match(sharedShell, /completeOrderFromBoard/);
+  assert.match(sharedShell, /getChapterProgress/);
+  assert.match(sharedShell, /getEventRail/);
+  assert.match(sharedShell, /getSessionGoal/);
+  assert.match(sharedShell, /feedback-pop/);
 });
