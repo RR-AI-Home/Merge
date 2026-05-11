@@ -102,10 +102,10 @@ test('Unity MergeClient portrait stack uses safe top margin and compact contract
     'utf8'
   );
 
-  assert.match(controller, /CreatePanel\("HUD"[\s\S]*new Vector2\(0f, -18f\)[\s\S]*new Vector2\(MobileContentWidth, 110f\)/);
+  assert.match(controller, /CreatePanel\("HUD"[\s\S]*new Vector2\(0f, -32f\)[\s\S]*new Vector2\(MobileContentWidth, 110f\)/);
   assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, 8f\)/);
-  assert.match(controller, /CreatePanel\("Merge Board"[\s\S]*new Vector2\(0f, -334f\)/);
-  assert.match(controller, /CreatePanel\("Orders Panel"[\s\S]*new Vector2\(0f, -570f\)[\s\S]*new Vector2\(MobileContentWidth, 176f\)/);
+  assert.match(controller, /CreatePanel\("Merge Board"[\s\S]*new Vector2\(0f, -350f\)/);
+  assert.match(controller, /CreatePanel\("Orders Panel"[\s\S]*new Vector2\(0f, -548f\)[\s\S]*new Vector2\(MobileContentWidth, 176f\)/);
   assert.match(controller, /new Vector2\(0f, -20f - index \* 68f\)/);
 });
 
@@ -179,4 +179,18 @@ test('Unity MergeClient board polish keeps mobile items and nav readable', async
   assert.match(controller, /CreateNavIcon/);
   assert.match(controller, /new Vector2\(86f, 46f\)/);
   assert.match(controller, /CreateText\("Nav Label"[\s\S]*new Vector2\(0f, -11f\)[\s\S]*new Vector2\(72f, 14f\)/);
+});
+
+test('Unity MergeClient portrait layout keeps top and bottom safe spacing', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /CreatePanel\("HUD"[\s\S]*new Vector2\(0f, -32f\)[\s\S]*new Vector2\(MobileContentWidth, 110f\)/);
+  assert.match(controller, /CreatePanel\("Merge Board"[\s\S]*new Vector2\(0f, -350f\)/);
+  assert.match(controller, /CreatePanel\("Orders Panel"[\s\S]*new Vector2\(0f, -548f\)[\s\S]*new Vector2\(MobileContentWidth, 176f\)/);
+  assert.match(controller, /CreatePanel\("Bottom Nav"[\s\S]*new Vector2\(0f, 44f\)[\s\S]*new Vector2\(MobileContentWidth, 56f\)/);
+  assert.match(controller, /CreateNavButton\(nav, "BOARD", new Vector2\(-144f, 30f\)/);
+  assert.doesNotMatch(controller, /CreatePanel\("Bottom Nav"[\s\S]*new Vector2\(0f, 18f\)/);
 });

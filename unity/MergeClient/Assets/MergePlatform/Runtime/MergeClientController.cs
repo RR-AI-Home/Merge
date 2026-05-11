@@ -180,7 +180,7 @@ namespace MergePlatform.Client
 
         private void CreateHud()
         {
-            RectTransform hud = CreatePanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), new Vector2(MobileContentWidth, 110f), new Color(0.03f, 0.04f, 0.055f, 0.96f));
+            RectTransform hud = CreatePanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -32f), new Vector2(MobileContentWidth, 110f), new Color(0.03f, 0.04f, 0.055f, 0.96f));
             CreateText("Title", hud, theme.config.displayName, 22, new Color(0.82f, 0.96f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, 8f), new Vector2(340f, 28f));
 
             energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-126f, -82f), new Color(0.95f, 0.78f, 0.24f));
@@ -202,7 +202,7 @@ namespace MergePlatform.Client
 
         private void CreateBoard()
         {
-            boardPanel = CreatePanel("Merge Board", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -334f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.04f, 0.052f, 0.07f, 1f));
+            boardPanel = CreatePanel("Merge Board", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -350f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.04f, 0.052f, 0.07f, 1f));
 
             for (int y = 0; y < boardHeight; y += 1)
             {
@@ -238,7 +238,7 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -570f), new Vector2(MobileContentWidth, 176f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
+            ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -548f), new Vector2(MobileContentWidth, 176f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
             RefreshOrdersPanel();
         }
 
@@ -267,11 +267,11 @@ namespace MergePlatform.Client
 
         private void CreateBottomNav()
         {
-            RectTransform nav = CreatePanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(MobileContentWidth, 52f), new Color(0.025f, 0.031f, 0.044f, 0.98f));
-            CreateNavButton(nav, "BOARD", new Vector2(-144f, 26f), true, new Color(0.54f, 0.94f, 1f));
-            CreateNavButton(nav, "DIST", new Vector2(-48f, 26f), false, new Color(0.72f, 1f, 0.74f));
-            CreateNavButton(nav, "BOOK", new Vector2(48f, 26f), false, new Color(0.78f, 0.56f, 1f));
-            CreateNavButton(nav, "SHOP", new Vector2(144f, 26f), false, new Color(1f, 0.48f, 0.78f));
+            RectTransform nav = CreatePanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 44f), new Vector2(MobileContentWidth, 56f), new Color(0.025f, 0.031f, 0.044f, 0.98f));
+            CreateNavButton(nav, "BOARD", new Vector2(-144f, 30f), true, new Color(0.54f, 0.94f, 1f));
+            CreateNavButton(nav, "DIST", new Vector2(-48f, 30f), false, new Color(0.72f, 1f, 0.74f));
+            CreateNavButton(nav, "BOOK", new Vector2(48f, 30f), false, new Color(0.78f, 0.56f, 1f));
+            CreateNavButton(nav, "SHOP", new Vector2(144f, 30f), false, new Color(1f, 0.48f, 0.78f));
         }
 
         private void CreateNavButton(RectTransform parent, string label, Vector2 position, bool active, Color accent)
