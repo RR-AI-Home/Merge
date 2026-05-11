@@ -21,6 +21,8 @@ See [docs/UNITY_CLIENT_ARCHITECTURE.md](docs/UNITY_CLIENT_ARCHITECTURE.md) for t
 
 Unity Android setup notes, including `ANDROID_HOME`, SDK packages, NDK version, and license acceptance, are recorded in [docs/UNITY_CLIENT_ARCHITECTURE.md](docs/UNITY_CLIENT_ARCHITECTURE.md#android-sdk-setup-note).
 
+Unity mobile text/rendering quality rules are recorded in [docs/UNITY_CLIENT_ARCHITECTURE.md](docs/UNITY_CLIENT_ARCHITECTURE.md#mobile-ui-rendering-standard) and [docs/UNITY_CLIENT_SETUP.md](docs/UNITY_CLIENT_SETUP.md#text-rendering-quality). The current Unity client uses TextMeshPro, a high-resolution dynamic SDF atlas, pixel-perfect canvas settings, and whole-pixel UI rect assignment.
+
 ## Commands
 
 ```bash
@@ -30,6 +32,9 @@ npm run validate:themes
 npm run smoke:apps
 npm run verify:playable
 npm run verify
+npm run unity:sync-source
+npm run unity:sync-packages
+npm run unity:export-theme
 ```
 
 ## Local Workspace Notes

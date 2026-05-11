@@ -25,6 +25,7 @@ Each shipped game remains a separate product with its own app identity, save nam
 - mobile input and device integration
 - app icons, splash screens, mobile builds, and store packaging
 - Unity-specific asset bundles and addressable assets
+- final mobile typography, TextMeshPro font assets, canvas scaling, safe-area layout, and render-quality settings
 
 ## Platform And Backend Own
 
@@ -71,6 +72,36 @@ The Unity adapter should load or receive:
 - generated asset references
 
 The adapter should call shared/platform-backed rules through a narrow interface. If rules are ported into C# for offline play, the JavaScript/Node verification suite remains the contract reference until a cross-runtime parity test exists.
+
+## Mobile UI Rendering Standard
+
+Production-facing Unity UI must be sharp at phone resolution. Text quality is a rendering requirement, not surface polish.
+
+Baseline rules:
+
+- Use TextMeshPro for all gameplay UI text.
+- Do not add new legacy `UnityEngine.UI.Text` labels.
+- Use SDF font assets with enough sampling, padding, and atlas resolution for small mobile labels.
+- Keep text auto-sizing off by default. If labels do not fit, fix layout dimensions, copy length, or hierarchy.
+- Keep transforms unrotated and uniformly scaled for text-bearing UI.
+- Keep anchored positions and sizes pixel-rounded where practical.
+- Avoid nested scaled canvases and non-uniform parent scale on text.
+- Keep contrast high and avoid placing small text over noisy icon or glow layers.
+- During animations, prefer moving containers without scaling text. If a text element must scale, return it to a stable whole-pixel layout state.
+
+Current proof implementation:
+
+```text
+TextMeshProUGUI
+TMP SDF runtime font asset
+2048 x 2048 dynamic atlas
+screen-space overlay canvas
+pixel-perfect canvas enabled
+412 x 915 reference resolution
+whole-pixel RectTransform assignment through SetRect()
+```
+
+If a Unity or TextMeshPro package upgrade changes API names, fix the shared text helper and preserve the regression tests in `tests/unity-client-scaffold.test.js`.
 
 ## Android SDK Setup Note
 

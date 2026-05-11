@@ -29,6 +29,14 @@ Sync Unity package dependencies with:
 npm run unity:sync-packages
 ```
 
+When Unity runtime source or package dependencies change, sync both before testing in the editor:
+
+```powershell
+npm run unity:sync-source
+npm run unity:sync-packages
+npm run unity:export-theme
+```
+
 ## Unity Version
 
 Use Unity `6000.4.6f1`.
@@ -88,6 +96,25 @@ E:\Projects\Merge\Unity\MergeClient\Assets\MergePlatform\Scenes\MergeClient.unit
 
 If the Unity editor already has the project open, batch mode will refuse to run. In that case, run `npm run unity:sync-source`, let Unity recompile in the open editor, then press Play again.
 
+## Text Rendering Quality
+
+The Unity client uses TextMeshPro for mobile UI text. Do not add new gameplay UI with legacy `UnityEngine.UI.Text`.
+
+Current text quality baseline:
+
+- Unity package `com.unity.textmeshpro` is required in `unity\MergeClient\Packages\manifest.json`.
+- `MergeClientController` creates a runtime TMP SDF font asset from the local cyber-readable font stack: Cascadia Code SemiBold, Cascadia Mono, Bahnschrift, Consolas, Arial.
+- The runtime font asset uses a high-resolution SDF atlas: 72 sampling point size, 9 padding, 2048 x 2048 atlas, dynamic population, and multi-atlas enabled.
+- Canvas rendering is screen-space overlay with `pixelPerfect = true`.
+- CanvasScaler uses the 412 x 915 reference resolution with stable match-width scaling and explicit pixel settings.
+- Shared `SetRect()` rounds anchored positions and sizes to whole pixels to reduce subpixel softness.
+- Text auto-sizing is disabled. Fix layout with explicit boxes and readable font sizes instead of shrinking text.
+- TMP wrapping uses `textWrappingMode`, not obsolete `enableWordWrapping`.
+
+If text becomes blurry again, inspect the shared `CreateText()` helper before changing individual labels. The helper is the typography contract for HUD, board items, contracts, and navigation.
+
 ## Current Proof Scope
 
-The current Unity proof loads the exported `cyber-syndicate` theme and renders a Canvas-based production-style board screen. It has a HUD, fixed board slots, compact icon-first item cards, a clickable producer crate, contract cards, energy spend, item generation, drag-to-empty-slot, and drag-to-merge. It does not yet implement saves, backend calls, APK output, final art assets, sound, or order completion.
+The current Unity proof loads the exported `cyber-syndicate` theme and renders a Canvas-based production-style board screen. It has a HUD, fixed board slots, compact icon-first item cards, a clickable producer crate, contract cards, energy spend, item generation, drag-to-empty-slot, drag-to-merge, local save/load, producer cooldowns, order completion, district progress, bottom navigation, merge feedback, and generated icon treatments.
+
+It does not yet implement backend calls, APK/AAB output, final art assets, final audio, monetization, liveops, analytics delivery, or production store packaging.
