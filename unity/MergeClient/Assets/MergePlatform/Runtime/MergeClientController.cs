@@ -171,6 +171,7 @@ namespace MergePlatform.Client
             energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-126f, -82f), new Color(0.95f, 0.78f, 0.24f));
             coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, -82f), new Color(0.55f, 0.92f, 0.72f));
             premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(126f, -82f), new Color(0.94f, 0.45f, 0.78f));
+            statusLabel = CreateText("HUD Status", hud, "Ready", 10, new Color(0.68f, 0.86f, 0.92f), TextAnchor.MiddleLeft, new Vector2(0f, -45f), new Vector2(340f, 16f));
 
             coinsLabel.text = $"COINS {currentCoins}";
             premiumLabel.text = $"GEMS {currentPremium}";
@@ -202,13 +203,11 @@ namespace MergePlatform.Client
             Stretch(itemLayer);
             dragLayer = CreateEmptyRect("Drag Layer", canvasRoot);
             Stretch(dragLayer);
-            statusLabel = CreateText("Board Status", canvasRoot, theme.copy != null ? theme.copy.onboardingTitle : "Build the board.", 13, new Color(0.75f, 0.95f, 1f), TextAnchor.MiddleCenter, new Vector2(0f, -526f), new Vector2(MobileContentWidth, 24f));
         }
 
         private void CreateOrdersPanel()
         {
             RectTransform ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -532f), new Vector2(MobileContentWidth, 200f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
-            CreateText("Orders Header", ordersPanel, "CONTRACTS", 16, new Color(0.8f, 0.95f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, -24f), new Vector2(340f, 24f));
 
             if (theme.orders == null)
             {
@@ -223,7 +222,7 @@ namespace MergePlatform.Client
 
         private void CreateOrderCard(RectTransform parent, OrderDefinition order, int index)
         {
-            RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -62f - index * 66f), new Vector2(348f, 58f), new Color(0.14f, 0.18f, 0.29f, 1f));
+            RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f - index * 66f), new Vector2(348f, 58f), new Color(0.14f, 0.18f, 0.29f, 1f));
             card.gameObject.AddComponent<RectMask2D>();
             CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.UpperLeft, new Vector2(0f, 11f), new Vector2(314f, 24f));
 

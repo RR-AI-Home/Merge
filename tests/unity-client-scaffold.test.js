@@ -103,5 +103,17 @@ test('Unity MergeClient portrait stack uses safe top margin and compact contract
   assert.match(controller, /CreatePanel\("HUD"[\s\S]*new Vector2\(0f, -28f\)[\s\S]*new Vector2\(MobileContentWidth, 112f\)/);
   assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, 8f\)/);
   assert.match(controller, /CreatePanel\("Orders Panel"[\s\S]*new Vector2\(0f, -532f\)[\s\S]*new Vector2\(MobileContentWidth, 200f\)/);
-  assert.match(controller, /new Vector2\(0f, -62f - index \* 66f\)/);
+  assert.match(controller, /new Vector2\(0f, -36f - index \* 66f\)/);
+});
+
+test('Unity MergeClient lower rail avoids header and status overlap', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /statusLabel = CreateText\("HUD Status"/);
+  assert.doesNotMatch(controller, /CreateText\("Orders Header"/);
+  assert.doesNotMatch(controller, /CreateText\("Board Status"/);
+  assert.match(controller, /new Vector2\(0f, -36f - index \* 66f\)/);
 });
