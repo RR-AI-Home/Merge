@@ -11,6 +11,14 @@ The goal is to build one reusable merge engine, then produce separate unlinked t
 - Theme data lives under `themes/`.
 - Regression scripts validate every completed theme before engine changes are considered safe.
 
+## Client And Backend Direction
+
+Production mobile clients should be built in Unity. Unity owns mobile rendering, interaction feel, animation, audio, device integration, and store builds.
+
+The platform/backend remains separate from Unity. Shared rules, theme contracts, validation, app identity generation, liveops configuration, analytics schema, persistence contracts, and future backend services stay outside the Unity client. The current browser apps are fast validation harnesses, not the final production client target.
+
+See [docs/UNITY_CLIENT_ARCHITECTURE.md](docs/UNITY_CLIENT_ARCHITECTURE.md) for the full decision.
+
 ## Commands
 
 ```bash
