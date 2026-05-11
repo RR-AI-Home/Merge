@@ -19,6 +19,8 @@ The platform/backend remains separate from Unity. Shared rules, theme contracts,
 
 See [docs/UNITY_CLIENT_ARCHITECTURE.md](docs/UNITY_CLIENT_ARCHITECTURE.md) for the full decision.
 
+Unity Android setup notes, including `ANDROID_HOME`, SDK packages, NDK version, and license acceptance, are recorded in [docs/UNITY_CLIENT_ARCHITECTURE.md](docs/UNITY_CLIENT_ARCHITECTURE.md#android-sdk-setup-note).
+
 ## Commands
 
 ```bash

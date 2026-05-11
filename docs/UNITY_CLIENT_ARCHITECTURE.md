@@ -72,6 +72,35 @@ The Unity adapter should load or receive:
 
 The adapter should call shared/platform-backed rules through a narrow interface. If rules are ported into C# for offline play, the JavaScript/Node verification suite remains the contract reference until a cross-runtime parity test exists.
 
+## Android SDK Setup Note
+
+Unity Android builds should use the local Android SDK at:
+
+```powershell
+C:\Users\badn3\AppData\Local\Android\Sdk
+```
+
+When Unity or another project needs the Android command-line tools available in PowerShell, set:
+
+```powershell
+$env:ANDROID_HOME="C:\Users\badn3\AppData\Local\Android\Sdk"
+$env:ANDROID_SDK_ROOT=$env:ANDROID_HOME
+$env:Path="$env:ANDROID_HOME\cmdline-tools\latest\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
+```
+
+Required Android packages for the Unity integration:
+
+```powershell
+sdkmanager.bat --sdk_root="$env:ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;27.1.12297006"
+sdkmanager.bat --sdk_root="$env:ANDROID_HOME" --licenses
+```
+
+Accept the SDK licenses when prompted. The latest recorded setup accepted all licenses from:
+
+```powershell
+PS C:\Users\badn3\AppData\Local\Android\Sdk\cmdline-tools>
+```
+
 ## Compatibility Rule
 
 Every engine or contract update must continue to validate:
