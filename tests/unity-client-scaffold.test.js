@@ -64,3 +64,32 @@ test('Unity MergeClient screen is sized for mobile portrait without side panels'
   assert.match(controller, /CreateOrdersPanel[\s\S]*new Vector2\(MobileContentWidth, 224f\)/);
   assert.doesNotMatch(controller, /new Vector2\(218f, -24f\)/);
 });
+
+test('Unity MergeClient HUD keeps title above resource pills', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, 26f\)/);
+  assert.match(controller, /CreateStatPill\(hud, "ENERGY", new Vector2\(-126f, -82f\)/);
+  assert.match(controller, /CreateStatPill\(hud, "COINS", new Vector2\(0f, -82f\)/);
+  assert.match(controller, /CreateStatPill\(hud, "GEMS", new Vector2\(126f, -82f\)/);
+  assert.doesNotMatch(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, -23f\)/);
+});
+
+test('Unity MergeClient locks Android builds to portrait orientation', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+  const builder = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Editor', 'MergeClientProjectBuilder.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /Screen\.orientation = ScreenOrientation\.Portrait/);
+  assert.match(builder, /PlayerSettings\.defaultInterfaceOrientation = UIOrientation\.Portrait/);
+  assert.match(builder, /PlayerSettings\.allowedAutorotateToLandscapeLeft = false/);
+  assert.match(builder, /PlayerSettings\.allowedAutorotateToLandscapeRight = false/);
+});

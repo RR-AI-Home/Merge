@@ -57,6 +57,7 @@ namespace MergePlatform.Client
 
         private void Start()
         {
+            Screen.orientation = ScreenOrientation.Portrait;
             LoadTheme();
             BuildScene();
         }
@@ -165,11 +166,11 @@ namespace MergePlatform.Client
         private void CreateHud()
         {
             RectTransform hud = CreatePanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -12f), new Vector2(MobileContentWidth, 112f), new Color(0.03f, 0.04f, 0.055f, 0.96f));
-            CreateText("Title", hud, theme.config.displayName, 22, new Color(0.82f, 0.96f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, -23f), new Vector2(340f, 28f));
+            CreateText("Title", hud, theme.config.displayName, 22, new Color(0.82f, 0.96f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, 26f), new Vector2(340f, 28f));
 
-            energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-126f, -72f), new Color(0.95f, 0.78f, 0.24f));
-            coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, -72f), new Color(0.55f, 0.92f, 0.72f));
-            premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(126f, -72f), new Color(0.94f, 0.45f, 0.78f));
+            energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-126f, -82f), new Color(0.95f, 0.78f, 0.24f));
+            coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, -82f), new Color(0.55f, 0.92f, 0.72f));
+            premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(126f, -82f), new Color(0.94f, 0.45f, 0.78f));
 
             coinsLabel.text = $"COINS {currentCoins}";
             premiumLabel.text = $"GEMS {currentPremium}";

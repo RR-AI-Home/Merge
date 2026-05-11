@@ -42,6 +42,11 @@ namespace MergePlatform.Client.Editor
             PlayerSettings.companyName = "Merge Platform";
             PlayerSettings.productName = "Merge Client";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, AppIdentifier);
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+            PlayerSettings.allowedAutorotateToPortrait = true;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
+            PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
 
