@@ -244,7 +244,9 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /private TextMeshProUGUI energyLabel;/);
   assert.match(controller, /private TMP_FontAsset uiFontAsset;/);
   assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(SourceUiFont, 72, 9, GlyphRenderMode\.SDFAA, 2048, 2048, AtlasPopulationMode\.Dynamic, true\)/);
+  assert.match(controller, /uiFontAsset\.isMultiAtlasTexturesEnabled = true;/);
   assert.match(controller, /text\.enableAutoSizing = false;/);
+  assert.match(controller, /text\.textWrappingMode = TextWrappingModes\.Normal;/);
   assert.match(controller, /text\.overflowMode = TextOverflowModes\.Overflow;/);
   assert.match(controller, /text\.fontStyle = FontStyles\.Bold;/);
   assert.match(controller, /text\.isTextObjectScaleStatic = true;/);
@@ -256,6 +258,8 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.doesNotMatch(controller, /resizeTextMinSize/);
   assert.doesNotMatch(controller, /typeof\(Text\)/);
   assert.doesNotMatch(controller, /private Text /);
+  assert.doesNotMatch(controller, /enableMultiAtlasSupport/);
+  assert.doesNotMatch(controller, /enableWordWrapping/);
 });
 
 test('Unity MergeClient uses a stronger cyber font and larger non-overlapping mobile labels', async () => {

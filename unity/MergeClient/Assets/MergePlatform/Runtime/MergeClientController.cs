@@ -83,7 +83,7 @@ namespace MergePlatform.Client
                 {
                     uiFontAsset = TMP_FontAsset.CreateFontAsset(SourceUiFont, 72, 9, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
                     uiFontAsset.name = "Merge UI Runtime SDF";
-                    uiFontAsset.enableMultiAtlasSupport = true;
+                    uiFontAsset.isMultiAtlasTexturesEnabled = true;
                 }
 
                 return uiFontAsset;
@@ -1587,7 +1587,7 @@ namespace MergePlatform.Client
             text.alignment = ToTextAlignment(alignment);
             text.fontStyle = FontStyles.Bold;
             text.enableAutoSizing = false;
-            text.enableWordWrapping = true;
+            text.textWrappingMode = TextWrappingModes.Normal;
             text.overflowMode = TextOverflowModes.Overflow;
             text.extraPadding = false;
             text.isTextObjectScaleStatic = true;
