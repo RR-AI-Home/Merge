@@ -12,8 +12,11 @@ test('Unity MergeClient controller contains the first interactive merge loop', a
   assert.match(controller, /private ItemTile selectedTile;/);
   assert.match(controller, /private void Update\(\)/);
   assert.match(controller, /TryMergeWith/);
+  assert.match(controller, /TryFindDropTargetTile/);
   assert.match(controller, /CanMerge/);
   assert.match(controller, /CreateMergedTile/);
+  assert.match(controller, /selectedTile\.collider\.enabled = false/);
+  assert.match(controller, /tile\.collider\.enabled = true/);
   assert.match(controller, /new SeededTile\("chip_1", 1, 1\)/);
   assert.match(controller, /new SeededTile\("chip_1", 2, 1\)/);
 });

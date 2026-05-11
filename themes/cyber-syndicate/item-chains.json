@@ -22,7 +22,8 @@
     "displayName": "Drones",
     "levels": [
       { "id": "drone_1", "level": 1, "name": "Drone Shell" },
-      { "id": "drone_2", "level": 2, "name": "Scout Drone" }
+      { "id": "drone_2", "level": 2, "name": "Scout Drone" },
+      { "id": "drone_3", "level": 3, "name": "Interceptor Drone" }
     ]
   },
   {

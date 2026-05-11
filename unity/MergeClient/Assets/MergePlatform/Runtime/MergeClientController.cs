@@ -197,6 +197,7 @@ namespace MergePlatform.Client
 
             selectedTile = tile;
             selectedOffset = selectedTile.root.transform.position - ScreenToBoardPoint(screenPosition);
+            selectedTile.collider.enabled = false;
             selectedTile.root.transform.position += Vector3.up * 0.28f;
             return true;
         }
@@ -210,6 +211,21 @@ namespace MergePlatform.Client
         private void EndDrag(Vector3 screenPosition)
         {
             Vector2Int targetGrid = WorldToGrid(ScreenToBoardPoint(screenPosition));
+
+            if (TryFindDropTargetTile(screenPosition, out ItemTile dropTargetTile))
+            {
+                if (CanMerge(selectedTile, dropTargetTile))
+                {
+                    TryMergeWith(selectedTile, dropTargetTile);
+                }
+                else
+                {
+                    ReturnTileHome(selectedTile);
+                }
+
+                selectedTile = null;
+                return;
+            }
 
             if (!IsInsideBoard(targetGrid))
             {
@@ -356,6 +372,27 @@ namespace MergePlatform.Client
                 && GetNextLevel(target) != null;
         }
 
+        private bool TryFindDropTargetTile(Vector3 screenPosition, out ItemTile targetTile)
+        {
+            targetTile = null;
+
+            if (TryRaycastTile(screenPosition, out ItemTile raycastTile) && raycastTile != selectedTile)
+            {
+                targetTile = raycastTile;
+                return true;
+            }
+
+            Vector2Int targetGrid = WorldToGrid(ScreenToBoardPoint(screenPosition));
+
+            if (targetGrid != selectedTile.grid && boardItems.TryGetValue(targetGrid, out ItemTile gridTile))
+            {
+                targetTile = gridTile;
+                return true;
+            }
+
+            return false;
+        }
+
         private void CreateMergedTile(ItemLevel nextLevel, Vector2Int grid)
         {
             CreateItemTile(nextLevel.id, nextLevel, grid);
@@ -406,6 +443,7 @@ namespace MergePlatform.Client
 
         private void ReturnTileHome(ItemTile tile)
         {
+            tile.collider.enabled = true;
             tile.root.transform.position = GridToWorld(tile.grid, 0.28f);
         }
 

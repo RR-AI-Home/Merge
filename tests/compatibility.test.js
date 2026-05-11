@@ -97,6 +97,14 @@ test('foundation themes use separate app identities', async () => {
   assert.notEqual(cyber.config.appId, kingdom.config.appId);
 });
 
+test('cyber-syndicate level two drone remains mergeable for the Unity proof', async () => {
+  const cyber = await loadTheme('cyber-syndicate');
+  const droneChain = cyber.itemChains.find((chain) => chain.id === 'drones');
+
+  assert.ok(droneChain);
+  assert.deepEqual(droneChain.levels.map((level) => level.id), ['drone_1', 'drone_2', 'drone_3']);
+});
+
 test('foundation themes can run producer, merge, and first order loops through shared engines', async () => {
   for (const themeId of ['cyber-syndicate', 'kingdom-lite']) {
     const theme = await loadTheme(themeId);
