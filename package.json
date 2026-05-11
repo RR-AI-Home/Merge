@@ -12,7 +12,8 @@
     "create:game": "node scripts/create-game.mjs",
     "validate:themes": "node scripts/validate-all-themes.mjs",
     "smoke:apps": "node scripts/smoke-app.mjs",
-    "verify": "npm test && npm run validate:themes && npm run smoke:apps"
+    "verify:playable": "node scripts/verify-playable-apps.mjs",
+    "verify": "npm test && npm run validate:themes && npm run smoke:apps && npm run verify:playable"
   },
   "engines": {
     "node": ">=20"

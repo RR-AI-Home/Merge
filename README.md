@@ -18,6 +18,7 @@ npm test
 npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --theme-id space-colony --app-id com.mergeplatform.spacecolony
 npm run validate:themes
 npm run smoke:apps
+npm run verify:playable
 npm run verify
 ```
 
@@ -32,6 +33,8 @@ npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --t
 The generated app has its own app identity, save namespace, analytics stream, theme data, and browser entrypoint. It uses the shared merge app session and browser shell, with no runtime theme switcher. After generation, run `npm run verify`; theme validation and app identity smoke checks will discover the new app automatically.
 
 For dry runs or tooling, add `--root-dir <path>` to write the scaffold into another directory.
+
+No database is required for this prototype workflow. Standalone browser apps load static theme JSON and persist local prototype saves by app-specific browser storage keys. `npm run verify:playable` imports each standalone app session, loads its theme data, starts a save, taps the primary producer, and confirms the first loop is playable.
 
 ## Engine Compatibility Rule
 
