@@ -22,6 +22,7 @@ namespace MergePlatform.Client
         private readonly Dictionary<Vector2Int, ItemTile> boardItems = new Dictionary<Vector2Int, ItemTile>();
         private readonly Dictionary<Vector2Int, RectTransform> boardSlots = new Dictionary<Vector2Int, RectTransform>();
         private readonly Dictionary<Vector2Int, Image> boardSlotHighlights = new Dictionary<Vector2Int, Image>();
+        private readonly HashSet<string> completedOrderIds = new HashSet<string>();
 
         private UnityMergeTheme theme;
         private RectTransform canvasRoot;
@@ -29,6 +30,7 @@ namespace MergePlatform.Client
         private RectTransform itemLayer;
         private RectTransform dragLayer;
         private RectTransform mergeFeedbackLayer;
+        private RectTransform ordersPanel;
         private Text energyLabel;
         private Text coinsLabel;
         private Text premiumLabel;
@@ -121,6 +123,7 @@ namespace MergePlatform.Client
             currentCoins = theme.config.startingState != null ? theme.config.startingState.coins : 0;
             currentPremium = theme.config.startingState != null ? theme.config.startingState.premium : 0;
             producerGrid = new Vector2Int(0, 0);
+            completedOrderIds.Clear();
 
             ClearGeneratedObjects();
             EnsureEventSystem();
@@ -235,7 +238,21 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            RectTransform ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -570f), new Vector2(MobileContentWidth, 176f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
+            ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -570f), new Vector2(MobileContentWidth, 176f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
+            RefreshOrdersPanel();
+        }
+
+        private void RefreshOrdersPanel()
+        {
+            if (ordersPanel == null)
+            {
+                return;
+            }
+
+            for (int childIndex = ordersPanel.childCount - 1; childIndex >= 0; childIndex -= 1)
+            {
+                Destroy(ordersPanel.GetChild(childIndex).gameObject);
+            }
 
             if (theme.orders == null)
             {
@@ -266,44 +283,46 @@ namespace MergePlatform.Client
 
         private void CreateOrderCard(RectTransform parent, OrderDefinition order, int index)
         {
-            RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f - index * 68f), new Vector2(356f, 64f), new Color(0.14f, 0.18f, 0.29f, 1f));
+            bool completed = completedOrderIds.Contains(order.id);
+            bool ready = !completed && CanCompleteOrder(order);
+            Color cardColor = completed ? new Color(0.08f, 0.18f, 0.16f, 1f) : ready ? new Color(0.13f, 0.23f, 0.28f, 1f) : new Color(0.14f, 0.18f, 0.29f, 1f);
+            RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f - index * 68f), new Vector2(356f, 64f), cardColor);
             card.gameObject.AddComponent<RectMask2D>();
-            CreateOrderProgressBar(card, index);
-            CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.UpperLeft, new Vector2(0f, 13f), new Vector2(274f, 24f));
-            CreateOrderStatusBadge(card, index);
 
-            string requirementText = FormatRequirements(order);
-            CreateText("Order Requirements", card, requirementText, 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, -8f), new Vector2(324f, 16f));
+            CreateOrderProgressBar(card, ready, completed);
+            CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.MiddleLeft, new Vector2(-58f, 16f), new Vector2(224f, 17f));
+            CreateText("Order Requirements", card, FormatRequirements(order), 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-58f, -2f), new Vector2(224f, 14f));
             CreateRewardRow(card, order);
+            CreateOrderActionButton(card, order, ready, completed);
         }
 
-        private void CreateOrderProgressBar(RectTransform parent, int index)
+        private void CreateOrderProgressBar(RectTransform parent, bool ready, bool completed)
         {
-            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 4f), new Vector2(324f, 3f), new Color(0.06f, 0.09f, 0.14f, 1f));
-            float width = index == 0 ? 132f : 56f;
-            CreatePanel("Order Progress Fill", track, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(width / 2f, 0f), new Vector2(width, 3f), index == 0 ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.72f, 1f, 0.74f, 1f));
+            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-58f, 7f), new Vector2(224f, 3f), new Color(0.06f, 0.09f, 0.14f, 1f));
+            float width = completed ? 224f : ready ? 192f : 76f;
+            Color fillColor = completed ? new Color(0.72f, 1f, 0.74f, 1f) : ready ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.45f, 0.55f, 0.72f, 1f);
+            CreatePanel("Order Progress Fill", track, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(width / 2f, 0f), new Vector2(width, 3f), fillColor);
         }
 
-        private void CreateOrderStatusBadge(RectTransform parent, int index)
+        private void CreateOrderActionButton(RectTransform parent, OrderDefinition order, bool ready, bool completed)
         {
-            RectTransform badge = CreatePanel("Order Status Badge", parent, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-10f, -10f), new Vector2(22f, 22f), index == 0 ? new Color(0.17f, 0.38f, 0.5f, 1f) : new Color(0.18f, 0.22f, 0.32f, 1f));
-            CreateImage("Badge Dot", badge, index == 0 ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.72f, 1f, 0.74f, 1f));
-            RectTransform dot = badge.GetChild(badge.childCount - 1).GetComponent<RectTransform>();
-            SetRect(dot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(8f, 8f));
+            Color buttonColor = completed ? new Color(0.16f, 0.36f, 0.28f, 1f) : ready ? new Color(0.14f, 0.42f, 0.52f, 1f) : new Color(0.18f, 0.22f, 0.32f, 1f);
+            RectTransform buttonRoot = CreatePanel("Order Action Button", parent, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), new Vector2(76f, 40f), buttonColor);
+            Button button = buttonRoot.gameObject.AddComponent<Button>();
+            button.targetGraphic = buttonRoot.GetComponent<Image>();
+            button.interactable = !completed;
+            button.onClick.AddListener(() => TryCompleteOrder(order));
+
+            string label = completed ? "DONE" : ready ? "CLAIM" : "CHECK";
+            Color labelColor = completed ? new Color(0.74f, 1f, 0.78f) : ready ? Color.white : new Color(0.72f, 0.82f, 0.92f);
+            CreateText("Order Action Label", buttonRoot, label, 10, labelColor, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(62f, 22f));
         }
 
         private void CreateRewardRow(RectTransform parent, OrderDefinition order)
         {
             int coins = order.rewards != null ? order.rewards.coins : 0;
             int xp = order.rewards != null ? order.rewards.xp : 0;
-
-            RectTransform coinIcon = CreatePanel("Coin Reward Icon", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(17f, 13f), new Vector2(10f, 10f), new Color(0.55f, 0.92f, 0.72f, 1f));
-            CreatePanel("Coin Reward Shine", coinIcon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(4f, 7f), new Color(0.86f, 1f, 0.9f, 1f));
-            CreateText("Coin Reward Text", parent, $"+{coins}", 9, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(-124f, -24f), new Vector2(52f, 14f));
-
-            RectTransform xpIcon = CreatePanel("XP Reward Icon", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(78f, 13f), new Vector2(10f, 10f), new Color(0.54f, 0.94f, 1f, 1f));
-            CreatePanel("XP Reward Core", xpIcon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(5f, 5f), new Color(0.04f, 0.1f, 0.16f, 1f));
-            CreateText("XP Reward Text", parent, $"+{xp} xp", 9, new Color(0.74f, 0.95f, 1f), TextAnchor.MiddleLeft, new Vector2(-63f, -24f), new Vector2(70f, 14f));
+            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 9, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(-58f, -19f), new Vector2(224f, 14f));
         }
 
         private void CreateProducerTile()
@@ -491,6 +510,87 @@ namespace MergePlatform.Client
             CreateItemTile(drop.itemId, level, grid);
             UpdateEnergyLabel();
             SetStatus($"Generated {level.name}");
+            RefreshOrdersPanel();
+            return true;
+        }
+
+        private bool CanCompleteOrder(OrderDefinition order)
+        {
+            List<ItemTile> requiredTiles = new List<ItemTile>();
+            return CollectRequiredTiles(order, requiredTiles);
+        }
+
+        private bool TryCompleteOrder(OrderDefinition order)
+        {
+            if (order == null || string.IsNullOrWhiteSpace(order.id))
+            {
+                SetStatus("Missing contract");
+                return false;
+            }
+
+            if (completedOrderIds.Contains(order.id))
+            {
+                SetStatus("Contract already completed");
+                return false;
+            }
+
+            List<ItemTile> requiredTiles = new List<ItemTile>();
+            if (!CollectRequiredTiles(order, requiredTiles))
+            {
+                SetStatus("Items do not match contract");
+                return false;
+            }
+
+            foreach (ItemTile tile in requiredTiles)
+            {
+                boardItems.Remove(tile.grid);
+                Destroy(tile.root.gameObject);
+            }
+
+            currentCoins += order.rewards != null ? order.rewards.coins : 0;
+            completedOrderIds.Add(order.id);
+            UpdateCurrencyLabels();
+            RefreshOrdersPanel();
+            SetStatus($"Completed {order.title}");
+            PlayMergeSound();
+            return true;
+        }
+
+        private bool CollectRequiredTiles(OrderDefinition order, List<ItemTile> requiredTiles)
+        {
+            requiredTiles.Clear();
+
+            if (order?.requires == null || order.requires.Length == 0)
+            {
+                return true;
+            }
+
+            foreach (RequiredItem requirement in order.requires)
+            {
+                int found = 0;
+
+                foreach (ItemTile tile in boardItems.Values)
+                {
+                    if (requiredTiles.Contains(tile) || tile.itemId != requirement.itemId)
+                    {
+                        continue;
+                    }
+
+                    requiredTiles.Add(tile);
+                    found += 1;
+
+                    if (found >= requirement.count)
+                    {
+                        break;
+                    }
+                }
+
+                if (found < requirement.count)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -567,6 +667,7 @@ namespace MergePlatform.Client
             CreateMergedTile(nextLevel, targetGrid);
             PlayMergeFeedback(targetGrid, ItemAccent(nextLevel.id));
             SetStatus($"Merged into {nextLevel.name}");
+            RefreshOrdersPanel();
         }
 
         private void CreateMergedTile(ItemLevel nextLevel, Vector2Int grid)
@@ -767,6 +868,19 @@ namespace MergePlatform.Client
             if (energyLabel != null)
             {
                 energyLabel.text = $"ENERGY {currentEnergy}";
+            }
+        }
+
+        private void UpdateCurrencyLabels()
+        {
+            if (coinsLabel != null)
+            {
+                coinsLabel.text = $"COINS {currentCoins}";
+            }
+
+            if (premiumLabel != null)
+            {
+                premiumLabel.text = $"GEMS {currentPremium}";
             }
         }
 

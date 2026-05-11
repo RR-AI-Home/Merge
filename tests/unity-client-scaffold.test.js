@@ -139,3 +139,23 @@ test('Unity MergeClient includes production polish systems for the gameplay scre
   assert.match(controller, /PlayMergeFeedback/);
   assert.match(controller, /PlayMergeSound/);
 });
+
+test('Unity MergeClient contracts can be claimed without overlapping reward UI', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /private RectTransform ordersPanel;/);
+  assert.match(controller, /private readonly HashSet<string> completedOrderIds/);
+  assert.match(controller, /RefreshOrdersPanel/);
+  assert.match(controller, /CreateOrderActionButton/);
+  assert.match(controller, /CanCompleteOrder/);
+  assert.match(controller, /TryCompleteOrder/);
+  assert.match(controller, /CollectRequiredTiles/);
+  assert.match(controller, /currentCoins \+= order\.rewards != null \? order\.rewards\.coins : 0;/);
+  assert.match(controller, /coinsLabel\.text = \$"COINS \{currentCoins\}"/);
+  assert.match(controller, /SetStatus\(\$"Completed \{order\.title\}"/);
+  assert.doesNotMatch(controller, /CreatePanel\("Coin Reward Icon"/);
+  assert.doesNotMatch(controller, /CreateText\("XP Reward Text"/);
+});
