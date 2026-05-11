@@ -24,6 +24,62 @@ async function loadTheme(themeId) {
   };
 }
 
+function firstEmptyPosition(board) {
+  const cell = board.cells.find((candidate) => candidate.item === null);
+  assert.ok(cell, 'expected an empty board cell');
+  return { x: cell.x, y: cell.y };
+}
+
+function findChainLevel(itemChains, itemId) {
+  for (const chain of itemChains) {
+    const index = chain.levels.findIndex((level) => level.id === itemId);
+    if (index !== -1) {
+      return { chain, index };
+    }
+  }
+  return null;
+}
+
+function randomForDrop(producer, itemId) {
+  const totalWeight = producer.drops.reduce((sum, drop) => sum + drop.weight, 0);
+  let cursor = 0;
+
+  for (const drop of producer.drops) {
+    if (drop.itemId === itemId) {
+      return () => (cursor + drop.weight / 2) / totalWeight;
+    }
+    cursor += drop.weight;
+  }
+
+  assert.fail(`${producer.id} cannot drop ${itemId}`);
+}
+
+function spendTapEnergy(state, producer) {
+  const energyResult = spendEnergy(state, producer.energyCost);
+  assert.equal(energyResult.ok, true);
+  return energyResult.state;
+}
+
+function tapExpectedItem({ board, producer, producerState, expectedItemId }) {
+  const expectedPosition = firstEmptyPosition(board);
+  const producerResult = tapProducer({
+    board,
+    producer,
+    producerState,
+    random: randomForDrop(producer, expectedItemId)
+  });
+
+  assert.equal(producerResult.ok, true);
+  assert.equal(producerResult.droppedItemId, expectedItemId);
+  assert.deepEqual(getCell(producerResult.board, expectedPosition).item, { itemId: expectedItemId });
+
+  return {
+    board: producerResult.board,
+    producerState: producerResult.producerState,
+    position: expectedPosition
+  };
+}
+
 test('all foundation themes satisfy the shared theme contract', async () => {
   for (const themeId of ['cyber-syndicate', 'kingdom-lite']) {
     const theme = await loadTheme(themeId);
@@ -41,40 +97,46 @@ test('foundation themes use separate app identities', async () => {
   assert.notEqual(cyber.config.appId, kingdom.config.appId);
 });
 
-test('cyber theme can run a producer, merge, and complete first order through shared engines', async () => {
-  const theme = await loadTheme('cyber-syndicate');
-  let board = createBoard(theme.config.board);
-  let state = { ...theme.config.startingState, xp: 0 };
-  const producerState = { tapsRemaining: theme.producers[0].tapLimit, cooldownUntil: null };
+test('foundation themes can run producer, merge, and first order loops through shared engines', async () => {
+  for (const themeId of ['cyber-syndicate', 'kingdom-lite']) {
+    const theme = await loadTheme(themeId);
+    const producer = theme.producers[0];
+    const order = theme.orders[0];
+    let board = createBoard(theme.config.board);
+    let state = { ...theme.config.startingState, xp: 0 };
+    let producerState = { tapsRemaining: producer.tapLimit, cooldownUntil: null };
+    const inventory = {};
 
-  const energyResult = spendEnergy(state, theme.producers[0].energyCost);
-  assert.equal(energyResult.ok, true);
-  state = energyResult.state;
+    for (const requirement of order.requires) {
+      const requiredLevel = findChainLevel(theme.itemChains, requirement.itemId);
+      assert.ok(requiredLevel, `${themeId}: missing chain for ${requirement.itemId}`);
+      assert.equal(requiredLevel.index, 1, `${themeId}: first order should require level-2 items`);
+      const baseItemId = requiredLevel.chain.levels[0].id;
 
-  let producerResult = tapProducer({
-    board,
-    producer: theme.producers[0],
-    producerState,
-    random: () => 0
-  });
-  assert.equal(producerResult.ok, true);
-  board = producerResult.board;
+      state = spendTapEnergy(state, producer);
+      let tapResult = tapExpectedItem({ board, producer, producerState, expectedItemId: baseItemId });
+      board = tapResult.board;
+      producerState = tapResult.producerState;
+      const firstPosition = tapResult.position;
 
-  producerResult = tapProducer({
-    board,
-    producer: theme.producers[0],
-    producerState: producerResult.producerState,
-    random: () => 0
-  });
-  assert.equal(producerResult.ok, true);
-  board = producerResult.board;
+      state = spendTapEnergy(state, producer);
+      tapResult = tapExpectedItem({ board, producer, producerState, expectedItemId: baseItemId });
+      board = tapResult.board;
+      producerState = tapResult.producerState;
+      const secondPosition = tapResult.position;
 
-  const mergeResult = mergeCells(board, { from: { x: 0, y: 0 }, to: { x: 1, y: 0 } }, theme.itemChains);
-  assert.equal(mergeResult.ok, true);
-  assert.deepEqual(getCell(mergeResult.board, { x: 1, y: 0 }).item, { itemId: 'chip_2' });
+      const mergeResult = mergeCells(board, { from: firstPosition, to: secondPosition }, theme.itemChains);
+      assert.equal(mergeResult.ok, true, `${themeId}: expected ${baseItemId} to merge`);
+      assert.equal(mergeResult.createdItemId, requirement.itemId);
+      assert.deepEqual(getCell(mergeResult.board, secondPosition).item, { itemId: requirement.itemId });
+      board = mergeResult.board;
+      inventory[requirement.itemId] = (inventory[requirement.itemId] ?? 0) + 1;
+    }
 
-  const inventory = { chip_2: 1, wire_2: 1 };
-  const orderResult = completeOrder({ inventory, state, order: theme.orders[0] });
-  assert.equal(orderResult.ok, true);
-  assert.equal(orderResult.state.coins, 35);
+    const orderResult = completeOrder({ inventory, state, order });
+    assert.equal(orderResult.ok, true, `${themeId}: expected first order to complete`);
+    assert.equal(orderResult.completedOrderId, order.id);
+    assert.equal(orderResult.state.coins, theme.config.startingState.coins + order.rewards.coins);
+    assert.equal(orderResult.state.xp, order.rewards.xp);
+  }
 });

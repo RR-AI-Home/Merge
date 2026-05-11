@@ -153,18 +153,26 @@ export function tapProducer({
     return { ok: false, reason: 'producer_cooling_down', board, producerState };
   }
 
-  if (producerState.tapsRemaining <= 0) {
-    return { ok: false, reason: 'producer_empty', board, producerState };
+  const effectiveProducerState = (
+    producerState.cooldownUntil &&
+    producerState.cooldownUntil <= nowSeconds &&
+    producerState.tapsRemaining <= 0
+  )
+    ? { ...producerState, tapsRemaining: producer.tapLimit, cooldownUntil: null }
+    : producerState;
+
+  if (effectiveProducerState.tapsRemaining <= 0) {
+    return { ok: false, reason: 'producer_empty', board, producerState: effectiveProducerState };
   }
 
   const emptyCell = firstEmptyCell(board);
   if (!emptyCell) {
-    return { ok: false, reason: 'board_full', board, producerState };
+    return { ok: false, reason: 'board_full', board, producerState: effectiveProducerState };
   }
 
   const drop = pickWeightedDrop(producer.drops, random);
   const nextBoard = placeItem(board, { x: emptyCell.x, y: emptyCell.y }, { itemId: drop.itemId });
-  const tapsRemaining = producerState.tapsRemaining - 1;
+  const tapsRemaining = effectiveProducerState.tapsRemaining - 1;
 
   return {
     ok: true,
@@ -172,7 +180,7 @@ export function tapProducer({
     droppedItemId: drop.itemId,
     energyCost: producer.energyCost,
     producerState: {
-      ...producerState,
+      ...effectiveProducerState,
       tapsRemaining,
       cooldownUntil: tapsRemaining === 0 ? nowSeconds + producer.cooldownSeconds : null
     }

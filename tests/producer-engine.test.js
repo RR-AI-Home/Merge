@@ -113,6 +113,27 @@ test('tapProducer rejects a cooling producer without consuming board or state', 
   assert.deepEqual(producerState, { tapsRemaining: 2, cooldownUntil: 1500, sourceItemId: 'crate_1' });
 });
 
+test('tapProducer refreshes an empty producer after cooldown expires before tapping', () => {
+  const board = createBoard({ width: 2, height: 2 });
+  const producerState = { tapsRemaining: 0, cooldownUntil: 900, sourceItemId: 'crate_1' };
+
+  const result = tapProducer({
+    board,
+    producer,
+    producerState,
+    nowSeconds: 1000,
+    random: () => 0
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.droppedItemId, 'chip_1');
+  assert.equal(result.producerState.sourceItemId, 'crate_1');
+  assert.equal(result.producerState.tapsRemaining, producer.tapLimit - 1);
+  assert.equal(result.producerState.cooldownUntil, null);
+  assert.deepEqual(getCell(result.board, { x: 0, y: 0 }).item, { itemId: 'chip_1' });
+  assert.deepEqual(producerState, { tapsRemaining: 0, cooldownUntil: 900, sourceItemId: 'crate_1' });
+});
+
 test('tapProducer rejects an empty producer without consuming board or state', () => {
   const board = createBoard({ width: 2, height: 2 });
   const producerState = { tapsRemaining: 0, cooldownUntil: null, sourceItemId: 'crate_1' };
