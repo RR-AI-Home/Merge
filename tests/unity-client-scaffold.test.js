@@ -51,3 +51,16 @@ test('Unity project manifest includes uGUI for production UI components', async 
 
   assert.equal(manifest.dependencies['com.unity.ugui'], '2.0.0');
 });
+
+test('Unity MergeClient screen is sized for mobile portrait without side panels', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /MobileReferenceWidth = 412f/);
+  assert.match(controller, /MobileReferenceHeight = 915f/);
+  assert.match(controller, /private const float TileSize = 54f/);
+  assert.match(controller, /CreateOrdersPanel[\s\S]*new Vector2\(MobileContentWidth, 224f\)/);
+  assert.doesNotMatch(controller, /new Vector2\(218f, -24f\)/);
+});
