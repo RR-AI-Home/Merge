@@ -276,9 +276,41 @@ namespace MergePlatform.Client
 
         private void CreateNavButton(RectTransform parent, string label, Vector2 position, bool active, Color accent)
         {
-            RectTransform button = CreatePanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(82f, 38f), active ? new Color(0.1f, 0.16f, 0.24f, 1f) : new Color(0.06f, 0.075f, 0.1f, 1f));
-            CreatePanel("Nav Glyph", button, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -7f), new Vector2(active ? 30f : 22f, 3f), accent);
-            CreateText("Nav Label", button, label, 9, active ? Color.white : new Color(0.62f, 0.72f, 0.82f), TextAnchor.MiddleCenter, new Vector2(0f, -5f), new Vector2(68f, 18f));
+            RectTransform button = CreatePanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(86f, 46f), active ? new Color(0.1f, 0.16f, 0.24f, 1f) : new Color(0.06f, 0.075f, 0.1f, 1f));
+            CreatePanel("Nav Top Accent", button, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -5f), new Vector2(active ? 30f : 22f, 3f), accent);
+            CreateNavIcon(button, label, active, accent);
+            CreateText("Nav Label", button, label, 8, active ? Color.white : new Color(0.62f, 0.72f, 0.82f), TextAnchor.MiddleCenter, new Vector2(0f, -11f), new Vector2(72f, 14f));
+        }
+
+        private void CreateNavIcon(RectTransform parent, string label, bool active, Color accent)
+        {
+            Color iconColor = active ? accent : new Color(accent.r, accent.g, accent.b, 0.62f);
+            RectTransform icon = CreatePanel($"Nav {label} Icon", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 5f), new Vector2(24f, 18f), new Color(iconColor.r, iconColor.g, iconColor.b, 0.14f));
+
+            if (label == "BOARD")
+            {
+                CreatePanel("Nav Board A", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-6f, 4f), new Vector2(8f, 7f), iconColor);
+                CreatePanel("Nav Board B", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(6f, -4f), new Vector2(8f, 7f), iconColor);
+                return;
+            }
+
+            if (label == "DIST")
+            {
+                CreatePanel("Nav District Base", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -4f), new Vector2(20f, 4f), iconColor);
+                CreatePanel("Nav District Tower", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-5f, 2f), new Vector2(5f, 12f), iconColor);
+                CreatePanel("Nav District Tower B", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(5f, 0f), new Vector2(5f, 8f), iconColor);
+                return;
+            }
+
+            if (label == "BOOK")
+            {
+                CreatePanel("Nav Book Left", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-5f, 0f), new Vector2(8f, 14f), iconColor);
+                CreatePanel("Nav Book Right", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(5f, 0f), new Vector2(8f, 14f), iconColor);
+                return;
+            }
+
+            CreatePanel("Nav Shop Base", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -3f), new Vector2(18f, 9f), iconColor);
+            CreatePanel("Nav Shop Handle", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 5f), new Vector2(10f, 4f), iconColor);
         }
 
         private void CreateOrderCard(RectTransform parent, OrderDefinition order, int index)
@@ -289,11 +321,18 @@ namespace MergePlatform.Client
             RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f - index * 68f), new Vector2(356f, 64f), cardColor);
             card.gameObject.AddComponent<RectMask2D>();
 
+            CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
             CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.MiddleLeft, new Vector2(-58f, 16f), new Vector2(224f, 17f));
             CreateText("Order Requirements", card, FormatRequirements(order), 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-58f, -2f), new Vector2(224f, 14f));
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
+        }
+
+        private void CreateOrderStateStripe(RectTransform parent, bool ready, bool completed)
+        {
+            Color stripeColor = completed ? new Color(0.72f, 1f, 0.74f, 1f) : ready ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.45f, 0.55f, 0.72f, 1f);
+            CreatePanel("Order State Stripe", parent, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(5f, 52f), stripeColor);
         }
 
         private void CreateOrderProgressBar(RectTransform parent, bool ready, bool completed)
@@ -774,10 +813,42 @@ namespace MergePlatform.Client
             RectTransform card = CreatePanel($"Item {itemId}", itemLayer, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), ItemCardColor(itemId, level.level));
             card.gameObject.AddComponent<CanvasGroup>();
             card.gameObject.AddComponent<RectMask2D>();
-            CreateProceduralItemIcon(card, itemId, ItemAccent(itemId));
-            CreateText("Level", card, $"L{level.level}", 8, new Color(0.85f, 0.94f, 1f), TextAnchor.UpperRight, new Vector2(17f, 19f), new Vector2(28f, 12f));
-            CreateText("Name", card, ShortName(level.name), 7, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -18f), new Vector2(TileSize - 6f, 12f));
+            CreateTierFrame(card, itemId, level.level);
+            CreateProceduralItemIcon(card, itemId, level.level, ItemAccent(itemId));
+            CreateTierPips(card, level.level, ItemAccent(itemId));
+            CreateLevelBadge(card, level.level);
+            CreateItemDisplayLabel(card, itemId, level.name);
             return card;
+        }
+
+        private void CreateTierFrame(RectTransform parent, string itemId, int tier)
+        {
+            Color accent = ItemAccent(itemId);
+            float alpha = Mathf.Clamp01(0.18f + tier * 0.09f);
+            CreatePanel("Tier Frame Top", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -3f), new Vector2(TileSize - 8f, 2f), new Color(accent.r, accent.g, accent.b, alpha));
+            CreatePanel("Tier Frame Bottom", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 3f), new Vector2(TileSize - 10f, 2f), new Color(accent.r, accent.g, accent.b, alpha * 0.7f));
+        }
+
+        private void CreateTierPips(RectTransform parent, int tier, Color accent)
+        {
+            int pipCount = Mathf.Clamp(tier, 1, 4);
+
+            for (int index = 0; index < pipCount; index += 1)
+            {
+                float x = -9f + index * 6f;
+                CreatePanel("Tier Pip", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(x, -9f), new Vector2(4f, 3f), new Color(accent.r, accent.g, accent.b, 0.95f));
+            }
+        }
+
+        private void CreateLevelBadge(RectTransform parent, int tier)
+        {
+            RectTransform badge = CreatePanel("Level Badge", parent, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-5f, -5f), new Vector2(13f, 13f), new Color(0.06f, 0.075f, 0.1f, 0.92f));
+            CreateText("Level Badge Text", badge, tier.ToString(), 8, new Color(0.82f, 0.96f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(11f, 11f));
+        }
+
+        private void CreateItemDisplayLabel(RectTransform parent, string itemId, string itemName)
+        {
+            CreateText("Name", parent, ItemDisplayName(itemId, itemName), 7, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -18f), new Vector2(TileSize - 8f, 11f));
         }
 
         private void CreateProducerIcon(RectTransform parent)
@@ -788,64 +859,107 @@ namespace MergePlatform.Client
             CreatePanel("Crate Stripe B", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(8f, 0f), new Vector2(3f, 18f), new Color(0.06f, 0.18f, 0.24f, 1f));
         }
 
-        private void CreateProceduralItemIcon(RectTransform parent, string itemId, Color accent)
+        private void CreateProceduralItemIcon(RectTransform parent, string itemId, int tier, Color accent)
         {
-            RectTransform icon = CreatePanel("Procedural Item Icon", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 5f), new Vector2(34f, 28f), new Color(accent.r, accent.g, accent.b, 0.92f));
+            float iconWidth = Mathf.Clamp(30f + tier * 2f, 30f, 38f);
+            float iconHeight = Mathf.Clamp(24f + tier * 2f, 24f, 30f);
+            RectTransform icon = CreatePanel("Procedural Item Icon", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 5f), new Vector2(iconWidth, iconHeight), new Color(accent.r, accent.g, accent.b, 0.92f));
 
             if (itemId.StartsWith("chip"))
             {
-                CreateChipMark(icon);
+                CreateChipMark(icon, tier);
                 return;
             }
 
             if (itemId.StartsWith("wire"))
             {
-                CreateWireMark(icon);
+                CreateWireMark(icon, tier);
                 return;
             }
 
             if (itemId.StartsWith("drone"))
             {
-                CreateDroneMark(icon);
+                CreateDroneMark(icon, tier);
                 return;
             }
 
             if (itemId.StartsWith("cache"))
             {
-                CreateCacheMark(icon);
+                CreateCacheMark(icon, tier);
                 return;
             }
 
             CreatePanel("Generic Mark", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(14f, 14f), new Color(0.04f, 0.08f, 0.12f, 1f));
         }
 
-        private void CreateChipMark(RectTransform icon)
+        private void CreateChipMark(RectTransform icon, int tier)
         {
             CreatePanel("Chip Core", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(14f, 12f), new Color(0.04f, 0.1f, 0.14f, 1f));
             CreatePanel("Chip Trace H", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 7f), new Vector2(24f, 2f), new Color(0.04f, 0.1f, 0.14f, 1f));
             CreatePanel("Chip Trace V", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-10f, 0f), new Vector2(2f, 18f), new Color(0.04f, 0.1f, 0.14f, 1f));
+
+            if (tier >= 2)
+            {
+                CreatePanel("Chip Trace V2", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(10f, 0f), new Vector2(2f, 18f), new Color(0.04f, 0.1f, 0.14f, 1f));
+            }
+
+            if (tier >= 3)
+            {
+                CreatePanel("Chip Core Plus", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(4f, 18f), new Color(0.04f, 0.1f, 0.14f, 1f));
+            }
         }
 
-        private void CreateWireMark(RectTransform icon)
+        private void CreateWireMark(RectTransform icon, int tier)
         {
             CreatePanel("Wire A", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-6f, 2f), new Vector2(5f, 21f), new Color(0.08f, 0.04f, 0.12f, 1f));
             CreatePanel("Wire B", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(6f, -2f), new Vector2(5f, 21f), new Color(0.08f, 0.04f, 0.12f, 1f));
             CreatePanel("Wire Tie", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(23f, 3f), new Color(0.08f, 0.04f, 0.12f, 1f));
+
+            if (tier >= 2)
+            {
+                CreatePanel("Wire Clamp", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -7f), new Vector2(20f, 3f), new Color(0.08f, 0.04f, 0.12f, 1f));
+            }
+
+            if (tier >= 3)
+            {
+                CreatePanel("Wire Signal", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(12f, 3f), new Color(0.08f, 0.04f, 0.12f, 1f));
+            }
         }
 
-        private void CreateDroneMark(RectTransform icon)
+        private void CreateDroneMark(RectTransform icon, int tier)
         {
             CreatePanel("Drone Body", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(12f, 10f), new Color(0.12f, 0.04f, 0.1f, 1f));
             CreatePanel("Drone Rotor L", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-12f, 6f), new Vector2(10f, 4f), new Color(0.12f, 0.04f, 0.1f, 1f));
             CreatePanel("Drone Rotor R", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(12f, 6f), new Vector2(10f, 4f), new Color(0.12f, 0.04f, 0.1f, 1f));
             CreatePanel("Drone Skid", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -9f), new Vector2(22f, 2f), new Color(0.12f, 0.04f, 0.1f, 1f));
+
+            if (tier >= 2)
+            {
+                CreatePanel("Drone Camera", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 1f), new Vector2(5f, 5f), new Color(0.12f, 0.04f, 0.1f, 1f));
+            }
+
+            if (tier >= 3)
+            {
+                CreatePanel("Drone Wing", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(28f, 2f), new Color(0.12f, 0.04f, 0.1f, 1f));
+            }
         }
 
-        private void CreateCacheMark(RectTransform icon)
+        private void CreateCacheMark(RectTransform icon, int tier)
         {
             CreatePanel("Cache Lid", icon, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -6f), new Vector2(22f, 3f), new Color(0.05f, 0.12f, 0.07f, 1f));
             CreatePanel("Cache Lock", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -1f), new Vector2(7f, 8f), new Color(0.05f, 0.12f, 0.07f, 1f));
             CreatePanel("Cache Base", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -9f), new Vector2(24f, 3f), new Color(0.05f, 0.12f, 0.07f, 1f));
+
+            if (tier >= 2)
+            {
+                CreatePanel("Cache Side L", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-10f, -2f), new Vector2(3f, 14f), new Color(0.05f, 0.12f, 0.07f, 1f));
+                CreatePanel("Cache Side R", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(10f, -2f), new Vector2(3f, 14f), new Color(0.05f, 0.12f, 0.07f, 1f));
+            }
+
+            if (tier >= 3)
+            {
+                CreatePanel("Cache Crown", icon, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -2f), new Vector2(14f, 3f), new Color(0.05f, 0.12f, 0.07f, 1f));
+            }
         }
 
         private void MoveTile(ItemTile tile, Vector2Int targetGrid)
@@ -947,6 +1061,31 @@ namespace MergePlatform.Client
             }
 
             return value.Length <= 10 ? value : $"{value.Substring(0, 9)}.";
+        }
+
+        private string ItemDisplayName(string itemId, string itemName)
+        {
+            if (itemId.StartsWith("chip"))
+            {
+                return itemId.EndsWith("_1") ? "Chip" : "Signal";
+            }
+
+            if (itemId.StartsWith("wire"))
+            {
+                return itemId.EndsWith("_1") ? "Wire" : "Relay";
+            }
+
+            if (itemId.StartsWith("drone"))
+            {
+                return itemId.EndsWith("_1") ? "Shell" : "Scout";
+            }
+
+            if (itemId.StartsWith("cache"))
+            {
+                return itemId.EndsWith("_1") ? "Cache" : "Vault";
+            }
+
+            return ShortName(itemName);
         }
 
         private string IconCode(string itemId)

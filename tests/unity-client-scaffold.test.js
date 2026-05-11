@@ -159,3 +159,24 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
   assert.doesNotMatch(controller, /CreatePanel\("Coin Reward Icon"/);
   assert.doesNotMatch(controller, /CreateText\("XP Reward Text"/);
 });
+
+test('Unity MergeClient board polish keeps mobile items and nav readable', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /CreateTierFrame/);
+  assert.match(controller, /CreateTierPips/);
+  assert.match(controller, /CreateLevelBadge/);
+  assert.match(controller, /CreateItemDisplayLabel/);
+  assert.match(controller, /CreateProceduralItemIcon\(card, itemId, level\.level, ItemAccent\(itemId\)\)/);
+  assert.match(controller, /CreateChipMark\(icon, tier\)/);
+  assert.match(controller, /CreateWireMark\(icon, tier\)/);
+  assert.match(controller, /CreateDroneMark\(icon, tier\)/);
+  assert.match(controller, /CreateCacheMark\(icon, tier\)/);
+  assert.match(controller, /CreateOrderStateStripe/);
+  assert.match(controller, /CreateNavIcon/);
+  assert.match(controller, /new Vector2\(86f, 46f\)/);
+  assert.match(controller, /CreateText\("Nav Label"[\s\S]*new Vector2\(0f, -11f\)[\s\S]*new Vector2\(72f, 14f\)/);
+});
