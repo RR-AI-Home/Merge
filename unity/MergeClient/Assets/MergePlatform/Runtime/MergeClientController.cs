@@ -1,57 +1,61 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace MergePlatform.Client
 {
     public sealed class MergeClientController : MonoBehaviour
     {
         [SerializeField] private string themeResourcePath = "Themes/cyber-syndicate";
-        [SerializeField] private float tileSpacing = 1.12f;
+
+        private const float TileSize = 74f;
+        private const float TileGap = 8f;
+        private const float BoardPadding = 10f;
 
         private readonly Dictionary<string, ItemLevel> itemLookup = new Dictionary<string, ItemLevel>();
         private readonly Dictionary<string, ItemChain> chainByItemId = new Dictionary<string, ItemChain>();
         private readonly Dictionary<Vector2Int, ItemTile> boardItems = new Dictionary<Vector2Int, ItemTile>();
-        private readonly Dictionary<Collider, ItemTile> tileByCollider = new Dictionary<Collider, ItemTile>();
-        private readonly Dictionary<Collider, ProducerTile> producerTileByCollider = new Dictionary<Collider, ProducerTile>();
+        private readonly Dictionary<Vector2Int, RectTransform> boardSlots = new Dictionary<Vector2Int, RectTransform>();
 
         private UnityMergeTheme theme;
+        private RectTransform canvasRoot;
+        private RectTransform boardPanel;
+        private RectTransform itemLayer;
+        private RectTransform dragLayer;
+        private Text energyLabel;
+        private Text coinsLabel;
+        private Text premiumLabel;
+        private Text statusLabel;
+        private Font uiFont;
         private ItemTile selectedTile;
-        private ProducerTile producerTile;
-        private TextMesh energyLabel;
-        private TextMesh statusLabel;
-        private Vector3 selectedOffset;
+        private Vector2Int producerGrid;
         private int currentEnergy;
+        private int currentCoins;
+        private int currentPremium;
         private int dropCursor;
         private int boardWidth;
         private int boardHeight;
-        private float originX;
-        private float originZ;
+        private float boardPixelSize;
+
+        private Font UiFont
+        {
+            get
+            {
+                if (uiFont == null)
+                {
+                    uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                    uiFont ??= Resources.GetBuiltinResource<Font>("Arial.ttf");
+                }
+
+                return uiFont;
+            }
+        }
 
         private void Start()
         {
-            EnsureCamera();
-            EnsureLighting();
             LoadTheme();
             BuildScene();
-        }
-
-        private void Update()
-        {
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (!BeginDrag(Input.mousePosition))
-                {
-                    TryTapProducer(Input.mousePosition);
-                }
-            }
-            else if (selectedTile != null && Input.GetMouseButton(0))
-            {
-                ContinueDrag(Input.mousePosition);
-            }
-            else if (selectedTile != null && Input.GetMouseButtonUp(0))
-            {
-                EndDrag(Input.mousePosition);
-            }
         }
 
         private void LoadTheme()
@@ -97,37 +101,135 @@ namespace MergePlatform.Client
         {
             if (theme?.config?.board == null)
             {
-                DrawLabel("No merge theme loaded", new Vector3(0f, 1f, 0f), 0.48f, Color.red);
                 return;
             }
 
             boardWidth = Mathf.Max(1, theme.config.board.width);
             boardHeight = Mathf.Max(1, theme.config.board.height);
+            boardPixelSize = BoardPadding * 2f + boardWidth * TileSize + (boardWidth - 1) * TileGap;
             currentEnergy = theme.config.startingState != null ? theme.config.startingState.energy : 0;
-            originX = -((boardWidth - 1) * tileSpacing) / 2f;
-            originZ = -((boardHeight - 1) * tileSpacing) / 2f;
+            currentCoins = theme.config.startingState != null ? theme.config.startingState.coins : 0;
+            currentPremium = theme.config.startingState != null ? theme.config.startingState.premium : 0;
+            producerGrid = new Vector2Int(0, 0);
 
-            DrawLabel(theme.config.displayName, new Vector3(0f, 0.25f, originZ - 1.45f), 0.44f, new Color(0.78f, 0.95f, 1f));
-            DrawLabel(theme.copy != null ? theme.copy.onboardingTitle : theme.themeId, new Vector3(0f, 0.25f, originZ - 0.9f), 0.22f, Color.white);
-            energyLabel = DrawLabel("", new Vector3(originX + 0.6f, 0.25f, originZ - 0.35f), 0.18f, new Color(0.95f, 0.98f, 0.72f));
-            statusLabel = DrawLabel("Click crate to generate items", new Vector3(originX + 3.15f, 0.25f, originZ - 0.35f), 0.16f, new Color(0.78f, 0.95f, 1f));
+            ClearGeneratedObjects();
+            EnsureEventSystem();
+            CreateCanvas();
+            CreateHud();
+            CreateBoard();
+            CreateOrdersPanel();
+            CreateProducerTile();
+            SeedMergeableItems();
             UpdateEnergyLabel();
+            SetStatus("Tap crate to generate items");
+        }
+
+        private void ClearGeneratedObjects()
+        {
+            for (int index = transform.childCount - 1; index >= 0; index -= 1)
+            {
+                Destroy(transform.GetChild(index).gameObject);
+            }
+
+            boardItems.Clear();
+            boardSlots.Clear();
+        }
+
+        private void CreateCanvas()
+        {
+            GameObject canvasObject = new GameObject("Merge Screen Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvasObject.transform.SetParent(transform);
+
+            Canvas canvas = canvasObject.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 10;
+
+            CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(390f, 844f);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            canvasRoot = canvasObject.GetComponent<RectTransform>();
+            canvasRoot.anchorMin = Vector2.zero;
+            canvasRoot.anchorMax = Vector2.one;
+            canvasRoot.offsetMin = Vector2.zero;
+            canvasRoot.offsetMax = Vector2.zero;
+
+            Image background = CreateImage("Background", canvasRoot, new Color(0.02f, 0.024f, 0.034f, 1f));
+            Stretch(background.rectTransform);
+        }
+
+        private void CreateHud()
+        {
+            RectTransform hud = CreatePanel("HUD", canvasRoot, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, -12f), new Vector2(360f, 82f), new Color(0.03f, 0.04f, 0.055f, 0.96f));
+            CreateText("Title", hud, theme.config.displayName, 24, new Color(0.82f, 0.96f, 1f), TextAnchor.MiddleLeft, new Vector2(-96f, 18f), new Vector2(150f, 30f));
+
+            energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-110f, -22f), new Color(0.95f, 0.78f, 0.24f));
+            coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, -22f), new Color(0.55f, 0.92f, 0.72f));
+            premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(110f, -22f), new Color(0.94f, 0.45f, 0.78f));
+
+            coinsLabel.text = $"COINS {currentCoins}";
+            premiumLabel.text = $"GEMS {currentPremium}";
+        }
+
+        private Text CreateStatPill(RectTransform parent, string label, Vector2 position, Color accent)
+        {
+            RectTransform pill = CreatePanel($"Stat {label}", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, new Vector2(104f, 28f), new Color(0.09f, 0.11f, 0.16f, 1f));
+            Image accentBar = CreateImage($"{label} Accent", pill, accent);
+            SetRect(accentBar.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(4f, 20f));
+            return CreateText($"{label} Text", pill, label, 12, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(88f, 22f));
+        }
+
+        private void CreateBoard()
+        {
+            boardPanel = CreatePanel("Merge Board", canvasRoot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-72f, -14f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.04f, 0.052f, 0.07f, 1f));
+            CreateText("Board Label", boardPanel, theme.copy != null ? theme.copy.onboardingTitle : "Build the board.", 14, new Color(0.75f, 0.95f, 1f), TextAnchor.MiddleCenter, new Vector2(0f, -boardPixelSize / 2f - 22f), new Vector2(boardPixelSize, 24f));
 
             for (int y = 0; y < boardHeight; y += 1)
             {
                 for (int x = 0; x < boardWidth; x += 1)
                 {
-                    Vector3 position = GridToWorld(new Vector2Int(x, y), 0f);
-                    CreateCube($"BoardSlot_{x}_{y}", transform, position, new Vector3(1f, 0.08f, 1f), new Color(0.09f, 0.11f, 0.15f), false);
+                    Vector2Int grid = new Vector2Int(x, y);
+                    RectTransform slot = CreatePanel($"Slot {x},{y}", boardPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), new Color(0.18f, 0.23f, 0.32f, 1f));
+                    boardSlots[grid] = slot;
                 }
             }
 
-            DrawProducer();
-            SeedMergeableItems();
-            DrawOrders();
+            itemLayer = CreateEmptyRect("Items", boardPanel);
+            Stretch(itemLayer);
+            dragLayer = CreateEmptyRect("Drag Layer", canvasRoot);
+            Stretch(dragLayer);
         }
 
-        private void DrawProducer()
+        private void CreateOrdersPanel()
+        {
+            RectTransform ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(218f, -24f), new Vector2(178f, 330f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
+            CreateText("Orders Header", ordersPanel, "CONTRACTS", 18, new Color(0.8f, 0.95f, 1f), TextAnchor.MiddleCenter, new Vector2(0f, 138f), new Vector2(150f, 28f));
+
+            if (theme.orders == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < theme.orders.Length; index += 1)
+            {
+                CreateOrderCard(ordersPanel, theme.orders[index], index);
+            }
+        }
+
+        private void CreateOrderCard(RectTransform parent, OrderDefinition order, int index)
+        {
+            RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -54f - index * 96f), new Vector2(150f, 82f), new Color(0.14f, 0.18f, 0.29f, 1f));
+            CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.UpperLeft, new Vector2(0f, 14f), new Vector2(128f, 34f));
+
+            string requirementText = FormatRequirements(order);
+            CreateText("Order Requirements", card, requirementText, 10, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, -12f), new Vector2(128f, 22f));
+
+            string reward = order.rewards != null ? $"+{order.rewards.coins} coins / +{order.rewards.xp} xp" : "Reward";
+            CreateText("Order Reward", card, reward, 10, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(0f, -31f), new Vector2(128f, 18f));
+        }
+
+        private void CreateProducerTile()
         {
             if (theme.producers == null || theme.producers.Length == 0)
             {
@@ -135,12 +237,12 @@ namespace MergePlatform.Client
             }
 
             ProducerDefinition producer = theme.producers[0];
-            Vector2Int grid = new Vector2Int(0, boardHeight - 1);
-            Vector3 position = GridToWorld(grid, 0.28f);
-            GameObject cube = CreateCube("Producer", transform, position, new Vector3(0.92f, 0.44f, 0.92f), new Color(0.15f, 0.42f, 0.55f), true);
-            producerTile = new ProducerTile(producer, cube.GetComponent<Collider>(), grid);
-            producerTileByCollider[producerTile.collider] = producerTile;
-            DrawLabel(producer.name, position + new Vector3(0f, 0.34f, 0f), 0.16f, Color.white);
+            RectTransform root = CreatePanel("Producer Tile", itemLayer, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(producerGrid), new Vector2(TileSize, TileSize), new Color(0.09f, 0.33f, 0.48f, 1f));
+            Button button = root.gameObject.AddComponent<Button>();
+            button.targetGraphic = root.GetComponent<Image>();
+            button.onClick.AddListener(() => TryTapProducer(producer));
+            CreateItemIcon(root, "CRATE", new Color(0.22f, 0.68f, 0.96f), new Color(0.02f, 0.07f, 0.1f));
+            CreateText("Producer Label", root, producer.name, 9, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -23f), new Vector2(TileSize - 8f, 18f));
         }
 
         private void SeedMergeableItems()
@@ -166,91 +268,57 @@ namespace MergePlatform.Client
             }
         }
 
-        private void DrawOrders()
+        public void BeginTileDrag(ItemTile tile, PointerEventData eventData)
         {
-            if (theme.orders == null || theme.orders.Length == 0)
+            selectedTile = tile;
+            tile.canvasGroup.blocksRaycasts = false;
+            tile.root.SetParent(dragLayer, true);
+            tile.root.SetAsLastSibling();
+            MoveDraggedTile(eventData);
+        }
+
+        public void DragTile(PointerEventData eventData)
+        {
+            if (selectedTile != null)
+            {
+                MoveDraggedTile(eventData);
+            }
+        }
+
+        public void EndTileDrag(PointerEventData eventData)
+        {
+            if (selectedTile == null)
             {
                 return;
             }
 
-            float rightEdge = originX + (boardWidth - 1) * tileSpacing + 1.8f;
-            DrawLabel("Orders", new Vector3(rightEdge, 0.35f, originZ - 0.1f), 0.28f, new Color(0.88f, 0.98f, 1f));
-
-            for (int index = 0; index < theme.orders.Length; index += 1)
+            if (TryFindDropTargetTile(eventData, out ItemTile targetTile))
             {
-                OrderDefinition order = theme.orders[index];
-                Vector3 position = new Vector3(rightEdge, 0.18f, originZ + (index + 1) * 1.25f);
-                CreateCube(order.id, transform, position, new Vector3(1.95f, 0.12f, 0.82f), new Color(0.18f, 0.2f, 0.27f), false);
-                DrawLabel(order.title, position + new Vector3(0f, 0.18f, 0f), 0.14f, Color.white);
-
-                string reward = order.rewards != null ? $"{order.rewards.coins} coins / {order.rewards.xp} xp" : "reward";
-                DrawLabel(reward, position + new Vector3(0f, 0.18f, 0.24f), 0.11f, new Color(0.75f, 0.95f, 0.78f));
-            }
-        }
-
-        private bool BeginDrag(Vector3 screenPosition)
-        {
-            if (!TryRaycastTile(screenPosition, out ItemTile tile))
-            {
-                return false;
-            }
-
-            selectedTile = tile;
-            selectedOffset = selectedTile.root.transform.position - ScreenToBoardPoint(screenPosition);
-            selectedTile.collider.enabled = false;
-            selectedTile.root.transform.position += Vector3.up * 0.28f;
-            return true;
-        }
-
-        private void ContinueDrag(Vector3 screenPosition)
-        {
-            Vector3 point = ScreenToBoardPoint(screenPosition);
-            selectedTile.root.transform.position = new Vector3(point.x + selectedOffset.x, 0.62f, point.z + selectedOffset.z);
-        }
-
-        private void EndDrag(Vector3 screenPosition)
-        {
-            Vector2Int targetGrid = WorldToGrid(ScreenToBoardPoint(screenPosition));
-
-            if (TryFindDropTargetTile(screenPosition, out ItemTile dropTargetTile))
-            {
-                if (CanMerge(selectedTile, dropTargetTile))
+                if (CanMerge(selectedTile, targetTile))
                 {
-                    TryMergeWith(selectedTile, dropTargetTile);
+                    TryMergeWith(selectedTile, targetTile);
                 }
                 else
                 {
                     ReturnTileHome(selectedTile);
+                    SetStatus("Items do not match");
                 }
 
                 selectedTile = null;
                 return;
             }
 
-            if (!IsInsideBoard(targetGrid))
+            if (TryScreenToGrid(eventData.position, out Vector2Int targetGrid) && IsInsideBoard(targetGrid) && targetGrid != producerGrid)
             {
-                ReturnTileHome(selectedTile);
-                selectedTile = null;
-                return;
-            }
-
-            if (targetGrid == selectedTile.grid)
-            {
-                ReturnTileHome(selectedTile);
-                selectedTile = null;
-                return;
-            }
-
-            if (!boardItems.TryGetValue(targetGrid, out ItemTile targetTile))
-            {
-                MoveTile(selectedTile, targetGrid);
-                selectedTile = null;
-                return;
-            }
-
-            if (CanMerge(selectedTile, targetTile))
-            {
-                TryMergeWith(selectedTile, targetTile);
+                if (!boardItems.ContainsKey(targetGrid))
+                {
+                    MoveTile(selectedTile, targetGrid);
+                }
+                else
+                {
+                    ReturnTileHome(selectedTile);
+                    SetStatus("Slot occupied");
+                }
             }
             else
             {
@@ -260,62 +328,43 @@ namespace MergePlatform.Client
             selectedTile = null;
         }
 
-        private void TryMergeWith(ItemTile source, ItemTile target)
+        private void MoveDraggedTile(PointerEventData eventData)
         {
-            ItemLevel nextLevel = GetNextLevel(target);
-
-            if (nextLevel == null)
-            {
-                ReturnTileHome(source);
-                return;
-            }
-
-            Vector2Int targetGrid = target.grid;
-            boardItems.Remove(source.grid);
-            boardItems.Remove(target.grid);
-            tileByCollider.Remove(source.collider);
-            tileByCollider.Remove(target.collider);
-            Destroy(source.root);
-            Destroy(target.root);
-            CreateMergedTile(nextLevel, targetGrid);
-            SetStatus($"Merged {target.label.text} into {nextLevel.name}");
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRoot, eventData.position, eventData.pressEventCamera, out Vector2 localPoint);
+            selectedTile.root.SetParent(dragLayer, false);
+            selectedTile.root.anchoredPosition = localPoint;
         }
 
-        private bool TryTapProducer(Vector3 screenPosition)
+        private bool TryTapProducer(ProducerDefinition producer)
         {
-            if (!TryRaycastProducer(screenPosition, out ProducerTile producer))
+            if (producer.energyCost > currentEnergy)
             {
+                SetStatus("Not enough energy");
                 return false;
             }
 
-            if (producer.definition.energyCost > currentEnergy)
-            {
-                SetStatus("Not enough energy");
-                return true;
-            }
-
-            if (producer.definition.drops == null || producer.definition.drops.Length == 0)
+            if (producer.drops == null || producer.drops.Length == 0)
             {
                 SetStatus("Producer has no drops");
-                return true;
+                return false;
             }
 
             if (!FindFirstEmptySlot(out Vector2Int grid))
             {
-                SetStatus("Board is full");
-                return true;
+                SetStatus("Board full");
+                return false;
             }
 
-            DropDefinition drop = producer.definition.drops[dropCursor % producer.definition.drops.Length];
+            DropDefinition drop = producer.drops[dropCursor % producer.drops.Length];
             dropCursor += 1;
 
             if (!itemLookup.TryGetValue(drop.itemId, out ItemLevel level))
             {
-                SetStatus($"Missing item {drop.itemId}");
-                return true;
+                SetStatus($"Missing {drop.itemId}");
+                return false;
             }
 
-            currentEnergy -= producer.definition.energyCost;
+            currentEnergy -= producer.energyCost;
             CreateItemTile(drop.itemId, level, grid);
             UpdateEnergyLabel();
             SetStatus($"Generated {level.name}");
@@ -330,7 +379,7 @@ namespace MergePlatform.Client
                 {
                     grid = new Vector2Int(x, y);
 
-                    if (producerTile != null && grid == producerTile.grid)
+                    if (grid == producerGrid)
                     {
                         continue;
                     }
@@ -346,20 +395,25 @@ namespace MergePlatform.Client
             return false;
         }
 
-        private void UpdateEnergyLabel()
+        private bool TryFindDropTargetTile(PointerEventData eventData, out ItemTile targetTile)
         {
-            if (energyLabel != null)
-            {
-                energyLabel.text = $"Energy {currentEnergy}";
-            }
-        }
+            targetTile = null;
 
-        private void SetStatus(string message)
-        {
-            if (statusLabel != null)
+            GameObject targetObject = eventData.pointerCurrentRaycast.gameObject;
+            BoardItemDragHandler handler = targetObject != null ? targetObject.GetComponentInParent<BoardItemDragHandler>() : null;
+
+            if (handler != null && handler.Tile != selectedTile)
             {
-                statusLabel.text = message;
+                targetTile = handler.Tile;
+                return true;
             }
+
+            if (TryScreenToGrid(eventData.position, out Vector2Int grid) && grid != selectedTile.grid)
+            {
+                return boardItems.TryGetValue(grid, out targetTile);
+            }
+
+            return false;
         }
 
         private bool CanMerge(ItemTile source, ItemTile target)
@@ -372,25 +426,23 @@ namespace MergePlatform.Client
                 && GetNextLevel(target) != null;
         }
 
-        private bool TryFindDropTargetTile(Vector3 screenPosition, out ItemTile targetTile)
+        private void TryMergeWith(ItemTile source, ItemTile target)
         {
-            targetTile = null;
+            ItemLevel nextLevel = GetNextLevel(target);
 
-            if (TryRaycastTile(screenPosition, out ItemTile raycastTile) && raycastTile != selectedTile)
+            if (nextLevel == null)
             {
-                targetTile = raycastTile;
-                return true;
+                ReturnTileHome(source);
+                return;
             }
 
-            Vector2Int targetGrid = WorldToGrid(ScreenToBoardPoint(screenPosition));
-
-            if (targetGrid != selectedTile.grid && boardItems.TryGetValue(targetGrid, out ItemTile gridTile))
-            {
-                targetTile = gridTile;
-                return true;
-            }
-
-            return false;
+            Vector2Int targetGrid = target.grid;
+            boardItems.Remove(source.grid);
+            boardItems.Remove(target.grid);
+            Destroy(source.root.gameObject);
+            Destroy(target.root.gameObject);
+            CreateMergedTile(nextLevel, targetGrid);
+            SetStatus($"Merged into {nextLevel.name}");
         }
 
         private void CreateMergedTile(ItemLevel nextLevel, Vector2Int grid)
@@ -418,19 +470,29 @@ namespace MergePlatform.Client
 
         private ItemTile CreateItemTile(string itemId, ItemLevel level, Vector2Int grid)
         {
-            GameObject root = new GameObject($"Item_{itemId}_{grid.x}_{grid.y}");
-            root.transform.SetParent(transform);
-            root.transform.position = GridToWorld(grid, 0.28f);
-
-            Color color = Color.Lerp(new Color(0.28f, 0.86f, 0.73f), new Color(0.94f, 0.45f, 0.72f), Mathf.Clamp01(level.level / 3f));
-            GameObject cube = CreateCube($"{itemId}_Body", root.transform, Vector3.zero, new Vector3(0.78f, 0.38f, 0.78f), color, true);
-            TextMesh label = DrawLabel(level.name, root.transform, new Vector3(0f, 0.34f, 0f), 0.14f, Color.black);
-
+            RectTransform root = CreateItemCard(itemId, level, grid);
             string chainId = chainByItemId.TryGetValue(itemId, out ItemChain chain) ? chain.id : itemId;
-            ItemTile tile = new ItemTile(root, cube.GetComponent<Collider>(), label, itemId, chainId, level.level, grid);
+            ItemTile tile = new ItemTile(root, root.GetComponent<CanvasGroup>(), itemId, chainId, level.level, grid);
+            BoardItemDragHandler dragHandler = root.gameObject.AddComponent<BoardItemDragHandler>();
+            dragHandler.Initialize(this, tile);
             boardItems[grid] = tile;
-            tileByCollider[tile.collider] = tile;
             return tile;
+        }
+
+        private RectTransform CreateItemCard(string itemId, ItemLevel level, Vector2Int grid)
+        {
+            RectTransform card = CreatePanel($"Item {itemId}", itemLayer, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), ItemCardColor(itemId, level.level));
+            card.gameObject.AddComponent<CanvasGroup>();
+            CreateItemIcon(card, IconCode(itemId), ItemAccent(itemId), Color.black);
+            CreateText("Level", card, $"L{level.level}", 10, new Color(0.85f, 0.94f, 1f), TextAnchor.UpperRight, new Vector2(23f, 21f), new Vector2(34f, 14f));
+            CreateText("Name", card, ShortName(level.name), 8, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -24f), new Vector2(TileSize - 8f, 17f));
+            return card;
+        }
+
+        private void CreateItemIcon(RectTransform parent, string code, Color accent, Color textColor)
+        {
+            RectTransform icon = CreatePanel("Icon Block", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 6f), new Vector2(46f, 34f), accent);
+            CreateText("Icon Code", icon, code, 12, textColor, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(42f, 24f));
         }
 
         private void MoveTile(ItemTile tile, Vector2Int targetGrid)
@@ -443,68 +505,42 @@ namespace MergePlatform.Client
 
         private void ReturnTileHome(ItemTile tile)
         {
-            tile.collider.enabled = true;
-            tile.root.transform.position = GridToWorld(tile.grid, 0.28f);
+            tile.root.SetParent(itemLayer, false);
+            tile.root.anchoredPosition = GridToAnchoredPosition(tile.grid);
+            tile.canvasGroup.blocksRaycasts = true;
         }
 
-        private bool TryRaycastTile(Vector3 screenPosition, out ItemTile tile)
+        private void UpdateEnergyLabel()
         {
-            tile = null;
-            Camera camera = Camera.main;
+            if (energyLabel != null)
+            {
+                energyLabel.text = $"ENERGY {currentEnergy}";
+            }
+        }
 
-            if (camera == null)
+        private void SetStatus(string message)
+        {
+            if (statusLabel != null)
+            {
+                statusLabel.text = message;
+            }
+        }
+
+        private bool TryScreenToGrid(Vector2 screenPosition, out Vector2Int grid)
+        {
+            grid = default;
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(boardPanel, screenPosition, null, out Vector2 localPoint))
             {
                 return false;
             }
 
-            Ray ray = camera.ScreenPointToRay(screenPosition);
-            return Physics.Raycast(ray, out RaycastHit hit, 100f) && tileByCollider.TryGetValue(hit.collider, out tile);
-        }
-
-        private bool TryRaycastProducer(Vector3 screenPosition, out ProducerTile producer)
-        {
-            producer = null;
-            Camera camera = Camera.main;
-
-            if (camera == null)
-            {
-                return false;
-            }
-
-            Ray ray = camera.ScreenPointToRay(screenPosition);
-
-            if (!Physics.Raycast(ray, out RaycastHit hit, 100f))
-            {
-                return false;
-            }
-
-            return producerTileByCollider.TryGetValue(hit.collider, out producer);
-        }
-
-        private Vector3 ScreenToBoardPoint(Vector3 screenPosition)
-        {
-            Camera camera = Camera.main;
-
-            if (camera == null)
-            {
-                return Vector3.zero;
-            }
-
-            Plane plane = new Plane(Vector3.up, new Vector3(0f, 0.28f, 0f));
-            Ray ray = camera.ScreenPointToRay(screenPosition);
-            return plane.Raycast(ray, out float distance) ? ray.GetPoint(distance) : Vector3.zero;
-        }
-
-        private Vector2Int WorldToGrid(Vector3 world)
-        {
-            int x = Mathf.RoundToInt((world.x - originX) / tileSpacing);
-            int y = Mathf.RoundToInt((world.z - originZ) / tileSpacing);
-            return new Vector2Int(x, y);
-        }
-
-        private Vector3 GridToWorld(Vector2Int grid, float y)
-        {
-            return new Vector3(originX + grid.x * tileSpacing, y, originZ + grid.y * tileSpacing);
+            float left = -boardPixelSize / 2f + BoardPadding;
+            float top = boardPixelSize / 2f - BoardPadding;
+            int x = Mathf.FloorToInt((localPoint.x - left) / (TileSize + TileGap));
+            int y = Mathf.FloorToInt((top - localPoint.y) / (TileSize + TileGap));
+            grid = new Vector2Int(x, y);
+            return IsInsideBoard(grid);
         }
 
         private bool IsInsideBoard(Vector2Int grid)
@@ -512,87 +548,166 @@ namespace MergePlatform.Client
             return grid.x >= 0 && grid.y >= 0 && grid.x < boardWidth && grid.y < boardHeight;
         }
 
-        private static GameObject CreateCube(string name, Transform parent, Vector3 localPosition, Vector3 scale, Color color, bool withCollider)
+        private Vector2 GridToAnchoredPosition(Vector2Int grid)
         {
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.name = name;
-            cube.transform.SetParent(parent);
-            cube.transform.localPosition = localPosition;
-            cube.transform.localScale = scale;
-            Renderer renderer = cube.GetComponent<Renderer>();
-            renderer.material = new Material(Shader.Find("Standard"));
-            renderer.material.color = color;
+            float left = -boardPixelSize / 2f + BoardPadding + TileSize / 2f;
+            float top = boardPixelSize / 2f - BoardPadding - TileSize / 2f;
+            return new Vector2(left + grid.x * (TileSize + TileGap), top - grid.y * (TileSize + TileGap));
+        }
 
-            Collider collider = cube.GetComponent<Collider>();
-
-            if (!withCollider && collider != null)
+        private string FormatRequirements(OrderDefinition order)
+        {
+            if (order.requires == null || order.requires.Length == 0)
             {
-                collider.enabled = false;
+                return "No requirements";
             }
 
-            return cube;
-        }
+            List<string> parts = new List<string>();
 
-        private TextMesh DrawLabel(string text, Vector3 position, float size, Color color)
-        {
-            GameObject labelObject = new GameObject($"Label_{text}");
-            labelObject.transform.SetParent(transform);
-            labelObject.transform.position = position;
-            labelObject.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            return ConfigureLabel(labelObject, text, size, color);
-        }
-
-        private TextMesh DrawLabel(string text, Transform parent, Vector3 localPosition, float size, Color color)
-        {
-            GameObject labelObject = new GameObject($"Label_{text}");
-            labelObject.transform.SetParent(parent);
-            labelObject.transform.localPosition = localPosition;
-            labelObject.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            return ConfigureLabel(labelObject, text, size, color);
-        }
-
-        private static TextMesh ConfigureLabel(GameObject labelObject, string text, float size, Color color)
-        {
-            TextMesh label = labelObject.AddComponent<TextMesh>();
-            label.text = text;
-            label.anchor = TextAnchor.MiddleCenter;
-            label.alignment = TextAlignment.Center;
-            label.characterSize = size;
-            label.color = color;
-            return label;
-        }
-
-        private static void EnsureCamera()
-        {
-            Camera camera = Camera.main;
-
-            if (camera == null)
+            foreach (RequiredItem requirement in order.requires)
             {
-                GameObject cameraObject = new GameObject("Main Camera");
-                cameraObject.tag = "MainCamera";
-                camera = cameraObject.AddComponent<Camera>();
+                string name = itemLookup.TryGetValue(requirement.itemId, out ItemLevel level) ? ShortName(level.name) : requirement.itemId;
+                parts.Add($"{requirement.count}x {name}");
             }
 
-            camera.transform.position = new Vector3(2.2f, 9.8f, -1.6f);
-            camera.transform.rotation = Quaternion.Euler(72f, 0f, 0f);
-            camera.orthographic = true;
-            camera.orthographicSize = 6.2f;
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.025f, 0.03f, 0.045f);
+            return string.Join("  ", parts);
         }
 
-        private static void EnsureLighting()
+        private string ShortName(string value)
         {
-            if (FindAnyObjectByType<Light>() != null)
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "";
+            }
+
+            return value.Length <= 13 ? value : $"{value.Substring(0, 12)}.";
+        }
+
+        private string IconCode(string itemId)
+        {
+            if (itemId.StartsWith("chip"))
+            {
+                return "CHIP";
+            }
+
+            if (itemId.StartsWith("wire"))
+            {
+                return "WIRE";
+            }
+
+            if (itemId.StartsWith("drone"))
+            {
+                return "DRN";
+            }
+
+            if (itemId.StartsWith("cache"))
+            {
+                return "BOX";
+            }
+
+            return "ITEM";
+        }
+
+        private Color ItemAccent(string itemId)
+        {
+            if (itemId.StartsWith("chip"))
+            {
+                return new Color(0.54f, 0.94f, 1f);
+            }
+
+            if (itemId.StartsWith("wire"))
+            {
+                return new Color(0.78f, 0.56f, 1f);
+            }
+
+            if (itemId.StartsWith("drone"))
+            {
+                return new Color(1f, 0.48f, 0.78f);
+            }
+
+            if (itemId.StartsWith("cache"))
+            {
+                return new Color(0.7f, 1f, 0.75f);
+            }
+
+            return new Color(0.85f, 0.9f, 1f);
+        }
+
+        private Color ItemCardColor(string itemId, int level)
+        {
+            Color baseColor = Color.Lerp(new Color(0.13f, 0.16f, 0.22f), ItemAccent(itemId), Mathf.Clamp01(level / 6f));
+            baseColor.a = 1f;
+            return baseColor;
+        }
+
+        private RectTransform CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 position, Vector2 size, Color color)
+        {
+            Image image = CreateImage(name, parent, color);
+            SetRect(image.rectTransform, anchorMin, anchorMax, pivot, position, size);
+            return image.rectTransform;
+        }
+
+        private Image CreateImage(string name, Transform parent, Color color)
+        {
+            GameObject imageObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+            imageObject.transform.SetParent(parent, false);
+            Image image = imageObject.GetComponent<Image>();
+            image.color = color;
+            return image;
+        }
+
+        private RectTransform CreateEmptyRect(string name, Transform parent)
+        {
+            GameObject rectObject = new GameObject(name, typeof(RectTransform));
+            rectObject.transform.SetParent(parent, false);
+            return rectObject.GetComponent<RectTransform>();
+        }
+
+        private Text CreateText(string name, Transform parent, string value, int size, Color color, TextAnchor alignment, Vector2 position, Vector2 dimensions)
+        {
+            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            Text text = textObject.GetComponent<Text>();
+            text.font = UiFont;
+            text.text = value;
+            text.fontSize = size;
+            text.color = color;
+            text.alignment = alignment;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 7;
+            text.resizeTextMaxSize = size;
+            SetRect(text.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, dimensions);
+            return text;
+        }
+
+        private static void SetRect(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 position, Vector2 size)
+        {
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
+        private static void Stretch(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        private static void EnsureEventSystem()
+        {
+            if (FindAnyObjectByType<EventSystem>() != null)
             {
                 return;
             }
 
-            GameObject lightObject = new GameObject("Key Light");
-            Light light = lightObject.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 1.1f;
-            light.transform.rotation = Quaternion.Euler(50f, -30f, 20f);
+            GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            DontDestroyOnLoad(eventSystem);
         }
 
         private readonly struct SeededTile
@@ -609,40 +724,53 @@ namespace MergePlatform.Client
             }
         }
 
-        private sealed class ItemTile
+        public sealed class ItemTile
         {
-            public readonly GameObject root;
-            public readonly Collider collider;
-            public readonly TextMesh label;
+            public readonly RectTransform root;
+            public readonly CanvasGroup canvasGroup;
             public readonly string itemId;
             public readonly string chainId;
             public readonly int level;
             public Vector2Int grid;
 
-            public ItemTile(GameObject root, Collider collider, TextMesh label, string itemId, string chainId, int level, Vector2Int grid)
+            public ItemTile(RectTransform root, CanvasGroup canvasGroup, string itemId, string chainId, int level, Vector2Int grid)
             {
                 this.root = root;
-                this.collider = collider;
-                this.label = label;
+                this.canvasGroup = canvasGroup;
                 this.itemId = itemId;
                 this.chainId = chainId;
                 this.level = level;
                 this.grid = grid;
             }
         }
+    }
 
-        private sealed class ProducerTile
+    public sealed class BoardItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    {
+        private MergeClientController controller;
+        private MergeClientController.ItemTile tile;
+
+        public MergeClientController.ItemTile Tile => tile;
+
+        public void Initialize(MergeClientController mergeController, MergeClientController.ItemTile itemTile)
         {
-            public readonly ProducerDefinition definition;
-            public readonly Collider collider;
-            public readonly Vector2Int grid;
+            controller = mergeController;
+            tile = itemTile;
+        }
 
-            public ProducerTile(ProducerDefinition definition, Collider collider, Vector2Int grid)
-            {
-                this.definition = definition;
-                this.collider = collider;
-                this.grid = grid;
-            }
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            controller.BeginTileDrag(tile, eventData);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            controller.DragTile(eventData);
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            controller.EndTileDrag(eventData);
         }
     }
 }
