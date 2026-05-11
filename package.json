@@ -13,6 +13,7 @@
     "validate:themes": "node scripts/validate-all-themes.mjs",
     "smoke:apps": "node scripts/smoke-app.mjs",
     "verify:playable": "node scripts/verify-playable-apps.mjs",
+    "unity:export-theme": "node scripts/export-unity-theme.mjs --theme-id cyber-syndicate --output E:\\Projects\\Merge\\Unity\\MergeClient\\Assets\\MergePlatform\\Resources\\Themes\\cyber-syndicate.json --force",
     "verify": "npm test && npm run validate:themes && npm run smoke:apps && npm run verify:playable"
   },
   "engines": {
