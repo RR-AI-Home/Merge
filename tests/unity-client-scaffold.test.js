@@ -15,7 +15,7 @@ test('Unity MergeClient controller contains the production UI board loop', async
   assert.match(controller, /CreateHud/);
   assert.match(controller, /CreateBoard/);
   assert.match(controller, /CreateItemCard/);
-  assert.match(controller, /CreateItemIcon/);
+  assert.match(controller, /CreateProceduralItemIcon/);
   assert.match(controller, /BoardItemDragHandler/);
   assert.match(controller, /TryFindDropTargetTile/);
   assert.match(controller, /TryMergeWith/);
@@ -119,4 +119,23 @@ test('Unity MergeClient lower rail avoids header and status overlap', async () =
   assert.doesNotMatch(controller, /CreateText\("Orders Header"/);
   assert.doesNotMatch(controller, /CreateText\("Board Status"/);
   assert.match(controller, /new Vector2\(0f, -20f - index \* 68f\)/);
+});
+
+test('Unity MergeClient includes production polish systems for the gameplay screen', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /CreateProceduralItemIcon/);
+  assert.match(controller, /CreateChipMark/);
+  assert.match(controller, /CreateDroneMark/);
+  assert.match(controller, /CreateBoardSlot/);
+  assert.match(controller, /boardSlotHighlights/);
+  assert.match(controller, /UpdateSlotHighlight/);
+  assert.match(controller, /CreateOrderProgressBar/);
+  assert.match(controller, /CreateRewardRow/);
+  assert.match(controller, /CreateBottomNav/);
+  assert.match(controller, /PlayMergeFeedback/);
+  assert.match(controller, /PlayMergeSound/);
 });
