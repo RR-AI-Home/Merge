@@ -15,7 +15,7 @@ The goal is to build one reusable merge engine, then produce separate unlinked t
 
 ```bash
 npm test
-npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --theme-id space-colony --app-id com.mergeplatform.spacecolony
+npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --theme-id space-colony --app-id com.mergeplatform.spacecolony --template sci-fi
 npm run validate:themes
 npm run smoke:apps
 npm run verify:playable
@@ -27,10 +27,19 @@ npm run verify
 Use the generator to scaffold a new app/theme pair from the shared factory pattern:
 
 ```bash
-npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --theme-id space-colony --app-id com.mergeplatform.spacecolony
+npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --theme-id space-colony --app-id com.mergeplatform.spacecolony --template sci-fi
 ```
 
-The generated app has its own app identity, save namespace, analytics stream, theme data, and browser entrypoint. It uses the shared merge app session and browser shell, with no runtime theme switcher. After generation, run `npm run verify`; theme validation and app identity smoke checks will discover the new app automatically.
+The generated app has its own app identity, save namespace, analytics stream, theme data, and browser entrypoint. It uses the shared merge app session and browser shell, with no runtime theme switcher. After generation, run `npm run verify`; theme validation, app identity smoke checks, and playable app checks will discover the new app automatically.
+
+Supported starter templates:
+
+- `cozy`
+- `crime`
+- `fantasy`
+- `sci-fi`
+
+Each template generates themed starter chains, producer naming, first order, event title, copy, icons, and color tokens while keeping the output contract-valid and playable.
 
 For dry runs or tooling, add `--root-dir <path>` to write the scaffold into another directory.
 
