@@ -9,7 +9,11 @@
       { "itemId": "chip_1", "weight": 45 },
       { "itemId": "wire_1", "weight": 35 },
       { "itemId": "drone_1", "weight": 12 },
-      { "itemId": "cache_1", "weight": 8 }
+      { "itemId": "cache_1", "weight": 8 },
+      { "itemId": "chip_2", "weight": 4 },
+      { "itemId": "wire_2", "weight": 3 },
+      { "itemId": "drone_2", "weight": 1 },
+      { "itemId": "cache_2", "weight": 1 }
     ]
   }
 ]

@@ -155,7 +155,7 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
   assert.match(controller, /CollectRequiredTiles/);
   assert.match(controller, /currentCoins \+= order\.rewards != null \? order\.rewards\.coins : 0;/);
   assert.match(controller, /coinsLabel\.text = \$"COINS \{currentCoins\}"/);
-  assert.match(controller, /SetStatus\(\$"Completed \{order\.title\}"/);
+  assert.match(controller, /SetStatus\(BuildCompletionStatus\(order\)\)/);
   assert.doesNotMatch(controller, /CreatePanel\("Coin Reward Icon"/);
   assert.doesNotMatch(controller, /CreateText\("XP Reward Text"/);
 });
@@ -193,4 +193,41 @@ test('Unity MergeClient portrait layout keeps top and bottom safe spacing', asyn
   assert.match(controller, /CreatePanel\("Bottom Nav"[\s\S]*new Vector2\(0f, 44f\)[\s\S]*new Vector2\(MobileContentWidth, 56f\)/);
   assert.match(controller, /CreateNavButton\(nav, "BOARD", new Vector2\(-144f, 30f\)/);
   assert.doesNotMatch(controller, /CreatePanel\("Bottom Nav"[\s\S]*new Vector2\(0f, 18f\)/);
+});
+
+test('Unity MergeClient supports order queue, progression, producer depth, and local saves', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /private const int VisibleOrderLimit = 2;/);
+  assert.match(controller, /CreateOrderQueueEmpty/);
+  assert.match(controller, /if \(completedOrderIds\.Contains\(order\.id\)\)[\s\S]*continue;/);
+  assert.match(controller, /UpdateDistrictProgress/);
+  assert.match(controller, /GetCurrentDistrict/);
+  assert.match(controller, /BuildCompletionStatus/);
+  assert.match(controller, /producerTapsRemaining/);
+  assert.match(controller, /producerCooldownReadyAt/);
+  assert.match(controller, /RefreshProducerCooldown/);
+  assert.match(controller, /StartProducerCooldown/);
+  assert.match(controller, /SelectWeightedDrop/);
+  assert.match(controller, /SaveGame/);
+  assert.match(controller, /TryLoadGame/);
+  assert.match(controller, /PlayerPrefs\.SetString/);
+  assert.match(controller, /PlayerPrefs\.GetString/);
+  assert.match(controller, /MergeClientSaveData/);
+  assert.match(controller, /SavedBoardItem/);
+});
+
+test('Cyber Syndicate Unity source theme has enough order and producer depth for progression', async () => {
+  const orders = JSON.parse(await readFile(path.join('themes', 'cyber-syndicate', 'orders.json'), 'utf8'));
+  const producers = JSON.parse(await readFile(path.join('themes', 'cyber-syndicate', 'producers.json'), 'utf8'));
+
+  assert.ok(orders.length >= 5);
+  assert.ok(orders.some((order) => order.id === 'district_takeover_1'));
+  assert.ok(producers[0].drops.some((drop) => drop.itemId === 'chip_2'));
+  assert.ok(producers[0].drops.some((drop) => drop.itemId === 'wire_2'));
+  assert.ok(producers[0].drops.some((drop) => drop.itemId === 'drone_2'));
+  assert.ok(producers[0].drops.some((drop) => drop.itemId === 'cache_2'));
 });

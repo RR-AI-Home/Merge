@@ -107,7 +107,7 @@ function hasMergeCandidate(save) {
 
 function getChapterTarget(theme) {
   const districtTarget = Math.max(...theme.worldMap.nodes.map((node) => node.unlocksAfterOrders));
-  return Math.max(districtTarget, theme.orders.length);
+  return Math.max(1, districtTarget);
 }
 
 export function createMergeGameSession({

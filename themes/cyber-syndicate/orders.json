@@ -15,5 +15,42 @@
       { "itemId": "drone_2", "count": 1 }
     ],
     "rewards": { "coins": 55, "xp": 12 }
+  },
+  {
+    "id": "cache_decrypt_1",
+    "title": "Decrypt a Street Cache",
+    "requires": [
+      { "itemId": "cache_2", "count": 1 },
+      { "itemId": "chip_2", "count": 1 }
+    ],
+    "rewards": { "coins": 65, "xp": 14 }
+  },
+  {
+    "id": "relay_grid_1",
+    "title": "Wire a Relay Grid",
+    "requires": [
+      { "itemId": "wire_3", "count": 1 },
+      { "itemId": "chip_3", "count": 1 }
+    ],
+    "rewards": { "coins": 90, "xp": 20 }
+  },
+  {
+    "id": "interceptor_cell_1",
+    "title": "Deploy an Interceptor Cell",
+    "requires": [
+      { "itemId": "drone_3", "count": 1 },
+      { "itemId": "cache_2", "count": 1 }
+    ],
+    "rewards": { "coins": 120, "xp": 28 }
+  },
+  {
+    "id": "district_takeover_1",
+    "title": "Take the Data Docks",
+    "requires": [
+      { "itemId": "chip_3", "count": 1 },
+      { "itemId": "wire_3", "count": 1 },
+      { "itemId": "drone_3", "count": 1 }
+    ],
+    "rewards": { "coins": 180, "xp": 40 }
   }
 ]

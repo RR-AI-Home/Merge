@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,6 +17,8 @@ namespace MergePlatform.Client
         private const float TileSize = 58f;
         private const float TileGap = 4f;
         private const float BoardPadding = 8f;
+        private const int VisibleOrderLimit = 2;
+        private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
 
         private readonly Dictionary<string, ItemLevel> itemLookup = new Dictionary<string, ItemLevel>();
         private readonly Dictionary<string, ItemChain> chainByItemId = new Dictionary<string, ItemChain>();
@@ -34,6 +37,7 @@ namespace MergePlatform.Client
         private Text energyLabel;
         private Text coinsLabel;
         private Text premiumLabel;
+        private Text districtLabel;
         private Text statusLabel;
         private Font uiFont;
         private AudioSource feedbackAudio;
@@ -44,7 +48,10 @@ namespace MergePlatform.Client
         private int currentEnergy;
         private int currentCoins;
         private int currentPremium;
+        private int currentXp;
         private int dropCursor;
+        private int producerTapsRemaining;
+        private long producerCooldownReadyAt;
         private int boardWidth;
         private int boardHeight;
         private float boardPixelSize;
@@ -122,6 +129,10 @@ namespace MergePlatform.Client
             currentEnergy = theme.config.startingState != null ? theme.config.startingState.energy : 0;
             currentCoins = theme.config.startingState != null ? theme.config.startingState.coins : 0;
             currentPremium = theme.config.startingState != null ? theme.config.startingState.premium : 0;
+            currentXp = 0;
+            dropCursor = 0;
+            producerTapsRemaining = GetDefaultProducerTapLimit();
+            producerCooldownReadyAt = 0;
             producerGrid = new Vector2Int(0, 0);
             completedOrderIds.Clear();
 
@@ -130,11 +141,17 @@ namespace MergePlatform.Client
             CreateCanvas();
             CreateHud();
             CreateBoard();
+            CreateProducerTile();
+            if (!TryLoadGame())
+            {
+                SeedMergeableItems();
+            }
+
             CreateOrdersPanel();
             CreateBottomNav();
-            CreateProducerTile();
-            SeedMergeableItems();
             UpdateEnergyLabel();
+            UpdateCurrencyLabels();
+            UpdateDistrictProgress();
             SetStatus("Tap crate to generate items");
         }
 
@@ -149,6 +166,7 @@ namespace MergePlatform.Client
             boardSlots.Clear();
             boardSlotHighlights.Clear();
             highlightedGrid = null;
+            districtLabel = null;
         }
 
         private void CreateCanvas()
@@ -187,6 +205,7 @@ namespace MergePlatform.Client
             coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, -82f), new Color(0.55f, 0.92f, 0.72f));
             premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(126f, -82f), new Color(0.94f, 0.45f, 0.78f));
             statusLabel = CreateText("HUD Status", hud, "Ready", 10, new Color(0.68f, 0.86f, 0.92f), TextAnchor.MiddleLeft, new Vector2(0f, -45f), new Vector2(340f, 16f));
+            districtLabel = CreateText("District Progress", hud, "District 0/2", 8, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(0f, -61f), new Vector2(340f, 12f));
 
             coinsLabel.text = $"COINS {currentCoins}";
             premiumLabel.text = $"GEMS {currentPremium}";
@@ -259,10 +278,38 @@ namespace MergePlatform.Client
                 return;
             }
 
+            int visibleIndex = 0;
             for (int index = 0; index < theme.orders.Length; index += 1)
             {
-                CreateOrderCard(ordersPanel, theme.orders[index], index);
+                OrderDefinition order = theme.orders[index];
+                if (completedOrderIds.Contains(order.id))
+                {
+                    continue;
+                }
+
+                CreateOrderCard(ordersPanel, order, visibleIndex);
+                visibleIndex += 1;
+
+                if (visibleIndex >= VisibleOrderLimit)
+                {
+                    break;
+                }
             }
+
+            if (visibleIndex == 0)
+            {
+                CreateOrderQueueEmpty(ordersPanel);
+            }
+
+            UpdateDistrictProgress();
+        }
+
+        private void CreateOrderQueueEmpty(RectTransform parent)
+        {
+            RectTransform card = CreatePanel("Order Queue Empty", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -54f), new Vector2(356f, 92f), new Color(0.08f, 0.16f, 0.18f, 1f));
+            CreatePanel("Order Empty Stripe", card, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(5f, 76f), new Color(0.72f, 1f, 0.74f, 1f));
+            CreateText("Order Empty Title", card, "District contracts cleared", 13, Color.white, TextAnchor.MiddleLeft, new Vector2(-28f, 14f), new Vector2(282f, 18f));
+            CreateText("Order Empty Detail", card, "More orders will arrive from the theme content queue.", 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-28f, -8f), new Vector2(282f, 28f));
         }
 
         private void CreateBottomNav()
@@ -518,6 +565,22 @@ namespace MergePlatform.Client
 
         private bool TryTapProducer(ProducerDefinition producer)
         {
+            RefreshProducerCooldown(producer);
+
+            if (producerCooldownReadyAt > NowUnixSeconds())
+            {
+                SetStatus($"Crate recharging {producerCooldownReadyAt - NowUnixSeconds()}s");
+                return false;
+            }
+
+            if (producerTapsRemaining <= 0)
+            {
+                StartProducerCooldown(producer);
+                SaveGame();
+                SetStatus("Crate cooling down");
+                return false;
+            }
+
             if (producer.energyCost > currentEnergy)
             {
                 SetStatus("Not enough energy");
@@ -536,8 +599,7 @@ namespace MergePlatform.Client
                 return false;
             }
 
-            DropDefinition drop = producer.drops[dropCursor % producer.drops.Length];
-            dropCursor += 1;
+            DropDefinition drop = SelectWeightedDrop(producer);
 
             if (!itemLookup.TryGetValue(drop.itemId, out ItemLevel level))
             {
@@ -546,11 +608,71 @@ namespace MergePlatform.Client
             }
 
             currentEnergy -= producer.energyCost;
+            producerTapsRemaining -= 1;
             CreateItemTile(drop.itemId, level, grid);
             UpdateEnergyLabel();
-            SetStatus($"Generated {level.name}");
+
+            if (producerTapsRemaining <= 0)
+            {
+                StartProducerCooldown(producer);
+                SetStatus($"Generated {level.name}. Crate cooling down");
+            }
+            else
+            {
+                SetStatus($"Generated {level.name} / {producerTapsRemaining} taps left");
+            }
+
             RefreshOrdersPanel();
+            SaveGame();
             return true;
+        }
+
+        private void RefreshProducerCooldown(ProducerDefinition producer)
+        {
+            if (producerCooldownReadyAt <= 0 || NowUnixSeconds() < producerCooldownReadyAt)
+            {
+                return;
+            }
+
+            producerCooldownReadyAt = 0;
+            producerTapsRemaining = Mathf.Max(1, producer.tapLimit);
+        }
+
+        private void StartProducerCooldown(ProducerDefinition producer)
+        {
+            int cooldown = Mathf.Max(1, producer.cooldownSeconds);
+            producerCooldownReadyAt = NowUnixSeconds() + cooldown;
+            producerTapsRemaining = 0;
+        }
+
+        private DropDefinition SelectWeightedDrop(ProducerDefinition producer)
+        {
+            int totalWeight = 0;
+            foreach (DropDefinition drop in producer.drops)
+            {
+                totalWeight += Mathf.Max(0, drop.weight);
+            }
+
+            if (totalWeight <= 0)
+            {
+                dropCursor += 1;
+                return producer.drops[dropCursor % producer.drops.Length];
+            }
+
+            int bucket = Mathf.Abs(dropCursor * 37) % totalWeight;
+            dropCursor += 1;
+            int runningWeight = 0;
+
+            foreach (DropDefinition drop in producer.drops)
+            {
+                runningWeight += Mathf.Max(0, drop.weight);
+                if (bucket < runningWeight)
+                {
+                    return drop;
+                }
+            }
+
+            return producer.drops[producer.drops.Length - 1];
         }
 
         private bool CanCompleteOrder(OrderDefinition order)
@@ -587,11 +709,14 @@ namespace MergePlatform.Client
             }
 
             currentCoins += order.rewards != null ? order.rewards.coins : 0;
+            currentXp += order.rewards != null ? order.rewards.xp : 0;
             completedOrderIds.Add(order.id);
             UpdateCurrencyLabels();
+            UpdateDistrictProgress();
             RefreshOrdersPanel();
-            SetStatus($"Completed {order.title}");
+            SetStatus(BuildCompletionStatus(order));
             PlayMergeSound();
+            SaveGame();
             return true;
         }
 
@@ -631,6 +756,99 @@ namespace MergePlatform.Client
             }
 
             return true;
+        }
+
+        private string BuildCompletionStatus(OrderDefinition order)
+        {
+            WorldNode unlockedDistrict = GetDistrictUnlockedAt(completedOrderIds.Count);
+            if (unlockedDistrict != null && unlockedDistrict.unlocksAfterOrders > 0)
+            {
+                return $"Unlocked {unlockedDistrict.title}";
+            }
+
+            return $"Completed {order.title}";
+        }
+
+        private void UpdateDistrictProgress()
+        {
+            if (districtLabel == null)
+            {
+                return;
+            }
+
+            WorldNode currentDistrict = GetCurrentDistrict();
+            WorldNode nextDistrict = GetNextDistrict();
+
+            if (currentDistrict == null)
+            {
+                districtLabel.text = $"{completedOrderIds.Count} contracts complete";
+                return;
+            }
+
+            if (nextDistrict == null)
+            {
+                districtLabel.text = $"{currentDistrict.title} unlocked / {completedOrderIds.Count} contracts";
+                return;
+            }
+
+            int target = Mathf.Max(1, nextDistrict.unlocksAfterOrders);
+            int progress = Mathf.Clamp(completedOrderIds.Count, 0, target);
+            districtLabel.text = $"{currentDistrict.title} {progress}/{target} -> {nextDistrict.title}";
+        }
+
+        private WorldNode GetCurrentDistrict()
+        {
+            if (theme?.worldMap?.nodes == null || theme.worldMap.nodes.Length == 0)
+            {
+                return null;
+            }
+
+            WorldNode current = theme.worldMap.nodes[0];
+            foreach (WorldNode node in theme.worldMap.nodes)
+            {
+                if (completedOrderIds.Count >= node.unlocksAfterOrders)
+                {
+                    current = node;
+                }
+            }
+
+            return current;
+        }
+
+        private WorldNode GetNextDistrict()
+        {
+            if (theme?.worldMap?.nodes == null)
+            {
+                return null;
+            }
+
+            foreach (WorldNode node in theme.worldMap.nodes)
+            {
+                if (completedOrderIds.Count < node.unlocksAfterOrders)
+                {
+                    return node;
+                }
+            }
+
+            return null;
+        }
+
+        private WorldNode GetDistrictUnlockedAt(int completedOrders)
+        {
+            if (theme?.worldMap?.nodes == null)
+            {
+                return null;
+            }
+
+            foreach (WorldNode node in theme.worldMap.nodes)
+            {
+                if (node.unlocksAfterOrders == completedOrders)
+                {
+                    return node;
+                }
+            }
+
+            return null;
         }
 
         private bool FindFirstEmptySlot(out Vector2Int grid)
@@ -707,6 +925,7 @@ namespace MergePlatform.Client
             PlayMergeFeedback(targetGrid, ItemAccent(nextLevel.id));
             SetStatus($"Merged into {nextLevel.name}");
             RefreshOrdersPanel();
+            SaveGame();
         }
 
         private void CreateMergedTile(ItemLevel nextLevel, Vector2Int grid)
@@ -968,6 +1187,7 @@ namespace MergePlatform.Client
             tile.grid = targetGrid;
             boardItems[targetGrid] = tile;
             ReturnTileHome(tile);
+            SaveGame();
         }
 
         private void ReturnTileHome(ItemTile tile)
@@ -996,6 +1216,144 @@ namespace MergePlatform.Client
             {
                 premiumLabel.text = $"GEMS {currentPremium}";
             }
+        }
+
+        private int GetDefaultProducerTapLimit()
+        {
+            if (theme?.producers == null || theme.producers.Length == 0)
+            {
+                return 1;
+            }
+
+            return Mathf.Max(1, theme.producers[0].tapLimit);
+        }
+
+        private long NowUnixSeconds()
+        {
+            return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        }
+
+        private string SaveKey()
+        {
+            string themeId = theme?.config != null ? theme.config.id : themeResourcePath;
+            return $"{SaveKeyPrefix}{themeId}";
+        }
+
+        private void SaveGame()
+        {
+            if (theme?.config == null)
+            {
+                return;
+            }
+
+            MergeClientSaveData saveData = new MergeClientSaveData
+            {
+                energy = currentEnergy,
+                coins = currentCoins,
+                premium = currentPremium,
+                xp = currentXp,
+                dropCursor = dropCursor,
+                producerTapsRemaining = producerTapsRemaining,
+                producerCooldownReadyAt = producerCooldownReadyAt,
+                completedOrderIds = ToCompletedOrderArray(),
+                boardItems = ToSavedBoardItems()
+            };
+
+            PlayerPrefs.SetString(SaveKey(), JsonUtility.ToJson(saveData));
+            PlayerPrefs.Save();
+        }
+
+        private bool TryLoadGame()
+        {
+            if (!PlayerPrefs.HasKey(SaveKey()))
+            {
+                return false;
+            }
+
+            string payload = PlayerPrefs.GetString(SaveKey());
+            if (string.IsNullOrWhiteSpace(payload))
+            {
+                return false;
+            }
+
+            MergeClientSaveData saveData = JsonUtility.FromJson<MergeClientSaveData>(payload);
+            if (saveData == null)
+            {
+                return false;
+            }
+
+            currentEnergy = saveData.energy;
+            currentCoins = saveData.coins;
+            currentPremium = saveData.premium;
+            currentXp = saveData.xp;
+            dropCursor = saveData.dropCursor;
+            producerCooldownReadyAt = saveData.producerCooldownReadyAt;
+            producerTapsRemaining = saveData.producerTapsRemaining > 0 || producerCooldownReadyAt > 0
+                ? saveData.producerTapsRemaining
+                : GetDefaultProducerTapLimit();
+
+            completedOrderIds.Clear();
+            if (saveData.completedOrderIds != null)
+            {
+                foreach (string orderId in saveData.completedOrderIds)
+                {
+                    if (!string.IsNullOrWhiteSpace(orderId))
+                    {
+                        completedOrderIds.Add(orderId);
+                    }
+                }
+            }
+
+            if (theme.producers != null && theme.producers.Length > 0)
+            {
+                RefreshProducerCooldown(theme.producers[0]);
+            }
+
+            if (saveData.boardItems != null)
+            {
+                foreach (SavedBoardItem savedItem in saveData.boardItems)
+                {
+                    Vector2Int grid = new Vector2Int(savedItem.x, savedItem.y);
+                    if (!IsInsideBoard(grid) || grid == producerGrid || boardItems.ContainsKey(grid))
+                    {
+                        continue;
+                    }
+
+                    if (itemLookup.TryGetValue(savedItem.itemId, out ItemLevel level))
+                    {
+                        CreateItemTile(savedItem.itemId, level, grid);
+                    }
+                }
+            }
+
+            SetStatus("Save loaded");
+            return true;
+        }
+
+        private string[] ToCompletedOrderArray()
+        {
+            string[] orderIds = new string[completedOrderIds.Count];
+            completedOrderIds.CopyTo(orderIds);
+            return orderIds;
+        }
+
+        private SavedBoardItem[] ToSavedBoardItems()
+        {
+            SavedBoardItem[] savedItems = new SavedBoardItem[boardItems.Count];
+            int index = 0;
+
+            foreach (ItemTile tile in boardItems.Values)
+            {
+                savedItems[index] = new SavedBoardItem
+                {
+                    itemId = tile.itemId,
+                    x = tile.grid.x,
+                    y = tile.grid.y
+                };
+                index += 1;
+            }
+
+            return savedItems;
         }
 
         private void SetStatus(string message)
@@ -1214,6 +1572,28 @@ namespace MergePlatform.Client
 
             GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             DontDestroyOnLoad(eventSystem);
+        }
+
+        [Serializable]
+        private sealed class MergeClientSaveData
+        {
+            public int energy;
+            public int coins;
+            public int premium;
+            public int xp;
+            public int dropCursor;
+            public int producerTapsRemaining;
+            public long producerCooldownReadyAt;
+            public string[] completedOrderIds;
+            public SavedBoardItem[] boardItems;
+        }
+
+        [Serializable]
+        private sealed class SavedBoardItem
+        {
+            public string itemId;
+            public int x;
+            public int y;
         }
 
         private readonly struct SeededTile
