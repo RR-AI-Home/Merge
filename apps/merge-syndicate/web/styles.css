@@ -242,6 +242,16 @@ button:disabled {
   background: var(--amber);
 }
 
+.chapter-track span {
+  background: var(--green);
+}
+
+#chapter-detail {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .orders-list {
   display: grid;
   gap: 8px;
@@ -322,6 +332,20 @@ button:disabled {
 
 .event-zone {
   gap: 4px;
+}
+
+.event-zone[data-status="active"] {
+  border-color: rgba(47, 209, 132, 0.6);
+  background: linear-gradient(145deg, rgba(47, 209, 132, 0.14), var(--panel));
+}
+
+.event-zone[data-status="locked"] {
+  border-color: rgba(174, 180, 178, 0.28);
+}
+
+#event-status {
+  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .event-zone p {

@@ -6,7 +6,9 @@ import {
   completeOrderFromBoard,
   createInitialSave,
   describeBoardCell,
+  getChapterProgress,
   getCurrentDistrict,
+  getEventRail,
   getSessionGoal,
   mergeBoardCells,
   tapPrimaryProducer
@@ -104,6 +106,64 @@ test('completes an order from board items and advances district progress', () =>
   assert.equal(result.save.board.cells[0].item, null);
   assert.equal(result.save.board.cells[1].item, null);
   assert.equal(getCurrentDistrict(result.save, theme).id, 'neon_market');
+  assert.deepEqual(result.save.onboardingDropQueue, ['drone_1', 'drone_1']);
+  assert.deepEqual(getChapterProgress(result.save, theme), {
+    completed: 1,
+    target: 2,
+    currentDistrictTitle: 'Neon Market',
+    nextDistrictTitle: 'Data Docks',
+    isChapterComplete: false
+  });
+});
+
+test('second order is guided and unlocks the next district plus event rail', () => {
+  const theme = loadMergeSyndicateTheme();
+  let save = createInitialSave(theme, { nowSeconds: 1000 });
+  save = completeOrderFromBoard({
+    ...save,
+    board: placeItem(
+      placeItem(save.board, { x: 0, y: 0 }, { itemId: 'chip_2' }),
+      { x: 1, y: 0 },
+      { itemId: 'wire_2' }
+    )
+  }, theme, 'signal_scrambler_1').save;
+
+  const firstDrop = tapPrimaryProducer(save, theme, { nowSeconds: 1001 });
+  const secondDrop = tapPrimaryProducer(firstDrop.save, theme, { nowSeconds: 1002 });
+  const merged = mergeBoardCells(secondDrop.save, theme, {
+    from: { x: 0, y: 0 },
+    to: { x: 1, y: 0 }
+  });
+  const completed = completeOrderFromBoard(merged.save, theme, 'drone_network_1');
+
+  assert.equal(firstDrop.save.board.cells[0].item.itemId, 'drone_1');
+  assert.equal(secondDrop.save.board.cells[1].item.itemId, 'drone_1');
+  assert.equal(merged.save.board.cells[1].item.itemId, 'drone_2');
+  assert.equal(completed.ok, true);
+  assert.equal(getCurrentDistrict(completed.save, theme).id, 'data_docks');
+  assert.deepEqual(getChapterProgress(completed.save, theme), {
+    completed: 2,
+    target: 2,
+    currentDistrictTitle: 'Data Docks',
+    nextDistrictTitle: null,
+    isChapterComplete: true
+  });
+  assert.deepEqual(getEventRail(completed.save, theme), {
+    status: 'active',
+    title: 'Weekend Cache',
+    detail: 'Timed orders are active in Data Docks.'
+  });
+});
+
+test('event rail is locked before Data Docks unlocks', () => {
+  const theme = loadMergeSyndicateTheme();
+  const save = createInitialSave(theme, { nowSeconds: 1000 });
+
+  assert.deepEqual(getEventRail(save, theme), {
+    status: 'locked',
+    title: 'Weekend Cache',
+    detail: 'Complete 2 district orders to unlock events.'
+  });
 });
 
 test('daily login reward updates the standalone save once per calendar day', () => {

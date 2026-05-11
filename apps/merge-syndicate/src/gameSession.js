@@ -94,6 +94,10 @@ function firstOrderDropQueue() {
   return ['chip_1', 'chip_1', 'wire_1', 'wire_1'];
 }
 
+function secondOrderDropQueue() {
+  return ['drone_1', 'drone_1'];
+}
+
 function randomForDrop(producer, itemId) {
   const totalWeight = producer.drops.reduce((sum, drop) => sum + drop.weight, 0);
   let cursor = 0;
@@ -247,12 +251,17 @@ export function completeOrderFromBoard(save, theme, orderId) {
   }
 
   const completedOrderIds = [...save.completedOrderIds, orderId];
+  const onboardingDropQueue = orderId === 'signal_scrambler_1'
+    ? secondOrderDropQueue()
+    : (save.onboardingDropQueue ?? []);
+
   return {
     ok: true,
     save: {
       ...result.state,
       board: removeOrderItemsFromBoard(save.board, order),
       completedOrderIds,
+      onboardingDropQueue,
       ordersCompleted: completedOrderIds.length
     },
     message: `${order.title} complete. District progress increased.`
@@ -279,6 +288,41 @@ export function getCurrentDistrict(save, theme) {
     .filter((node) => node.unlocksAfterOrders <= save.ordersCompleted)
     .at(-1);
   return unlocked ?? theme.worldMap.nodes[0];
+}
+
+export function getChapterProgress(save, theme) {
+  const target = Math.max(...theme.worldMap.nodes.map((node) => node.unlocksAfterOrders));
+  const currentDistrict = getCurrentDistrict(save, theme);
+  const nextDistrict = theme.worldMap.nodes.find((node) => {
+    return node.unlocksAfterOrders > save.ordersCompleted;
+  }) ?? null;
+
+  return {
+    completed: Math.min(save.ordersCompleted, target),
+    target,
+    currentDistrictTitle: currentDistrict.title,
+    nextDistrictTitle: nextDistrict?.title ?? null,
+    isChapterComplete: save.ordersCompleted >= target
+  };
+}
+
+export function getEventRail(save, theme) {
+  const slot = theme.events.slots[0];
+  const progress = getChapterProgress(save, theme);
+
+  if (!progress.isChapterComplete) {
+    return {
+      status: 'locked',
+      title: slot.title,
+      detail: `Complete ${progress.target} district orders to unlock events.`
+    };
+  }
+
+  return {
+    status: 'active',
+    title: slot.title,
+    detail: 'Timed orders are active in Data Docks.'
+  };
 }
 
 export function getOpenOrders(save, theme) {

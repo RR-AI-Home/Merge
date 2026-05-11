@@ -3,7 +3,9 @@ import {
   completeOrderFromBoard,
   createInitialSave,
   describeBoardCell,
+  getChapterProgress,
   getCurrentDistrict,
+  getEventRail,
   getOpenOrders,
   getSessionGoal,
   mergeBoardCells,
@@ -24,10 +26,17 @@ const elements = {
   appName: document.querySelector('#app-name'),
   board: document.querySelector('#merge-board'),
   boardPressure: document.querySelector('#board-pressure'),
+  chapterDetail: document.querySelector('#chapter-detail'),
+  chapterFill: document.querySelector('#chapter-fill'),
+  chapterProgress: document.querySelector('#chapter-progress'),
   coins: document.querySelector('#coins-value'),
   dailyButton: document.querySelector('#daily-button'),
   district: document.querySelector('#district-name'),
   energy: document.querySelector('#energy-value'),
+  eventDetail: document.querySelector('#event-detail'),
+  eventPanel: document.querySelector('#event-panel'),
+  eventStatus: document.querySelector('#event-status'),
+  eventTitle: document.querySelector('#event-title'),
   goalAction: document.querySelector('#goal-action'),
   goalDetail: document.querySelector('#goal-detail'),
   log: document.querySelector('#action-log'),
@@ -125,6 +134,19 @@ function renderStatus() {
   const total = save.board.cells.length;
   elements.boardPressure.textContent = `${occupied} / ${total}`;
   elements.pressureFill.style.width = `${Math.round((occupied / total) * 100)}%`;
+
+  const progress = getChapterProgress(save, theme);
+  elements.chapterProgress.textContent = `${progress.completed} / ${progress.target}`;
+  elements.chapterFill.style.width = `${Math.round((progress.completed / progress.target) * 100)}%`;
+  elements.chapterDetail.textContent = progress.nextDistrictTitle
+    ? `Next unlock: ${progress.nextDistrictTitle}`
+    : `${progress.currentDistrictTitle} unlocked.`;
+
+  const eventRail = getEventRail(save, theme);
+  elements.eventPanel.dataset.status = eventRail.status;
+  elements.eventStatus.textContent = eventRail.status;
+  elements.eventTitle.textContent = eventRail.title;
+  elements.eventDetail.textContent = eventRail.detail;
 
   const goal = getSessionGoal(save, theme);
   elements.goalAction.textContent = goal.action;
