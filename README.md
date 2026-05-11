@@ -30,6 +30,10 @@ npm run verify:playable
 npm run verify
 ```
 
+## Local Workspace Notes
+
+- Use `E:\tmp` for temporary local dry runs, generated scratch output, and other disposable workspace files.
+
 ## Creating a New Standalone Game
 
 Use the generator to scaffold a new app/theme pair from the shared factory pattern:
