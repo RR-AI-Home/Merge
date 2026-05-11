@@ -11,9 +11,9 @@ namespace MergePlatform.Client
 
         private const float MobileReferenceWidth = 412f;
         private const float MobileReferenceHeight = 915f;
-        private const float MobileContentWidth = 380f;
-        private const float TileSize = 54f;
-        private const float TileGap = 5f;
+        private const float MobileContentWidth = 388f;
+        private const float TileSize = 58f;
+        private const float TileGap = 4f;
         private const float BoardPadding = 8f;
 
         private readonly Dictionary<string, ItemLevel> itemLookup = new Dictionary<string, ItemLevel>();
@@ -165,7 +165,7 @@ namespace MergePlatform.Client
 
         private void CreateHud()
         {
-            RectTransform hud = CreatePanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -28f), new Vector2(MobileContentWidth, 112f), new Color(0.03f, 0.04f, 0.055f, 0.96f));
+            RectTransform hud = CreatePanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), new Vector2(MobileContentWidth, 110f), new Color(0.03f, 0.04f, 0.055f, 0.96f));
             CreateText("Title", hud, theme.config.displayName, 22, new Color(0.82f, 0.96f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, 8f), new Vector2(340f, 28f));
 
             energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-126f, -82f), new Color(0.95f, 0.78f, 0.24f));
@@ -187,7 +187,7 @@ namespace MergePlatform.Client
 
         private void CreateBoard()
         {
-            boardPanel = CreatePanel("Merge Board", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -322f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.04f, 0.052f, 0.07f, 1f));
+            boardPanel = CreatePanel("Merge Board", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -334f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.04f, 0.052f, 0.07f, 1f));
 
             for (int y = 0; y < boardHeight; y += 1)
             {
@@ -207,7 +207,7 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            RectTransform ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -532f), new Vector2(MobileContentWidth, 200f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
+            RectTransform ordersPanel = CreatePanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -570f), new Vector2(MobileContentWidth, 176f), new Color(0.035f, 0.042f, 0.06f, 0.98f));
 
             if (theme.orders == null)
             {
@@ -222,15 +222,15 @@ namespace MergePlatform.Client
 
         private void CreateOrderCard(RectTransform parent, OrderDefinition order, int index)
         {
-            RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f - index * 66f), new Vector2(348f, 58f), new Color(0.14f, 0.18f, 0.29f, 1f));
+            RectTransform card = CreatePanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f - index * 68f), new Vector2(356f, 64f), new Color(0.14f, 0.18f, 0.29f, 1f));
             card.gameObject.AddComponent<RectMask2D>();
-            CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.UpperLeft, new Vector2(0f, 11f), new Vector2(314f, 24f));
+            CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.UpperLeft, new Vector2(0f, 13f), new Vector2(324f, 24f));
 
             string requirementText = FormatRequirements(order);
-            CreateText("Order Requirements", card, requirementText, 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, -11f), new Vector2(314f, 16f));
+            CreateText("Order Requirements", card, requirementText, 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, -11f), new Vector2(324f, 16f));
 
             string reward = order.rewards != null ? $"+{order.rewards.coins} coins / +{order.rewards.xp} xp" : "Reward";
-            CreateText("Order Reward", card, reward, 9, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(0f, -24f), new Vector2(314f, 14f));
+            CreateText("Order Reward", card, reward, 9, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(0f, -26f), new Vector2(324f, 14f));
         }
 
         private void CreateProducerTile()

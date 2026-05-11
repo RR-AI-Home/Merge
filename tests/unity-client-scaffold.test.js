@@ -60,8 +60,10 @@ test('Unity MergeClient screen is sized for mobile portrait without side panels'
 
   assert.match(controller, /MobileReferenceWidth = 412f/);
   assert.match(controller, /MobileReferenceHeight = 915f/);
-  assert.match(controller, /private const float TileSize = 54f/);
-  assert.match(controller, /CreateOrdersPanel[\s\S]*new Vector2\(MobileContentWidth, 200f\)/);
+  assert.match(controller, /MobileContentWidth = 388f/);
+  assert.match(controller, /private const float TileSize = 58f/);
+  assert.match(controller, /private const float TileGap = 4f/);
+  assert.match(controller, /CreateOrdersPanel[\s\S]*new Vector2\(MobileContentWidth, 176f\)/);
   assert.doesNotMatch(controller, /new Vector2\(218f, -24f\)/);
 });
 
@@ -100,10 +102,11 @@ test('Unity MergeClient portrait stack uses safe top margin and compact contract
     'utf8'
   );
 
-  assert.match(controller, /CreatePanel\("HUD"[\s\S]*new Vector2\(0f, -28f\)[\s\S]*new Vector2\(MobileContentWidth, 112f\)/);
+  assert.match(controller, /CreatePanel\("HUD"[\s\S]*new Vector2\(0f, -18f\)[\s\S]*new Vector2\(MobileContentWidth, 110f\)/);
   assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, 8f\)/);
-  assert.match(controller, /CreatePanel\("Orders Panel"[\s\S]*new Vector2\(0f, -532f\)[\s\S]*new Vector2\(MobileContentWidth, 200f\)/);
-  assert.match(controller, /new Vector2\(0f, -36f - index \* 66f\)/);
+  assert.match(controller, /CreatePanel\("Merge Board"[\s\S]*new Vector2\(0f, -334f\)/);
+  assert.match(controller, /CreatePanel\("Orders Panel"[\s\S]*new Vector2\(0f, -570f\)[\s\S]*new Vector2\(MobileContentWidth, 176f\)/);
+  assert.match(controller, /new Vector2\(0f, -20f - index \* 68f\)/);
 });
 
 test('Unity MergeClient lower rail avoids header and status overlap', async () => {
@@ -115,5 +118,5 @@ test('Unity MergeClient lower rail avoids header and status overlap', async () =
   assert.match(controller, /statusLabel = CreateText\("HUD Status"/);
   assert.doesNotMatch(controller, /CreateText\("Orders Header"/);
   assert.doesNotMatch(controller, /CreateText\("Board Status"/);
-  assert.match(controller, /new Vector2\(0f, -36f - index \* 66f\)/);
+  assert.match(controller, /new Vector2\(0f, -20f - index \* 68f\)/);
 });
