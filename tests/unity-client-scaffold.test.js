@@ -17,3 +17,18 @@ test('Unity MergeClient controller contains the first interactive merge loop', a
   assert.match(controller, /new SeededTile\("chip_1", 1, 1\)/);
   assert.match(controller, /new SeededTile\("chip_1", 2, 1\)/);
 });
+
+test('Unity MergeClient controller contains producer tap and energy loop', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /private ProducerTile producerTile;/);
+  assert.match(controller, /private int currentEnergy;/);
+  assert.match(controller, /TryTapProducer/);
+  assert.match(controller, /FindFirstEmptySlot/);
+  assert.match(controller, /UpdateEnergyLabel/);
+  assert.match(controller, /tileByCollider\.TryGetValue\(hit\.collider, out tile\)/);
+  assert.match(controller, /producerTileByCollider\.TryGetValue\(hit\.collider, out producer\)/);
+});

@@ -12,10 +12,16 @@ namespace MergePlatform.Client
         private readonly Dictionary<string, ItemChain> chainByItemId = new Dictionary<string, ItemChain>();
         private readonly Dictionary<Vector2Int, ItemTile> boardItems = new Dictionary<Vector2Int, ItemTile>();
         private readonly Dictionary<Collider, ItemTile> tileByCollider = new Dictionary<Collider, ItemTile>();
+        private readonly Dictionary<Collider, ProducerTile> producerTileByCollider = new Dictionary<Collider, ProducerTile>();
 
         private UnityMergeTheme theme;
         private ItemTile selectedTile;
+        private ProducerTile producerTile;
+        private TextMesh energyLabel;
+        private TextMesh statusLabel;
         private Vector3 selectedOffset;
+        private int currentEnergy;
+        private int dropCursor;
         private int boardWidth;
         private int boardHeight;
         private float originX;
@@ -33,7 +39,10 @@ namespace MergePlatform.Client
         {
             if (Input.GetMouseButtonDown(0))
             {
-                BeginDrag(Input.mousePosition);
+                if (!BeginDrag(Input.mousePosition))
+                {
+                    TryTapProducer(Input.mousePosition);
+                }
             }
             else if (selectedTile != null && Input.GetMouseButton(0))
             {
@@ -94,11 +103,15 @@ namespace MergePlatform.Client
 
             boardWidth = Mathf.Max(1, theme.config.board.width);
             boardHeight = Mathf.Max(1, theme.config.board.height);
+            currentEnergy = theme.config.startingState != null ? theme.config.startingState.energy : 0;
             originX = -((boardWidth - 1) * tileSpacing) / 2f;
             originZ = -((boardHeight - 1) * tileSpacing) / 2f;
 
             DrawLabel(theme.config.displayName, new Vector3(0f, 0.25f, originZ - 1.45f), 0.44f, new Color(0.78f, 0.95f, 1f));
             DrawLabel(theme.copy != null ? theme.copy.onboardingTitle : theme.themeId, new Vector3(0f, 0.25f, originZ - 0.9f), 0.22f, Color.white);
+            energyLabel = DrawLabel("", new Vector3(originX + 0.6f, 0.25f, originZ - 0.35f), 0.18f, new Color(0.95f, 0.98f, 0.72f));
+            statusLabel = DrawLabel("Click crate to generate items", new Vector3(originX + 3.15f, 0.25f, originZ - 0.35f), 0.16f, new Color(0.78f, 0.95f, 1f));
+            UpdateEnergyLabel();
 
             for (int y = 0; y < boardHeight; y += 1)
             {
@@ -122,8 +135,11 @@ namespace MergePlatform.Client
             }
 
             ProducerDefinition producer = theme.producers[0];
-            Vector3 position = GridToWorld(new Vector2Int(0, boardHeight - 1), 0.28f);
-            CreateCube("Producer", transform, position, new Vector3(0.92f, 0.44f, 0.92f), new Color(0.15f, 0.42f, 0.55f), false);
+            Vector2Int grid = new Vector2Int(0, boardHeight - 1);
+            Vector3 position = GridToWorld(grid, 0.28f);
+            GameObject cube = CreateCube("Producer", transform, position, new Vector3(0.92f, 0.44f, 0.92f), new Color(0.15f, 0.42f, 0.55f), true);
+            producerTile = new ProducerTile(producer, cube.GetComponent<Collider>(), grid);
+            producerTileByCollider[producerTile.collider] = producerTile;
             DrawLabel(producer.name, position + new Vector3(0f, 0.34f, 0f), 0.16f, Color.white);
         }
 
@@ -172,16 +188,17 @@ namespace MergePlatform.Client
             }
         }
 
-        private void BeginDrag(Vector3 screenPosition)
+        private bool BeginDrag(Vector3 screenPosition)
         {
             if (!TryRaycastTile(screenPosition, out ItemTile tile))
             {
-                return;
+                return false;
             }
 
             selectedTile = tile;
             selectedOffset = selectedTile.root.transform.position - ScreenToBoardPoint(screenPosition);
             selectedTile.root.transform.position += Vector3.up * 0.28f;
+            return true;
         }
 
         private void ContinueDrag(Vector3 screenPosition)
@@ -245,6 +262,88 @@ namespace MergePlatform.Client
             Destroy(source.root);
             Destroy(target.root);
             CreateMergedTile(nextLevel, targetGrid);
+            SetStatus($"Merged {target.label.text} into {nextLevel.name}");
+        }
+
+        private bool TryTapProducer(Vector3 screenPosition)
+        {
+            if (!TryRaycastProducer(screenPosition, out ProducerTile producer))
+            {
+                return false;
+            }
+
+            if (producer.definition.energyCost > currentEnergy)
+            {
+                SetStatus("Not enough energy");
+                return true;
+            }
+
+            if (producer.definition.drops == null || producer.definition.drops.Length == 0)
+            {
+                SetStatus("Producer has no drops");
+                return true;
+            }
+
+            if (!FindFirstEmptySlot(out Vector2Int grid))
+            {
+                SetStatus("Board is full");
+                return true;
+            }
+
+            DropDefinition drop = producer.definition.drops[dropCursor % producer.definition.drops.Length];
+            dropCursor += 1;
+
+            if (!itemLookup.TryGetValue(drop.itemId, out ItemLevel level))
+            {
+                SetStatus($"Missing item {drop.itemId}");
+                return true;
+            }
+
+            currentEnergy -= producer.definition.energyCost;
+            CreateItemTile(drop.itemId, level, grid);
+            UpdateEnergyLabel();
+            SetStatus($"Generated {level.name}");
+            return true;
+        }
+
+        private bool FindFirstEmptySlot(out Vector2Int grid)
+        {
+            for (int y = 0; y < boardHeight; y += 1)
+            {
+                for (int x = 0; x < boardWidth; x += 1)
+                {
+                    grid = new Vector2Int(x, y);
+
+                    if (producerTile != null && grid == producerTile.grid)
+                    {
+                        continue;
+                    }
+
+                    if (!boardItems.ContainsKey(grid))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            grid = default;
+            return false;
+        }
+
+        private void UpdateEnergyLabel()
+        {
+            if (energyLabel != null)
+            {
+                energyLabel.text = $"Energy {currentEnergy}";
+            }
+        }
+
+        private void SetStatus(string message)
+        {
+            if (statusLabel != null)
+            {
+                statusLabel.text = message;
+            }
         }
 
         private bool CanMerge(ItemTile source, ItemTile target)
@@ -322,6 +421,26 @@ namespace MergePlatform.Client
 
             Ray ray = camera.ScreenPointToRay(screenPosition);
             return Physics.Raycast(ray, out RaycastHit hit, 100f) && tileByCollider.TryGetValue(hit.collider, out tile);
+        }
+
+        private bool TryRaycastProducer(Vector3 screenPosition, out ProducerTile producer)
+        {
+            producer = null;
+            Camera camera = Camera.main;
+
+            if (camera == null)
+            {
+                return false;
+            }
+
+            Ray ray = camera.ScreenPointToRay(screenPosition);
+
+            if (!Physics.Raycast(ray, out RaycastHit hit, 100f))
+            {
+                return false;
+            }
+
+            return producerTileByCollider.TryGetValue(hit.collider, out producer);
         }
 
         private Vector3 ScreenToBoardPoint(Vector3 screenPosition)
@@ -470,6 +589,20 @@ namespace MergePlatform.Client
                 this.itemId = itemId;
                 this.chainId = chainId;
                 this.level = level;
+                this.grid = grid;
+            }
+        }
+
+        private sealed class ProducerTile
+        {
+            public readonly ProducerDefinition definition;
+            public readonly Collider collider;
+            public readonly Vector2Int grid;
+
+            public ProducerTile(ProducerDefinition definition, Collider collider, Vector2Int grid)
+            {
+                this.definition = definition;
+                this.collider = collider;
                 this.grid = grid;
             }
         }

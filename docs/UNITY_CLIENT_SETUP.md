@@ -84,4 +84,4 @@ If the Unity editor already has the project open, batch mode will refuse to run.
 
 ## Current Proof Scope
 
-The current Unity proof loads the exported `cyber-syndicate` theme and renders a simple board with programmatic primitives. It seeds duplicate low-level items so the first drag-to-merge loop can be tested in Play mode. It does not yet implement producer tapping, saves, backend calls, APK output, or production UI.
+The current Unity proof loads the exported `cyber-syndicate` theme and renders a simple board with programmatic primitives. It seeds duplicate low-level items so the first drag-to-merge loop can be tested in Play mode. The producer crate is clickable, spends one energy, and drops a level-1 item into the first empty board slot. It does not yet implement saves, backend calls, APK output, or production UI.
