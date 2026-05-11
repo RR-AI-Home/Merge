@@ -44,6 +44,9 @@ test('createCosmeticSku marks foundation purchases as non-pay-to-win', () => {
     priceTier: 'standard'
   });
 
+  assert.equal(sku.id, 'cyber_board_skin_01');
+  assert.equal(sku.name, 'Neon Board Skin');
+  assert.equal(sku.priceTier, 'standard');
   assert.equal(sku.category, 'cosmetic');
   assert.equal(sku.payToWin, false);
 });
