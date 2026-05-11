@@ -15,10 +15,23 @@ The goal is to build one reusable merge engine, then produce separate unlinked t
 
 ```bash
 npm test
+npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --theme-id space-colony --app-id com.mergeplatform.spacecolony
 npm run validate:themes
 npm run smoke:apps
 npm run verify
 ```
+
+## Creating a New Standalone Game
+
+Use the generator to scaffold a new app/theme pair from the shared factory pattern:
+
+```bash
+npm run create:game -- --slug merge-space-colony --name "Merge Space Colony" --theme-id space-colony --app-id com.mergeplatform.spacecolony
+```
+
+The generated app has its own app identity, save namespace, analytics stream, theme data, and browser entrypoint. It uses the shared merge app session and browser shell, with no runtime theme switcher. After generation, run `npm run verify`; theme validation and app identity smoke checks will discover the new app automatically.
+
+For dry runs or tooling, add `--root-dir <path>` to write the scaffold into another directory.
 
 ## Engine Compatibility Rule
 
