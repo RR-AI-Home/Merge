@@ -61,7 +61,7 @@ test('Unity MergeClient screen is sized for mobile portrait without side panels'
   assert.match(controller, /MobileReferenceWidth = 412f/);
   assert.match(controller, /MobileReferenceHeight = 915f/);
   assert.match(controller, /private const float TileSize = 54f/);
-  assert.match(controller, /CreateOrdersPanel[\s\S]*new Vector2\(MobileContentWidth, 224f\)/);
+  assert.match(controller, /CreateOrdersPanel[\s\S]*new Vector2\(MobileContentWidth, 200f\)/);
   assert.doesNotMatch(controller, /new Vector2\(218f, -24f\)/);
 });
 
@@ -71,7 +71,7 @@ test('Unity MergeClient HUD keeps title above resource pills', async () => {
     'utf8'
   );
 
-  assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, 26f\)/);
+  assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, 8f\)/);
   assert.match(controller, /CreateStatPill\(hud, "ENERGY", new Vector2\(-126f, -82f\)/);
   assert.match(controller, /CreateStatPill\(hud, "COINS", new Vector2\(0f, -82f\)/);
   assert.match(controller, /CreateStatPill\(hud, "GEMS", new Vector2\(126f, -82f\)/);
@@ -92,4 +92,16 @@ test('Unity MergeClient locks Android builds to portrait orientation', async () 
   assert.match(builder, /PlayerSettings\.defaultInterfaceOrientation = UIOrientation\.Portrait/);
   assert.match(builder, /PlayerSettings\.allowedAutorotateToLandscapeLeft = false/);
   assert.match(builder, /PlayerSettings\.allowedAutorotateToLandscapeRight = false/);
+});
+
+test('Unity MergeClient portrait stack uses safe top margin and compact contracts rail', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /CreatePanel\("HUD"[\s\S]*new Vector2\(0f, -28f\)[\s\S]*new Vector2\(MobileContentWidth, 112f\)/);
+  assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, 8f\)/);
+  assert.match(controller, /CreatePanel\("Orders Panel"[\s\S]*new Vector2\(0f, -532f\)[\s\S]*new Vector2\(MobileContentWidth, 200f\)/);
+  assert.match(controller, /new Vector2\(0f, -62f - index \* 66f\)/);
 });
