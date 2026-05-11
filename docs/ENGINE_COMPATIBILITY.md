@@ -2,7 +2,7 @@
 
 Engine updates must keep all completed themes working.
 
-Before changing a shared engine package, run:
+After changing a shared engine package, run this before considering the change safe:
 
 ```bash
 npm run verify

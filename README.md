@@ -25,3 +25,5 @@ npm run verify
 Engine updates must keep all completed themes working. Run `npm run verify` before considering a shared engine change safe.
 
 If a theme needs behavior that the engine does not support, treat that as a platform feature and validate it against every completed theme.
+
+See [docs/ENGINE_COMPATIBILITY.md](docs/ENGINE_COMPATIBILITY.md) for the full rule.
