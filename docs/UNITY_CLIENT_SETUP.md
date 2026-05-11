@@ -23,6 +23,12 @@ Sync those source files into the local Unity project with:
 npm run unity:sync-source
 ```
 
+Sync Unity package dependencies with:
+
+```powershell
+npm run unity:sync-packages
+```
+
 ## Unity Version
 
 Use Unity `6000.4.6f1`.

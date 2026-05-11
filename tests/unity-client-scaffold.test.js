@@ -42,3 +42,12 @@ test('Unity MergeClient controller contains production HUD, orders, and producer
   assert.match(controller, /SetStatus\("Board full"/);
   assert.match(controller, /CanvasScaler\.ScaleMode\.ScaleWithScreenSize/);
 });
+
+test('Unity project manifest includes uGUI for production UI components', async () => {
+  const manifest = JSON.parse(await readFile(
+    path.join('unity', 'MergeClient', 'Packages', 'manifest.json'),
+    'utf8'
+  ));
+
+  assert.equal(manifest.dependencies['com.unity.ugui'], '2.0.0');
+});

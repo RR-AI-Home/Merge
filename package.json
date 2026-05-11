@@ -14,6 +14,7 @@
     "smoke:apps": "node scripts/smoke-app.mjs",
     "verify:playable": "node scripts/verify-playable-apps.mjs",
     "unity:sync-source": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Copy-Item -Force -Recurse 'unity\\MergeClient\\Assets\\MergePlatform\\*' 'E:\\Projects\\Merge\\Unity\\MergeClient\\Assets\\MergePlatform'\"",
+    "unity:sync-packages": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Copy-Item -Force 'unity\\MergeClient\\Packages\\manifest.json' 'E:\\Projects\\Merge\\Unity\\MergeClient\\Packages\\manifest.json'\"",
     "unity:export-theme": "node scripts/export-unity-theme.mjs --theme-id cyber-syndicate --output E:\\Projects\\Merge\\Unity\\MergeClient\\Assets\\MergePlatform\\Resources\\Themes\\cyber-syndicate.json --force",
     "verify": "npm test && npm run validate:themes && npm run smoke:apps && npm run verify:playable"
   },
