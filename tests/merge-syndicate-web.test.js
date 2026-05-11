@@ -16,7 +16,10 @@ test('browser prototype boots the Merge Syndicate app module', () => {
 
   assert.match(index, /<script type="module" src="\.\/app\.js"><\/script>/);
   assert.match(index, /id="merge-board"/);
+  assert.match(index, /id="session-goal"/);
   assert.match(script, /createInitialSave/);
   assert.match(script, /tapPrimaryProducer/);
   assert.match(script, /completeOrderFromBoard/);
+  assert.match(script, /getSessionGoal/);
+  assert.match(script, /feedback-pop/);
 });

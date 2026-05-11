@@ -5,7 +5,9 @@ import {
   claimDailyLogin,
   completeOrderFromBoard,
   createInitialSave,
+  describeBoardCell,
   getCurrentDistrict,
+  getSessionGoal,
   mergeBoardCells,
   tapPrimaryProducer
 } from '../apps/merge-syndicate/src/gameSession.js';
@@ -23,6 +25,7 @@ test('creates a standalone Merge Syndicate save from theme data', () => {
   assert.equal(save.premium, 0);
   assert.equal(save.producerStates.black_market_crate.tapsRemaining, 12);
   assert.equal(save.saveNamespace, 'merge-syndicate-save-v1');
+  assert.deepEqual(save.onboardingDropQueue, ['chip_1', 'chip_1', 'wire_1', 'wire_1']);
 });
 
 test('producer tap spends energy and drops into the first empty board slot', () => {
@@ -39,6 +42,22 @@ test('producer tap spends energy and drops into the first empty board slot', () 
   assert.equal(result.save.board.cells[0].item.itemId, 'chip_1');
   assert.equal(result.save.producerStates.black_market_crate.tapsRemaining, 11);
   assert.match(result.message, /Black-Market Crate/);
+});
+
+test('first prototype crate taps are seeded toward the first order', () => {
+  const theme = loadMergeSyndicateTheme();
+  let save = createInitialSave(theme, { nowSeconds: 1000 });
+
+  const drops = [];
+  for (let index = 0; index < 4; index += 1) {
+    const result = tapPrimaryProducer(save, theme, { nowSeconds: 1000 + index });
+    assert.equal(result.ok, true);
+    save = result.save;
+    drops.push(save.board.cells[index].item.itemId);
+  }
+
+  assert.deepEqual(drops, ['chip_1', 'chip_1', 'wire_1', 'wire_1']);
+  assert.deepEqual(save.onboardingDropQueue, []);
 });
 
 test('merges two matching board cells through the shared engine', () => {
@@ -99,4 +118,31 @@ test('daily login reward updates the standalone save once per calendar day', () 
   assert.equal(first.save.dailyReward.streak, 1);
   assert.equal(second.ok, false);
   assert.equal(second.reason, 'already_claimed_today');
+});
+
+test('board cell descriptions include presentation data for the browser UI', () => {
+  const theme = loadMergeSyndicateTheme();
+  const described = describeBoardCell({ x: 0, y: 0, item: { itemId: 'chip_2' } }, theme);
+
+  assert.equal(described.label, 'Chip II');
+  assert.equal(described.icon, '◇');
+  assert.equal(described.chainId, 'chips');
+  assert.equal(described.level, 2);
+});
+
+test('session goal points to the next useful player action', () => {
+  const theme = loadMergeSyndicateTheme();
+  const initial = createInitialSave(theme, { nowSeconds: 1000 });
+  const ready = {
+    ...initial,
+    board: placeItem(
+      placeItem(initial.board, { x: 0, y: 0 }, { itemId: 'chip_2' }),
+      { x: 1, y: 0 },
+      { itemId: 'wire_2' }
+    )
+  };
+
+  assert.equal(getSessionGoal(initial, theme).action, 'produce');
+  assert.equal(getSessionGoal(ready, theme).action, 'deliver');
+  assert.match(getSessionGoal(ready, theme).label, /Build a Signal Scrambler/);
 });

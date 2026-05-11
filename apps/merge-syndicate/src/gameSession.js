@@ -1,4 +1,8 @@
-import { completeOrder, spendEnergy } from '../../../packages/economy-engine/src/index.js';
+import {
+  canCompleteOrder,
+  completeOrder,
+  spendEnergy
+} from '../../../packages/economy-engine/src/index.js';
 import {
   createBoard,
   mergeCells,
@@ -39,6 +43,27 @@ function getItemLevel(theme, itemId) {
   return null;
 }
 
+function getItemChain(theme, itemId) {
+  return theme.itemChains.find((chain) => {
+    return chain.levels.some((level) => level.id === itemId);
+  }) ?? null;
+}
+
+function getItemPresentation(theme, itemId) {
+  const chain = getItemChain(theme, itemId);
+  const icons = {
+    chips: '◇',
+    wires: '≋',
+    drones: '✦',
+    caches: '▣'
+  };
+
+  return {
+    chainId: chain?.id ?? null,
+    icon: icons[chain?.id] ?? '•'
+  };
+}
+
 function countBoardItems(board) {
   const inventory = {};
   for (const cell of board.cells) {
@@ -65,6 +90,41 @@ function removeOrderItemsFromBoard(board, order) {
   return next;
 }
 
+function firstOrderDropQueue() {
+  return ['chip_1', 'chip_1', 'wire_1', 'wire_1'];
+}
+
+function randomForDrop(producer, itemId) {
+  const totalWeight = producer.drops.reduce((sum, drop) => sum + drop.weight, 0);
+  let cursor = 0;
+
+  for (const drop of producer.drops) {
+    const start = cursor;
+    cursor += drop.weight;
+    if (drop.itemId === itemId) {
+      return () => (start + drop.weight / 2) / totalWeight;
+    }
+  }
+
+  return null;
+}
+
+function hasMergeCandidate(save) {
+  const seen = new Set();
+  for (const cell of save.board.cells) {
+    if (!cell.item) {
+      continue;
+    }
+
+    if (seen.has(cell.item.itemId)) {
+      return true;
+    }
+
+    seen.add(cell.item.itemId);
+  }
+  return false;
+}
+
 export function createInitialSave(theme, { nowSeconds = Math.floor(Date.now() / 1000) } = {}) {
   return {
     appId: syndicateIdentity.appId,
@@ -73,6 +133,7 @@ export function createInitialSave(theme, { nowSeconds = Math.floor(Date.now() / 
     board: createBoard(theme.config.board),
     producerStates: createProducerStates(theme),
     completedOrderIds: [],
+    onboardingDropQueue: firstOrderDropQueue(),
     ordersCompleted: 0,
     lastEnergyAt: nowSeconds,
     dailyReward: {
@@ -95,12 +156,14 @@ export function tapPrimaryProducer(save, theme, options = {}) {
     };
   }
 
+  const queuedDrop = save.onboardingDropQueue?.[0] ?? null;
+  const seededRandom = queuedDrop ? randomForDrop(producer, queuedDrop) : null;
   const result = tapProducer({
     board: save.board,
     producer,
     producerState: save.producerStates[producer.id],
     nowSeconds: options.nowSeconds,
-    random: options.random
+    random: seededRandom ?? options.random
   });
 
   if (!result.ok) {
@@ -126,6 +189,7 @@ export function tapPrimaryProducer(save, theme, options = {}) {
     save: {
       ...energyCheck.state,
       board: result.board,
+      onboardingDropQueue: queuedDrop ? save.onboardingDropQueue.slice(1) : (save.onboardingDropQueue ?? []),
       producerStates: {
         ...save.producerStates,
         [producer.id]: result.producerState
@@ -191,7 +255,7 @@ export function completeOrderFromBoard(save, theme, orderId) {
       completedOrderIds,
       ordersCompleted: completedOrderIds.length
     },
-    message: `${order.title} complete.`
+    message: `${order.title} complete. District progress increased.`
   };
 }
 
@@ -221,14 +285,52 @@ export function getOpenOrders(save, theme) {
   return theme.orders.filter((order) => !save.completedOrderIds.includes(order.id));
 }
 
+export function getSessionGoal(save, theme) {
+  const openOrders = getOpenOrders(save, theme);
+  const inventory = countBoardItems(save.board);
+  const readyOrder = openOrders.find((order) => canCompleteOrder(inventory, order));
+  if (readyOrder) {
+    return {
+      action: 'deliver',
+      label: `Deliver ${readyOrder.title}`,
+      detail: 'Order items are ready on the board.'
+    };
+  }
+
+  if (hasMergeCandidate(save)) {
+    return {
+      action: 'merge',
+      label: 'Merge matching items',
+      detail: 'Upgrade parts toward the next order.'
+    };
+  }
+
+  if (openOrders.length > 0) {
+    return {
+      action: 'produce',
+      label: `Open ${getPrimaryProducer(theme).name}`,
+      detail: `Find parts for ${openOrders[0].title}.`
+    };
+  }
+
+  return {
+    action: 'complete',
+    label: 'Prototype orders complete',
+    detail: 'The next slice can add more districts and event chains.'
+  };
+}
+
 export function describeBoardCell(cell, theme) {
   if (!cell.item) {
-    return { label: '', level: null, itemId: null };
+    return { label: '', level: null, itemId: null, chainId: null, icon: null };
   }
 
   const level = getItemLevel(theme, cell.item.itemId);
+  const presentation = getItemPresentation(theme, cell.item.itemId);
   return {
     label: level?.name ?? cell.item.itemId,
+    chainId: presentation.chainId,
+    icon: presentation.icon,
     level: level?.level ?? null,
     itemId: cell.item.itemId
   };

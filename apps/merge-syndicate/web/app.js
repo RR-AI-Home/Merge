@@ -5,6 +5,7 @@ import {
   describeBoardCell,
   getCurrentDistrict,
   getOpenOrders,
+  getSessionGoal,
   mergeBoardCells,
   moveItem,
   serializeSave,
@@ -27,6 +28,8 @@ const elements = {
   dailyButton: document.querySelector('#daily-button'),
   district: document.querySelector('#district-name'),
   energy: document.querySelector('#energy-value'),
+  goalAction: document.querySelector('#goal-action'),
+  goalDetail: document.querySelector('#goal-detail'),
   log: document.querySelector('#action-log'),
   orders: document.querySelector('#orders-list'),
   premium: document.querySelector('#premium-value'),
@@ -34,6 +37,7 @@ const elements = {
   producerButton: document.querySelector('#producer-button'),
   producerStatus: document.querySelector('#producer-status'),
   resetButton: document.querySelector('#reset-button'),
+  sessionGoal: document.querySelector('#session-goal'),
   xp: document.querySelector('#xp-value')
 };
 
@@ -91,12 +95,6 @@ function addLog(message) {
   log.splice(5);
 }
 
-function findChainId(itemId) {
-  return theme.itemChains.find((chain) => {
-    return chain.levels.some((level) => level.id === itemId);
-  })?.id ?? '';
-}
-
 function itemName(itemId) {
   for (const chain of theme.itemChains) {
     const level = chain.levels.find((candidate) => candidate.id === itemId);
@@ -127,6 +125,11 @@ function renderStatus() {
   const total = save.board.cells.length;
   elements.boardPressure.textContent = `${occupied} / ${total}`;
   elements.pressureFill.style.width = `${Math.round((occupied / total) * 100)}%`;
+
+  const goal = getSessionGoal(save, theme);
+  elements.goalAction.textContent = goal.action;
+  elements.sessionGoal.textContent = goal.label;
+  elements.goalDetail.textContent = goal.detail;
 }
 
 function renderBoard() {
@@ -139,10 +142,18 @@ function renderBoard() {
     button.className = cell.item ? 'cell has-item' : 'cell';
     button.dataset.x = cell.x;
     button.dataset.y = cell.y;
-    button.dataset.chain = cell.item ? findChainId(cell.item.itemId) : '';
+    button.dataset.chain = described.chainId ?? '';
     button.setAttribute('role', 'gridcell');
     button.setAttribute('aria-label', cell.item ? described.label : 'Empty cell');
-    button.textContent = described.label;
+    if (cell.item) {
+      const icon = document.createElement('span');
+      const label = document.createElement('span');
+      icon.className = 'item-icon';
+      label.className = 'item-label';
+      icon.textContent = described.icon;
+      label.textContent = described.label;
+      button.append(icon, label);
+    }
 
     if (selectedCell && selectedCell.x === cell.x && selectedCell.y === cell.y) {
       button.classList.add('selected');
@@ -171,9 +182,13 @@ function renderOrders() {
     const header = document.createElement('header');
     const title = document.createElement('h2');
     const button = document.createElement('button');
+    const canDeliver = order.requires.every((requirement) => {
+      return countBoardItem(requirement.itemId) >= requirement.count;
+    });
     title.textContent = order.title;
     button.type = 'button';
     button.textContent = 'Deliver';
+    button.disabled = !canDeliver;
     button.addEventListener('click', () => {
       applyResult(completeOrderFromBoard(save, theme, order.id));
     });
@@ -183,7 +198,11 @@ function renderOrders() {
     requirements.className = 'order-requirements';
     for (const requirement of order.requires) {
       const pill = document.createElement('span');
-      pill.textContent = `${itemName(requirement.itemId)} ${countBoardItem(requirement.itemId)} / ${requirement.count}`;
+      const current = countBoardItem(requirement.itemId);
+      pill.textContent = `${itemName(requirement.itemId)} ${current} / ${requirement.count}`;
+      if (current >= requirement.count) {
+        pill.classList.add('ready');
+      }
       requirements.append(pill);
     }
 
@@ -208,6 +227,13 @@ function render() {
   renderLog();
 }
 
+function playFeedback(kind) {
+  const target = kind === 'produce' ? elements.producerButton : elements.sessionGoal;
+  target.classList.remove('feedback-pop');
+  target.getBoundingClientRect();
+  target.classList.add('feedback-pop');
+}
+
 function applyResult(result) {
   if (result.save) {
     save = result.save;
@@ -217,6 +243,7 @@ function applyResult(result) {
   addLog(result.message ?? (result.ok ? 'Action complete.' : 'Action blocked.'));
   persist();
   render();
+  playFeedback(result.ok ? 'progress' : 'blocked');
 }
 
 function handleCellClick(cell) {
@@ -245,6 +272,7 @@ function handleCellClick(cell) {
 function bindActions() {
   elements.producerButton.addEventListener('click', () => {
     applyResult(tapPrimaryProducer(save, theme));
+    playFeedback('produce');
   });
 
   elements.dailyButton.addEventListener('click', () => {
