@@ -204,8 +204,8 @@ namespace MergePlatform.Client
             energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-126f, -82f), new Color(0.95f, 0.78f, 0.24f));
             coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, -82f), new Color(0.55f, 0.92f, 0.72f));
             premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(126f, -82f), new Color(0.94f, 0.45f, 0.78f));
-            statusLabel = CreateText("HUD Status", hud, "Ready", 10, new Color(0.68f, 0.86f, 0.92f), TextAnchor.MiddleLeft, new Vector2(0f, -45f), new Vector2(340f, 16f));
-            districtLabel = CreateText("District Progress", hud, "District 0/2", 8, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(0f, -61f), new Vector2(340f, 12f));
+            statusLabel = CreateText("HUD Status", hud, "Ready", 10, new Color(0.68f, 0.86f, 0.92f), TextAnchor.MiddleLeft, new Vector2(0f, -43f), new Vector2(340f, 14f));
+            districtLabel = CreateText("District Progress", hud, "District 0/2", 9, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(0f, -59f), new Vector2(340f, 14f));
 
             coinsLabel.text = $"COINS {currentCoins}";
             premiumLabel.text = $"GEMS {currentPremium}";
@@ -370,8 +370,8 @@ namespace MergePlatform.Client
 
             CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
-            CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.MiddleLeft, new Vector2(-58f, 16f), new Vector2(224f, 17f));
-            CreateText("Order Requirements", card, FormatRequirements(order), 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-58f, -2f), new Vector2(224f, 14f));
+            CreateText("Order Title", card, order.title, 12, Color.white, TextAnchor.MiddleLeft, new Vector2(-42f, 16f), new Vector2(236f, 17f));
+            CreateText("Order Requirements", card, FormatRequirements(order), 9, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-42f, -2f), new Vector2(236f, 14f));
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
         }
@@ -408,7 +408,7 @@ namespace MergePlatform.Client
         {
             int coins = order.rewards != null ? order.rewards.coins : 0;
             int xp = order.rewards != null ? order.rewards.xp : 0;
-            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 9, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(-58f, -19f), new Vector2(224f, 14f));
+            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 9, new Color(0.72f, 1f, 0.74f), TextAnchor.MiddleLeft, new Vector2(-42f, -19f), new Vector2(236f, 14f));
         }
 
         private void CreateProducerTile()
@@ -1083,6 +1083,9 @@ namespace MergePlatform.Client
             float iconWidth = Mathf.Clamp(30f + tier * 2f, 30f, 38f);
             float iconHeight = Mathf.Clamp(24f + tier * 2f, 24f, 30f);
             RectTransform icon = CreatePanel("Procedural Item Icon", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 5f), new Vector2(iconWidth, iconHeight), new Color(accent.r, accent.g, accent.b, 0.92f));
+            CreateIconCastShadow(icon);
+            CreateIconDepthBase(icon, accent);
+            CreateIconHighlight(icon);
 
             if (itemId.StartsWith("chip"))
             {
@@ -1109,6 +1112,28 @@ namespace MergePlatform.Client
             }
 
             CreatePanel("Generic Mark", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(14f, 14f), new Color(0.04f, 0.08f, 0.12f, 1f));
+        }
+
+        private void CreateIconCastShadow(RectTransform icon)
+        {
+            CreatePanel("Icon Drop Shadow", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(3f, -3f), new Vector2(30f, 22f), new Color(0f, 0f, 0f, 0.18f));
+        }
+
+        private void CreateIconDepthBase(RectTransform icon, Color accent)
+        {
+            Color front = new Color(Mathf.Min(1f, accent.r + 0.1f), Mathf.Min(1f, accent.g + 0.1f), Mathf.Min(1f, accent.b + 0.1f), 1f);
+            Color dark = new Color(accent.r * 0.55f, accent.g * 0.55f, accent.b * 0.55f, 1f);
+            Color highlight = new Color(Mathf.Min(1f, accent.r + 0.24f), Mathf.Min(1f, accent.g + 0.24f), Mathf.Min(1f, accent.b + 0.24f), 0.95f);
+
+            CreatePanel("Icon Front Face", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-1f, 1f), new Vector2(28f, 21f), front);
+            CreatePanel("Icon Side Bevel", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(14f, -1f), new Vector2(4f, 22f), dark);
+            CreatePanel("Icon Bottom Bevel", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1f, -11f), new Vector2(28f, 4f), dark);
+            CreatePanel("Icon Top Bevel", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-1f, 12f), new Vector2(28f, 3f), highlight);
+        }
+
+        private void CreateIconHighlight(RectTransform icon)
+        {
+            CreatePanel("Icon Highlight", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-8f, 8f), new Vector2(9f, 2f), new Color(1f, 1f, 1f, 0.3f));
         }
 
         private void CreateChipMark(RectTransform icon, int tier)
@@ -1537,10 +1562,8 @@ namespace MergePlatform.Client
             text.color = color;
             text.alignment = alignment;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
-            text.resizeTextForBestFit = true;
-            text.resizeTextMinSize = 7;
-            text.resizeTextMaxSize = size;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.resizeTextForBestFit = false;
             text.raycastTarget = false;
             SetRect(text.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, dimensions);
             return text;

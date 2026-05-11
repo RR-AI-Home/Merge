@@ -231,3 +231,34 @@ test('Cyber Syndicate Unity source theme has enough order and producer depth for
   assert.ok(producers[0].drops.some((drop) => drop.itemId === 'drone_2'));
   assert.ok(producers[0].drops.some((drop) => drop.itemId === 'cache_2'));
 });
+
+test('Unity MergeClient text stays crisp and avoids contract stripe overlap', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /text\.resizeTextForBestFit = false;/);
+  assert.match(controller, /text\.verticalOverflow = VerticalWrapMode\.Overflow;/);
+  assert.match(controller, /CreateText\("Order Title"[\s\S]*new Vector2\(-42f, 16f\)[\s\S]*new Vector2\(236f, 17f\)/);
+  assert.match(controller, /CreateText\("Order Requirements"[\s\S]*new Vector2\(-42f, -2f\)[\s\S]*new Vector2\(236f, 14f\)/);
+  assert.match(controller, /CreateText\("Order Reward"[\s\S]*new Vector2\(-42f, -19f\)[\s\S]*new Vector2\(236f, 14f\)/);
+  assert.match(controller, /CreateText\("District Progress"[\s\S]*9[\s\S]*new Vector2\(0f, -59f\)[\s\S]*new Vector2\(340f, 14f\)/);
+  assert.doesNotMatch(controller, /resizeTextMinSize/);
+});
+
+test('Unity MergeClient procedural icons use layered depth treatment', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /CreateIconDepthBase/);
+  assert.match(controller, /CreateIconHighlight/);
+  assert.match(controller, /CreateIconCastShadow/);
+  assert.match(controller, /CreatePanel\("Icon Front Face"/);
+  assert.match(controller, /CreatePanel\("Icon Top Bevel"/);
+  assert.match(controller, /CreatePanel\("Icon Drop Shadow"/);
+  assert.match(controller, /CreateIconDepthBase\(icon, accent\)/);
+  assert.match(controller, /CreateIconHighlight\(icon\)/);
+});
