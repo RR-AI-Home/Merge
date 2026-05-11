@@ -11,6 +11,18 @@ Keep the Unity project and generated build output outside OneDrive.
 
 The Unity project is not the main source of truth. The merge platform repo owns engine code, themes, validation, and app generation. Unity consumes exported theme payloads.
 
+Repo-tracked Unity source files live under:
+
+```text
+unity\MergeClient\Assets\MergePlatform
+```
+
+Sync those source files into the local Unity project with:
+
+```powershell
+npm run unity:sync-source
+```
+
 ## Unity Version
 
 Use Unity `6000.4.6f1`.
@@ -68,6 +80,8 @@ Generated scene:
 E:\Projects\Merge\Unity\MergeClient\Assets\MergePlatform\Scenes\MergeClient.unity
 ```
 
+If the Unity editor already has the project open, batch mode will refuse to run. In that case, run `npm run unity:sync-source`, let Unity recompile in the open editor, then press Play again.
+
 ## Current Proof Scope
 
-The current Unity proof loads the exported `cyber-syndicate` theme and renders a simple board with programmatic primitives. It proves the platform-to-Unity data bridge. It does not yet implement drag-to-merge, saves, backend calls, APK output, or production UI.
+The current Unity proof loads the exported `cyber-syndicate` theme and renders a simple board with programmatic primitives. It seeds duplicate low-level items so the first drag-to-merge loop can be tested in Play mode. It does not yet implement producer tapping, saves, backend calls, APK output, or production UI.
