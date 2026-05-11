@@ -9,7 +9,7 @@ export function createAnalyticsEvent({
     appId,
     themeId,
     name,
-    payload,
+    payload: { ...payload },
     timestamp,
     schemaVersion: 1
   };

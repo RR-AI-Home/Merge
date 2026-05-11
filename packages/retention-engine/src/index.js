@@ -16,7 +16,7 @@ export function claimDailyReward(save, { calendarDay }) {
   }
 
   const nextStreak = dailyReward.streak + 1;
-  const reward = DAILY_REWARDS[(nextStreak - 1) % DAILY_REWARDS.length];
+  const reward = { ...DAILY_REWARDS[(nextStreak - 1) % DAILY_REWARDS.length] };
 
   return {
     ok: true,
