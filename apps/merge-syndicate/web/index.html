@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Merge Syndicate Prototype</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="status-strip" aria-label="Player status">
+        <div>
+          <span>Energy</span>
+          <strong id="energy-value">--</strong>
+        </div>
+        <div>
+          <span>Coins</span>
+          <strong id="coins-value">--</strong>
+        </div>
+        <div>
+          <span>XP</span>
+          <strong id="xp-value">--</strong>
+        </div>
+        <div>
+          <span>Premium</span>
+          <strong id="premium-value">--</strong>
+        </div>
+      </section>
+
+      <section class="command-bar" aria-label="Core actions">
+        <button id="producer-button" type="button">
+          <span class="button-icon" aria-hidden="true">+</span>
+          <span>Crate</span>
+        </button>
+        <button id="daily-button" type="button">
+          <span class="button-icon" aria-hidden="true">$</span>
+          <span>Daily</span>
+        </button>
+        <button id="reset-button" type="button" class="secondary-button">
+          <span class="button-icon" aria-hidden="true">↺</span>
+          <span>Reset</span>
+        </button>
+      </section>
+
+      <section class="board-zone" aria-label="Merge board">
+        <div class="section-heading">
+          <div>
+            <span id="app-name">Merge Syndicate</span>
+            <strong id="district-name">Neon Market</strong>
+          </div>
+          <p id="producer-status">--</p>
+        </div>
+        <div id="merge-board" class="merge-board" role="grid" aria-label="Merge board"></div>
+      </section>
+
+      <section class="progress-zone" aria-label="Progress">
+        <div>
+          <span>Board Pressure</span>
+          <strong id="board-pressure">0 / 36</strong>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <span id="pressure-fill"></span>
+        </div>
+      </section>
+
+      <section class="orders-zone" aria-label="Orders">
+        <div class="section-heading">
+          <div>
+            <span>Orders</span>
+            <strong>District Work</strong>
+          </div>
+        </div>
+        <div id="orders-list" class="orders-list"></div>
+      </section>
+
+      <section class="event-zone" aria-label="Event">
+        <div>
+          <span>Live Slot</span>
+          <strong>Signal Rush</strong>
+        </div>
+        <p>Prototype event rail reserved for timed chains and bonus currency.</p>
+      </section>
+
+      <section class="log-zone" aria-label="Activity log">
+        <div class="section-heading">
+          <div>
+            <span>Feed</span>
+            <strong>Recent Actions</strong>
+          </div>
+        </div>
+        <ol id="action-log"></ol>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
