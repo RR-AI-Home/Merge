@@ -243,8 +243,10 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /using UnityEngine\.TextCore\.LowLevel;/);
   assert.match(controller, /private TextMeshProUGUI energyLabel;/);
   assert.match(controller, /private TMP_FontAsset uiFontAsset;/);
-  assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(SourceUiFont, 72, 9, GlyphRenderMode\.SDFAA, 2048, 2048, AtlasPopulationMode\.Dynamic, true\)/);
+  assert.match(controller, /LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\)/);
+  assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(font, 72, 9, GlyphRenderMode\.SDFAA, 2048, 2048, AtlasPopulationMode\.Dynamic, true\)/);
   assert.match(controller, /uiFontAsset\.isMultiAtlasTexturesEnabled = true;/);
+  assert.match(controller, /if \(fontAsset != null\)[\s\S]*text\.font = fontAsset;/);
   assert.match(controller, /text\.enableAutoSizing = false;/);
   assert.match(controller, /text\.textWrappingMode = TextWrappingModes\.Normal;/);
   assert.match(controller, /text\.overflowMode = TextOverflowModes\.Overflow;/);

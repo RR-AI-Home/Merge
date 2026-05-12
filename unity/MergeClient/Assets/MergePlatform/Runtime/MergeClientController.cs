@@ -21,6 +21,7 @@ namespace MergePlatform.Client
         private const float BoardPadding = 8f;
         private const int VisibleOrderLimit = 2;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
+        private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
         private static readonly string[] UiFontNames = { "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" };
 
         private readonly Dictionary<string, ItemLevel> itemLookup = new Dictionary<string, ItemLevel>();
@@ -42,8 +43,8 @@ namespace MergePlatform.Client
         private TextMeshProUGUI premiumLabel;
         private TextMeshProUGUI districtLabel;
         private TextMeshProUGUI statusLabel;
-        private Font sourceUiFont;
         private TMP_FontAsset uiFontAsset;
+        private bool loggedMissingTmpFont;
         private AudioSource feedbackAudio;
         private AudioClip mergeSound;
         private ItemTile selectedTile;
@@ -60,33 +61,81 @@ namespace MergePlatform.Client
         private int boardHeight;
         private float boardPixelSize;
 
-        private Font SourceUiFont
-        {
-            get
-            {
-                if (sourceUiFont == null)
-                {
-                    sourceUiFont = Font.CreateDynamicFontFromOSFont(UiFontNames, 32);
-                    sourceUiFont ??= Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                    sourceUiFont ??= Resources.GetBuiltinResource<Font>("Arial.ttf");
-                }
-
-                return sourceUiFont;
-            }
-        }
-
         private TMP_FontAsset UiFontAsset
         {
             get
             {
                 if (uiFontAsset == null)
                 {
-                    uiFontAsset = TMP_FontAsset.CreateFontAsset(SourceUiFont, 72, 9, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
-                    uiFontAsset.name = "Merge UI Runtime SDF";
-                    uiFontAsset.isMultiAtlasTexturesEnabled = true;
+                    uiFontAsset = LoadProjectTmpFontAsset() ?? CreateRuntimeTmpFontAsset();
+
+                    if (uiFontAsset != null)
+                    {
+                        uiFontAsset.name = "Merge UI Runtime SDF";
+                        uiFontAsset.isMultiAtlasTexturesEnabled = true;
+                    }
+                    else if (!loggedMissingTmpFont)
+                    {
+                        loggedMissingTmpFont = true;
+                        Debug.LogWarning("Merge UI could not create a TextMeshPro font asset. Import TMP Essentials, or add a TMP font asset under Resources/Fonts & Materials.");
+                    }
                 }
 
                 return uiFontAsset;
+            }
+        }
+
+        private static TMP_FontAsset LoadProjectTmpFontAsset()
+        {
+            foreach (string resourcePath in ProjectTmpFontResourcePaths)
+            {
+                TMP_FontAsset fontAsset = Resources.Load<TMP_FontAsset>(resourcePath);
+                if (fontAsset != null)
+                {
+                    return fontAsset;
+                }
+            }
+
+            return null;
+        }
+
+        private static TMP_FontAsset CreateRuntimeTmpFontAsset()
+        {
+            foreach (Font font in RuntimeFontCandidates())
+            {
+                if (font == null)
+                {
+                    continue;
+                }
+
+                TMP_FontAsset fontAsset = TMP_FontAsset.CreateFontAsset(font, 72, 9, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
+                if (fontAsset != null)
+                {
+                    return fontAsset;
+                }
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<Font> RuntimeFontCandidates()
+        {
+            Font builtInRuntime = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (builtInRuntime != null)
+            {
+                yield return builtInRuntime;
+            }
+
+            Font builtInArial = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            if (builtInArial != null)
+            {
+                yield return builtInArial;
+            }
+
+            Font osFont = Font.CreateDynamicFontFromOSFont(UiFontNames, 32);
+            if (osFont != null)
+            {
+                yield return osFont;
             }
         }
 
@@ -1580,7 +1629,12 @@ namespace MergePlatform.Client
             GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
             textObject.transform.SetParent(parent, false);
             TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
-            text.font = UiFontAsset;
+            TMP_FontAsset fontAsset = UiFontAsset;
+            if (fontAsset != null)
+            {
+                text.font = fontAsset;
+            }
+
             text.text = value;
             text.fontSize = size;
             text.color = color;
