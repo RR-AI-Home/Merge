@@ -103,7 +103,7 @@ The Unity client uses TextMeshPro for mobile UI text. Do not add new gameplay UI
 Current text quality baseline:
 
 - Unity package `com.unity.textmeshpro` is required in `unity\MergeClient\Packages\manifest.json`.
-- First-time Unity projects should import TextMeshPro Essentials when Unity prompts for them. This creates the default TMP resources used by the editor and fallback font loading.
+- First-time Unity projects should import TextMeshPro Essentials when Unity prompts for them. Stop Play Mode first; Unity cannot import TMP Essentials while the game is running. This creates the default TMP resources used by the editor and fallback font loading.
 - `MergeClientController` first tries to load a project TMP font asset from `Resources/Fonts & Materials`, then creates a runtime TMP SDF font asset from safe Unity font candidates and the local cyber-readable font stack: Cascadia Code SemiBold, Cascadia Mono, Bahnschrift, Consolas, Arial.
 - The runtime font asset uses a high-resolution SDF atlas: 72 sampling point size, 9 padding, 2048 x 2048 atlas, dynamic population, and multi-atlas enabled.
 - Canvas rendering is screen-space overlay with `pixelPerfect = true`.
