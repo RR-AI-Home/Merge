@@ -175,8 +175,14 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
   assert.match(controller, /private readonly Dictionary<string, float> helpfulItemGlowUntil = new Dictionary<string, float>\(\)/);
   assert.match(controller, /TrackHelpfulItem\(nextLevel\.id\)/);
   assert.match(controller, /CreateHelpfulItemGlow\(tile\.root, ItemAccent\(itemId\)\)/);
+  assert.match(controller, /CreateNeededItemMarker\(tile\.root, ItemAccent\(itemId\)\)/);
+  assert.match(controller, /CreateText\("Needed Marker Label"[\s\S]*"JOB"/);
   assert.match(controller, /AnimateHelpfulItemGlows\(\);/);
   assert.match(controller, /CreateRequirementRow\(card, order\)/);
+  assert.match(controller, /private const float OrderTextCenterX = -52f;/);
+  assert.match(controller, /private const float OrderTextWidth = 208f;/);
+  assert.match(controller, /CreateText\("Order Title"[\s\S]*new Vector2\(OrderTextCenterX, 24f\)[\s\S]*new Vector2\(OrderTextWidth, 18f\)/);
+  assert.match(controller, /float startX = OrderTextCenterX - OrderTextWidth \/ 2f \+ width \/ 2f;/);
   assert.match(controller, /RequirementTextColor\(requirement\.itemId\)/);
   assert.match(controller, /IsRequirementSatisfied\(requirement\)/);
   assert.match(controller, /requirement\.itemId == lastHelpfulItemId/);
@@ -184,6 +190,8 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
   assert.match(controller, /coinsLabel\.text = currentCoins\.ToString\(\)/);
   assert.match(controller, /SetStatus\(BuildCompletionStatus\(order\)\)/);
   assert.match(controller, /CreateReadyOrderPulse\(card\)/);
+  assert.match(controller, /CreateReadyOrderBadge\(card\)/);
+  assert.match(controller, /CreateText\("Ready Badge Text"[\s\S]*"READY"/);
   assert.match(controller, /readyOrderPulseImages\.Add\(pulse\)/);
   assert.match(controller, /private void Update\(\)[\s\S]*AnimateReadyOrderPulses\(\);[\s\S]*UpdateScrollHintIndicators\(\);/);
   assert.match(controller, /Mathf\.Sin\(Time\.unscaledTime \* 4\.5f\)/);
@@ -287,9 +295,9 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /text\.fontStyle = FontStyles\.Bold;/);
   assert.match(controller, /text\.isTextObjectScaleStatic = true;/);
   assert.match(controller, /typeof\(TextMeshProUGUI\)/);
-  assert.match(controller, /CreateText\("Order Title"[\s\S]*14[\s\S]*new Vector2\(-44f, 24f\)[\s\S]*new Vector2\(220f, 18f\)/);
-  assert.match(controller, /CreateText\("Order Requirements"[\s\S]*11[\s\S]*new Vector2\(-44f, 7f\)[\s\S]*new Vector2\(220f, 15f\)/);
-  assert.match(controller, /CreateText\("Order Reward"[\s\S]*11[\s\S]*new Vector2\(-44f, -10f\)[\s\S]*new Vector2\(220f, 15f\)/);
+  assert.match(controller, /CreateText\("Order Title"[\s\S]*14[\s\S]*new Vector2\(OrderTextCenterX, 24f\)[\s\S]*new Vector2\(OrderTextWidth, 18f\)/);
+  assert.match(controller, /CreateText\("Order Requirements"[\s\S]*11[\s\S]*new Vector2\(OrderTextCenterX, 7f\)[\s\S]*new Vector2\(OrderTextWidth, 15f\)/);
+  assert.match(controller, /CreateText\("Order Reward"[\s\S]*11[\s\S]*new Vector2\(OrderTextCenterX, -10f\)[\s\S]*new Vector2\(OrderTextWidth, 15f\)/);
   assert.match(controller, /CreateText\("District Progress"[\s\S]*11[\s\S]*new Vector2\(-78f, -32f\)[\s\S]*new Vector2\(236f, 15f\)/);
   assert.doesNotMatch(controller, /resizeTextMinSize/);
   assert.doesNotMatch(controller, /typeof\(Text\)/);

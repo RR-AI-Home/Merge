@@ -22,6 +22,8 @@ namespace MergePlatform.Client
         private const float OrderCardHeight = 76f;
         private const float OrderCardStep = 82f;
         private const float OrdersViewportHeight = 164f;
+        private const float OrderTextCenterX = -52f;
+        private const float OrderTextWidth = 208f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
         private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
         private static readonly string[] UiFontNames = { "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" };
@@ -529,11 +531,12 @@ namespace MergePlatform.Client
             if (ready)
             {
                 CreateReadyOrderPulse(card);
+                CreateReadyOrderBadge(card);
             }
 
             CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
-            CreateText("Order Title", card, order.title, 14, Color.white, TextAnchor.MiddleLeft, new Vector2(-44f, 24f), new Vector2(220f, 18f));
+            CreateText("Order Title", card, order.title, 14, Color.white, TextAnchor.MiddleLeft, new Vector2(OrderTextCenterX, 24f), new Vector2(OrderTextWidth, 18f));
             CreateRequirementRow(card, order);
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
@@ -543,12 +546,12 @@ namespace MergePlatform.Client
         {
             if (order.requires == null || order.requires.Length == 0)
             {
-                CreateText("Order Requirements", parent, "No requirements", 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-44f, 7f), new Vector2(220f, 15f));
+                CreateText("Order Requirements", parent, "No requirements", 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(OrderTextCenterX, 7f), new Vector2(OrderTextWidth, 15f));
                 return;
             }
 
-            float width = Mathf.Min(106f, 220f / Mathf.Max(1, order.requires.Length));
-            float startX = -44f + width / 2f;
+            float width = Mathf.Min(102f, OrderTextWidth / Mathf.Max(1, order.requires.Length));
+            float startX = OrderTextCenterX - OrderTextWidth / 2f + width / 2f;
 
             for (int index = 0; index < order.requires.Length; index += 1)
             {
@@ -603,6 +606,12 @@ namespace MergePlatform.Client
             Image pulse = pulseRoot.GetComponent<Image>();
             pulse.raycastTarget = false;
             readyOrderPulseImages.Add(pulse);
+        }
+
+        private void CreateReadyOrderBadge(RectTransform parent)
+        {
+            RectTransform badge = CreateRoundedPanel("Ready Order Badge", parent, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-88f, -14f), new Vector2(44f, 16f), new Color(0.25f, 0.74f, 0.86f, 0.95f));
+            CreateText("Ready Badge Text", badge, "READY", 8, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(38f, 11f));
         }
 
         private void AnimateReadyOrderPulses()
@@ -677,7 +686,7 @@ namespace MergePlatform.Client
         {
             int coins = order.rewards != null ? order.rewards.coins : 0;
             int xp = order.rewards != null ? order.rewards.xp : 0;
-            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 11, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-44f, -10f), new Vector2(220f, 15f));
+            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 11, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(OrderTextCenterX, -10f), new Vector2(OrderTextWidth, 15f));
         }
 
         private void CreateProducerTile()
@@ -1333,6 +1342,11 @@ namespace MergePlatform.Client
             BoardItemDragHandler dragHandler = root.gameObject.AddComponent<BoardItemDragHandler>();
             dragHandler.Initialize(this, tile);
             boardItems[grid] = tile;
+            if (IsItemNeededByActiveOrder(itemId))
+            {
+                CreateNeededItemMarker(tile.root, ItemAccent(itemId));
+            }
+
             if (IsHelpfulItemRecentlyCreated(itemId))
             {
                 CreateHelpfulItemGlow(tile.root, ItemAccent(itemId));
@@ -1354,6 +1368,14 @@ namespace MergePlatform.Client
             glow.raycastTarget = false;
             helpfulGlowEnds[glow] = Time.unscaledTime + 1.15f;
             helpfulItemGlowImages.Add(glow);
+        }
+
+        private void CreateNeededItemMarker(RectTransform parent, Color accent)
+        {
+            CreatePanel("Needed Marker Top", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -2f), new Vector2(TileSize - 10f, 3f), new Color(accent.r, accent.g, accent.b, 0.95f));
+            CreatePanel("Needed Marker Left", parent, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(2f, 0f), new Vector2(3f, TileSize - 10f), new Color(accent.r, accent.g, accent.b, 0.5f));
+            RectTransform marker = CreateRoundedPanel("Needed Marker Badge", parent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -9f), new Vector2(28f, 13f), new Color(0.04f, 0.12f, 0.16f, 0.96f));
+            CreateText("Needed Marker Label", marker, "JOB", 7, new Color(0.72f, 1f, 0.86f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(24f, 9f));
         }
 
         private void AnimateHelpfulItemGlows()
