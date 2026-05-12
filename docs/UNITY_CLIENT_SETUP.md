@@ -110,15 +110,15 @@ Current text quality baseline:
 - CanvasScaler uses the 412 x 915 reference resolution with stable match-width scaling and explicit pixel settings.
 - Shared `SetRect()` rounds anchored positions and sizes to whole pixels to reduce subpixel softness.
 - Text auto-sizing is disabled. Fix layout with explicit boxes and readable font sizes instead of shrinking text.
-- TMP wrapping uses `textWrappingMode`, not obsolete `enableWordWrapping`.
+- TMP wrapping uses `textWrappingMode`, not obsolete `enableWordWrapping`. Compact gameplay labels should default to no-wrap plus ellipsis; do not allow contract, nav, or tile labels to wrap into adjacent UI.
 
 If text becomes blurry again, inspect the shared `CreateText()` helper before changing individual labels. The helper is the typography contract for HUD, board items, contracts, and navigation.
 
 ## Portrait Visual Target
 
-Use `1080 x 1920` portrait in the Unity Game view for real-device preview. The runtime layout still uses a `412 x 915` logical CanvasScaler reference, with a `386` logical-pixel content column so the 6 x 6 merge board becomes a near full-width screen element.
+Use `1080 x 1920` portrait in the Unity Game view for real-device preview. The runtime layout still uses a `412 x 915` logical CanvasScaler reference, with a `386` logical-pixel content column so the 6 x 6 merge board becomes a near full-width screen element. Because the CanvasScaler matches width, the visible logical height on a 1080 x 1920 preview is shorter than 915; fit HUD, board, contracts, and bottom navigation against the actual visible portrait space, not the reference-height number.
 
-The current target style is a dark navy cyber UI with compact currency pills, an italic bold title, a large rounded merge board, icon-first item tiles, full-width contract cards, and a floating bottom navigation bar. The board sits directly under the HUD text, contract cards sit below the board, and mobile text should use heavier, larger labels instead of thin microtext.
+The current target style is a dark navy cyber UI with compact currency pills, an italic bold title, a large rounded merge board, icon-first item tiles, full-width contract cards, and a floating bottom navigation bar. The board sits directly under the HUD text, contract cards sit below the board but above the nav, and mobile text should use heavier, larger labels instead of thin microtext. Ready contracts render first, followed by blocked contracts, so the first visible card should usually be the player's next claimable action.
 
 ## Current Proof Scope
 

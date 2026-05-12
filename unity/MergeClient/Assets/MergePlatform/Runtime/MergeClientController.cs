@@ -337,7 +337,7 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            ordersPanel = CreateRoundedPanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -512f), new Vector2(MobileContentWidth, 168f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+            ordersPanel = CreateRoundedPanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -486f), new Vector2(MobileContentWidth, 150f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
             RefreshOrdersPanel();
         }
 
@@ -358,7 +358,8 @@ namespace MergePlatform.Client
                 return;
             }
 
-            int visibleIndex = 0;
+            List<OrderDefinition> readyOrders = new List<OrderDefinition>();
+            List<OrderDefinition> waitingOrders = new List<OrderDefinition>();
             for (int index = 0; index < theme.orders.Length; index += 1)
             {
                 OrderDefinition order = theme.orders[index];
@@ -367,14 +368,19 @@ namespace MergePlatform.Client
                     continue;
                 }
 
-                CreateOrderCard(ordersPanel, order, visibleIndex);
-                visibleIndex += 1;
-
-                if (visibleIndex >= VisibleOrderLimit)
+                if (CanCompleteOrder(order))
                 {
-                    break;
+                    readyOrders.Add(order);
+                }
+                else
+                {
+                    waitingOrders.Add(order);
                 }
             }
+
+            int visibleIndex = 0;
+            RenderVisibleOrders(readyOrders, ref visibleIndex);
+            RenderVisibleOrders(waitingOrders, ref visibleIndex);
 
             if (visibleIndex == 0)
             {
@@ -382,6 +388,15 @@ namespace MergePlatform.Client
             }
 
             UpdateDistrictProgress();
+        }
+
+        private void RenderVisibleOrders(List<OrderDefinition> orders, ref int visibleIndex)
+        {
+            for (int index = 0; index < orders.Count && visibleIndex < VisibleOrderLimit; index += 1)
+            {
+                CreateOrderCard(ordersPanel, orders[index], visibleIndex);
+                visibleIndex += 1;
+            }
         }
 
         private void CreateOrderQueueEmpty(RectTransform parent)
@@ -394,7 +409,7 @@ namespace MergePlatform.Client
 
         private void CreateBottomNav()
         {
-            RectTransform nav = CreateRoundedPanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 0f), new Vector2(MobileContentWidth, 88f), new Color(0.035f, 0.055f, 0.09f, 0.99f));
+            RectTransform nav = CreateRoundedPanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 0f), new Vector2(MobileContentWidth, 78f), new Color(0.035f, 0.055f, 0.09f, 0.99f));
             CreateNavButton(nav, "BOARD", new Vector2(-144f, 48f), true, new Color(0.16f, 0.48f, 1f));
             CreateNavButton(nav, "DIST", new Vector2(-48f, 48f), false, new Color(0.25f, 0.82f, 0.58f));
             CreateNavButton(nav, "BOOK", new Vector2(48f, 48f), false, new Color(0.86f, 0.26f, 0.78f));
@@ -405,7 +420,7 @@ namespace MergePlatform.Client
         {
             RectTransform button = CreateRoundedPanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(62f, 58f), active ? new Color(0.08f, 0.16f, 0.27f, 1f) : new Color(0.035f, 0.045f, 0.065f, 1f));
             CreateNavIcon(button, label, active, accent);
-            CreateText("Nav Label", button, label, 7, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(52f, 12f));
+            CreateText("Nav Label", button, label, 8, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(54f, 13f));
         }
 
         private void CreateNavIcon(RectTransform parent, string label, bool active, Color accent)
@@ -444,13 +459,13 @@ namespace MergePlatform.Client
             bool completed = completedOrderIds.Contains(order.id);
             bool ready = !completed && CanCompleteOrder(order);
             Color cardColor = completed ? new Color(0.08f, 0.18f, 0.16f, 1f) : ready ? new Color(0.1f, 0.18f, 0.25f, 1f) : new Color(0.08f, 0.11f, 0.19f, 1f);
-            RectTransform card = CreateRoundedPanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -27f - index * 72f), new Vector2(356f, 64f), cardColor);
+            RectTransform card = CreateRoundedPanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f - index * 66f), new Vector2(356f, 60f), cardColor);
             card.gameObject.AddComponent<RectMask2D>();
 
             CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
-            CreateText("Order Title", card, order.title, 13, Color.white, TextAnchor.MiddleLeft, new Vector2(-58f, 19f), new Vector2(246f, 17f));
-            CreateText("Order Requirements", card, FormatRequirements(order), 10, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-58f, 0f), new Vector2(246f, 14f));
+            CreateText("Order Title", card, order.title, 14, Color.white, TextAnchor.MiddleLeft, new Vector2(-44f, 17f), new Vector2(224f, 18f));
+            CreateText("Order Requirements", card, FormatRequirements(order), 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-44f, -1f), new Vector2(224f, 15f));
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
         }
@@ -458,13 +473,13 @@ namespace MergePlatform.Client
         private void CreateOrderStateStripe(RectTransform parent, bool ready, bool completed)
         {
             Color stripeColor = completed ? new Color(0.72f, 1f, 0.74f, 1f) : ready ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.45f, 0.55f, 0.72f, 1f);
-            CreatePanel("Order State Stripe", parent, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(4f, 52f), stripeColor);
+            CreatePanel("Order State Stripe", parent, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(4f, 48f), stripeColor);
         }
 
         private void CreateOrderProgressBar(RectTransform parent, bool ready, bool completed)
         {
-            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-58f, 7f), new Vector2(246f, 3f), new Color(0.04f, 0.06f, 0.1f, 1f));
-            float width = completed ? 246f : ready ? 198f : 92f;
+            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-44f, 6f), new Vector2(224f, 3f), new Color(0.04f, 0.06f, 0.1f, 1f));
+            float width = completed ? 224f : ready ? 178f : 84f;
             Color fillColor = completed ? new Color(0.72f, 1f, 0.74f, 1f) : ready ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.45f, 0.55f, 0.72f, 1f);
             CreatePanel("Order Progress Fill", track, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(width / 2f, 0f), new Vector2(width, 3f), fillColor);
         }
@@ -472,7 +487,8 @@ namespace MergePlatform.Client
         private void CreateOrderActionButton(RectTransform parent, OrderDefinition order, bool ready, bool completed)
         {
             Color buttonColor = completed ? new Color(0.16f, 0.36f, 0.28f, 1f) : ready ? new Color(0.14f, 0.42f, 0.52f, 1f) : new Color(0.18f, 0.22f, 0.32f, 1f);
-            RectTransform buttonRoot = CreateRoundedPanel("Order Action Button", parent, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), new Vector2(62f, 42f), buttonColor);
+            RectTransform buttonRoot = CreateRoundedPanel("Order Action Button", parent, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-10f, 0f), new Vector2(72f, 44f), buttonColor);
+            CreatePanel("Order Button Shine", buttonRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -6f), new Vector2(46f, 3f), new Color(1f, 1f, 1f, ready ? 0.28f : 0.12f));
             Button button = buttonRoot.gameObject.AddComponent<Button>();
             button.targetGraphic = buttonRoot.GetComponent<Image>();
             button.interactable = !completed;
@@ -480,14 +496,14 @@ namespace MergePlatform.Client
 
             string label = completed ? "DONE" : ready ? "CLAIM" : "CHECK";
             Color labelColor = completed ? new Color(0.74f, 1f, 0.78f) : ready ? Color.white : new Color(0.72f, 0.82f, 0.92f);
-            CreateText("Order Action Label", buttonRoot, label, 8, labelColor, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(50f, 20f));
+            CreateText("Order Action Label", buttonRoot, label, 11, labelColor, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(58f, 22f));
         }
 
         private void CreateRewardRow(RectTransform parent, OrderDefinition order)
         {
             int coins = order.rewards != null ? order.rewards.coins : 0;
             int xp = order.rewards != null ? order.rewards.xp : 0;
-            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 10, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-58f, -18f), new Vector2(246f, 14f));
+            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 11, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-44f, -18f), new Vector2(224f, 15f));
         }
 
         private void CreateProducerTile()
@@ -1698,7 +1714,7 @@ namespace MergePlatform.Client
             text.alignment = ToTextAlignment(alignment);
             text.fontStyle = FontStyles.Bold;
             text.enableAutoSizing = false;
-            text.textWrappingMode = TextWrappingModes.Normal;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Ellipsis;
             text.extraPadding = false;
             text.isTextObjectScaleStatic = true;
