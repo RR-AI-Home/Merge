@@ -116,9 +116,9 @@ If text becomes blurry again, inspect the shared `CreateText()` helper before ch
 
 ## Portrait Visual Target
 
-Use `1080 x 1920` portrait in the Unity Game view for real-device preview. The runtime layout still uses a `412 x 915` logical CanvasScaler reference, with a compact `292` logical-pixel content column that matches the current premium mobile mock direction.
+Use `1080 x 1920` portrait in the Unity Game view for real-device preview. The runtime layout still uses a `412 x 915` logical CanvasScaler reference, with a `352` logical-pixel content column so the 6 x 6 merge board becomes the primary end-to-end screen element.
 
-The current target style is a dark navy cyber UI with compact currency pills, an italic bold title, rounded board and contract panels, icon-first item tiles, and a floating bottom navigation bar. Keep item labels short and avoid putting long text inside board tiles.
+The current target style is a dark navy cyber UI with compact currency pills, an italic bold title, a large rounded merge board, icon-first item tiles, full-width contract cards, and a floating bottom navigation bar. Keep item labels short and avoid putting long text inside board tiles.
 
 ## Current Proof Scope
 
