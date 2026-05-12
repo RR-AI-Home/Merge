@@ -291,7 +291,8 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /using UnityEngine\.TextCore\.LowLevel;/);
   assert.match(controller, /private TextMeshProUGUI energyLabel;/);
   assert.match(controller, /private TMP_FontAsset uiFontAsset;/);
-  assert.match(controller, /CreateRuntimeTmpFontAsset\(\) \?\? LoadProjectTmpFontAsset\(\)/);
+  assert.match(controller, /LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\)/);
+  assert.match(controller, /"Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
   assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(font, 96, 12, GlyphRenderMode\.SDFAA, 4096, 4096, AtlasPopulationMode\.Dynamic, true\)/);
   assert.match(controller, /uiFontAsset\.isMultiAtlasTexturesEnabled = true;/);
   assert.match(controller, /if \(fontAsset != null\)[\s\S]*text\.font = fontAsset;/);
@@ -425,7 +426,7 @@ test('Unity MergeClient matches the approved first playable mockup proportions',
   assert.match(controller, /private const float OrdersPanelTopY = -532f;/);
   assert.match(controller, /private const float BottomNavBottomY = 14f;/);
   assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(font, 96, 12, GlyphRenderMode\.SDFAA, 4096, 4096, AtlasPopulationMode\.Dynamic, true\)/);
-  assert.match(controller, /Font osFont = Font\.CreateDynamicFontFromOSFont\(UiFontNames, 36\);[\s\S]*yield return osFont;[\s\S]*Resources\.GetBuiltinResource<Font>\("Arial\.ttf"\)/);
+  assert.match(controller, /Resources\.GetBuiltinResource<Font>\("Arial\.ttf"\);[\s\S]*yield return builtInArial;[\s\S]*Font osFont = Font\.CreateDynamicFontFromOSFont\(UiFontNames, 36\);/);
   assert.match(controller, /private TextMeshProUGUI titleLabel;/);
   assert.match(controller, /titleLabel = CreateText\("Title"[\s\S]*24[\s\S]*new Vector2\(-78f, 12f\)/);
   assert.match(controller, /CreateStatPill\(hud, "ENERGY", new Vector2\(-120f, 44f\), new Vector2\(78f, 30f\)/);
@@ -470,7 +471,8 @@ test('Unity MergeClient uses the mockup font and keeps contract actions clear of
   );
 
   assert.match(controller, /private static readonly string\[\] UiFontNames = \{ "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" \};/);
-  assert.match(controller, /uiFontAsset = CreateRuntimeTmpFontAsset\(\) \?\? LoadProjectTmpFontAsset\(\);/);
+  assert.match(controller, /uiFontAsset = LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\);/);
+  assert.match(controller, /ProjectTmpFontResourcePaths = \{ "Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
   assert.match(controller, /private const float OrdersPanelTopY = -532f;/);
   assert.match(controller, /private const float BottomNavBottomY = 14f;/);
   assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.129f, 0\.188f, 0\.29f, 1f\)/);

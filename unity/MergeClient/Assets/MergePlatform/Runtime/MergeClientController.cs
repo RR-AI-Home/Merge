@@ -30,7 +30,7 @@ namespace MergePlatform.Client
         private const float OrderTextCenterX = -52f;
         private const float OrderTextWidth = 208f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
-        private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
+        private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/Cascadia Code SDF", "Fonts/Cascadia Code SDF", "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
         private static readonly string[] UiFontNames = { "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" };
 
         private enum ActiveScreen
@@ -101,7 +101,7 @@ namespace MergePlatform.Client
             {
                 if (uiFontAsset == null)
                 {
-                    uiFontAsset = CreateRuntimeTmpFontAsset() ?? LoadProjectTmpFontAsset();
+                    uiFontAsset = LoadProjectTmpFontAsset() ?? CreateRuntimeTmpFontAsset();
 
                     if (uiFontAsset != null)
                     {
@@ -154,12 +154,6 @@ namespace MergePlatform.Client
 
         private static IEnumerable<Font> RuntimeFontCandidates()
         {
-            Font osFont = Font.CreateDynamicFontFromOSFont(UiFontNames, 36);
-            if (osFont != null)
-            {
-                yield return osFont;
-            }
-
             Font builtInArial = Resources.GetBuiltinResource<Font>("Arial.ttf");
             if (builtInArial != null)
             {
@@ -170,6 +164,12 @@ namespace MergePlatform.Client
             if (builtInRuntime != null)
             {
                 yield return builtInRuntime;
+            }
+
+            Font osFont = Font.CreateDynamicFontFromOSFont(UiFontNames, 36);
+            if (osFont != null)
+            {
+                yield return osFont;
             }
         }
 
