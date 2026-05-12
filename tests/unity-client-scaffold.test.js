@@ -171,6 +171,15 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
   assert.match(controller, /CanCompleteOrder/);
   assert.match(controller, /TryCompleteOrder/);
   assert.match(controller, /CollectRequiredTiles/);
+  assert.match(controller, /private string lastHelpfulItemId;/);
+  assert.match(controller, /private readonly Dictionary<string, float> helpfulItemGlowUntil = new Dictionary<string, float>\(\)/);
+  assert.match(controller, /TrackHelpfulItem\(nextLevel\.id\)/);
+  assert.match(controller, /CreateHelpfulItemGlow\(tile\.root, ItemAccent\(itemId\)\)/);
+  assert.match(controller, /AnimateHelpfulItemGlows\(\);/);
+  assert.match(controller, /CreateRequirementRow\(card, order\)/);
+  assert.match(controller, /RequirementTextColor\(requirement\.itemId\)/);
+  assert.match(controller, /IsRequirementSatisfied\(requirement\)/);
+  assert.match(controller, /requirement\.itemId == lastHelpfulItemId/);
   assert.match(controller, /currentCoins \+= order\.rewards != null \? order\.rewards\.coins : 0;/);
   assert.match(controller, /coinsLabel\.text = currentCoins\.ToString\(\)/);
   assert.match(controller, /SetStatus\(BuildCompletionStatus\(order\)\)/);

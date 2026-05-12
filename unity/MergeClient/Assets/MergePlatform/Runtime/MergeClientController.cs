@@ -31,6 +31,9 @@ namespace MergePlatform.Client
         private readonly Dictionary<Vector2Int, ItemTile> boardItems = new Dictionary<Vector2Int, ItemTile>();
         private readonly Dictionary<Vector2Int, RectTransform> boardSlots = new Dictionary<Vector2Int, RectTransform>();
         private readonly Dictionary<Vector2Int, Image> boardSlotHighlights = new Dictionary<Vector2Int, Image>();
+        private readonly Dictionary<string, float> helpfulItemGlowUntil = new Dictionary<string, float>();
+        private readonly Dictionary<Image, float> helpfulGlowEnds = new Dictionary<Image, float>();
+        private readonly List<Image> helpfulItemGlowImages = new List<Image>();
         private readonly List<Image> readyOrderPulseImages = new List<Image>();
         private readonly HashSet<string> completedOrderIds = new HashSet<string>();
 
@@ -56,6 +59,7 @@ namespace MergePlatform.Client
         private AudioSource feedbackAudio;
         private AudioClip mergeSound;
         private ItemTile selectedTile;
+        private string lastHelpfulItemId;
         private Vector2Int? highlightedGrid;
         private Vector2Int producerGrid;
         private int currentEnergy;
@@ -157,6 +161,7 @@ namespace MergePlatform.Client
         private void Update()
         {
             AnimateReadyOrderPulses();
+            AnimateHelpfulItemGlows();
             UpdateScrollHintIndicators();
         }
 
@@ -248,7 +253,11 @@ namespace MergePlatform.Client
             boardItems.Clear();
             boardSlots.Clear();
             boardSlotHighlights.Clear();
+            helpfulItemGlowUntil.Clear();
+            helpfulGlowEnds.Clear();
+            helpfulItemGlowImages.Clear();
             readyOrderPulseImages.Clear();
+            lastHelpfulItemId = null;
             highlightedGrid = null;
             districtLabel = null;
             orderScrollContent = null;
@@ -525,9 +534,66 @@ namespace MergePlatform.Client
             CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
             CreateText("Order Title", card, order.title, 14, Color.white, TextAnchor.MiddleLeft, new Vector2(-44f, 24f), new Vector2(220f, 18f));
-            CreateText("Order Requirements", card, FormatRequirements(order), 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-44f, 7f), new Vector2(220f, 15f));
+            CreateRequirementRow(card, order);
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
+        }
+
+        private void CreateRequirementRow(RectTransform parent, OrderDefinition order)
+        {
+            if (order.requires == null || order.requires.Length == 0)
+            {
+                CreateText("Order Requirements", parent, "No requirements", 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-44f, 7f), new Vector2(220f, 15f));
+                return;
+            }
+
+            float width = Mathf.Min(106f, 220f / Mathf.Max(1, order.requires.Length));
+            float startX = -44f + width / 2f;
+
+            for (int index = 0; index < order.requires.Length; index += 1)
+            {
+                RequiredItem requirement = order.requires[index];
+                string name = itemLookup.TryGetValue(requirement.itemId, out ItemLevel level) ? ShortName(level.name) : requirement.itemId;
+                bool satisfied = IsRequirementSatisfied(requirement);
+                bool wasJustCreated = requirement.itemId == lastHelpfulItemId;
+                Color requirementColor = satisfied || wasJustCreated ? RequirementTextColor(requirement.itemId) : new Color(0.78f, 0.9f, 1f, 1f);
+                CreateText("Order Requirement", parent, $"{requirement.count}x {name}", 11, requirementColor, TextAnchor.MiddleLeft, new Vector2(startX + index * width, 7f), new Vector2(width - 4f, 15f));
+            }
+        }
+
+        private Color RequirementTextColor(string itemId)
+        {
+            if (itemId == lastHelpfulItemId)
+            {
+                return new Color(0.54f, 0.94f, 1f, 1f);
+            }
+
+            return new Color(0.5f, 1f, 0.7f, 1f);
+        }
+
+        private bool IsRequirementSatisfied(RequiredItem requirement)
+        {
+            if (requirement == null || string.IsNullOrWhiteSpace(requirement.itemId))
+            {
+                return false;
+            }
+
+            int found = 0;
+            foreach (ItemTile tile in boardItems.Values)
+            {
+                if (tile.itemId != requirement.itemId)
+                {
+                    continue;
+                }
+
+                found += 1;
+                if (found >= Mathf.Max(1, requirement.count))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void CreateReadyOrderPulse(RectTransform parent)
@@ -812,6 +878,7 @@ namespace MergePlatform.Client
 
             currentEnergy -= producer.energyCost;
             producerTapsRemaining -= 1;
+            TrackHelpfulItem(drop.itemId);
             CreateItemTile(drop.itemId, level, grid);
             UpdateEnergyLabel();
 
@@ -1124,6 +1191,7 @@ namespace MergePlatform.Client
             boardItems.Remove(target.grid);
             Destroy(source.root.gameObject);
             Destroy(target.root.gameObject);
+            TrackHelpfulItem(nextLevel.id);
             CreateMergedTile(nextLevel, targetGrid);
             PlayMergeFeedback(targetGrid, ItemAccent(nextLevel.id));
             SetStatus($"Merged into {nextLevel.name}");
@@ -1134,6 +1202,44 @@ namespace MergePlatform.Client
         private void CreateMergedTile(ItemLevel nextLevel, Vector2Int grid)
         {
             CreateItemTile(nextLevel.id, nextLevel, grid);
+        }
+
+        private bool TrackHelpfulItem(string itemId)
+        {
+            if (!IsItemNeededByActiveOrder(itemId))
+            {
+                return false;
+            }
+
+            lastHelpfulItemId = itemId;
+            helpfulItemGlowUntil[itemId] = Time.unscaledTime + 1.15f;
+            return true;
+        }
+
+        private bool IsItemNeededByActiveOrder(string itemId)
+        {
+            if (theme?.orders == null || string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            foreach (OrderDefinition order in theme.orders)
+            {
+                if (order == null || completedOrderIds.Contains(order.id) || order.requires == null)
+                {
+                    continue;
+                }
+
+                foreach (RequiredItem requirement in order.requires)
+                {
+                    if (requirement.itemId == itemId)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private void PlayMergeFeedback(Vector2Int grid, Color accent)
@@ -1227,7 +1333,58 @@ namespace MergePlatform.Client
             BoardItemDragHandler dragHandler = root.gameObject.AddComponent<BoardItemDragHandler>();
             dragHandler.Initialize(this, tile);
             boardItems[grid] = tile;
+            if (IsHelpfulItemRecentlyCreated(itemId))
+            {
+                CreateHelpfulItemGlow(tile.root, ItemAccent(itemId));
+            }
+
             return tile;
+        }
+
+        private bool IsHelpfulItemRecentlyCreated(string itemId)
+        {
+            return helpfulItemGlowUntil.TryGetValue(itemId, out float glowUntil) && Time.unscaledTime <= glowUntil;
+        }
+
+        private void CreateHelpfulItemGlow(RectTransform parent, Color accent)
+        {
+            RectTransform glowRoot = CreateRoundedPanel("Helpful Item Glow", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TileSize - 5f, TileSize - 5f), new Color(accent.r, accent.g, accent.b, 0.2f));
+            glowRoot.SetAsFirstSibling();
+            Image glow = glowRoot.GetComponent<Image>();
+            glow.raycastTarget = false;
+            helpfulGlowEnds[glow] = Time.unscaledTime + 1.15f;
+            helpfulItemGlowImages.Add(glow);
+        }
+
+        private void AnimateHelpfulItemGlows()
+        {
+            if (helpfulItemGlowImages.Count == 0)
+            {
+                return;
+            }
+
+            float alpha = 0.12f + (Mathf.Sin(Time.unscaledTime * 6f) + 1f) * 0.06f;
+            for (int index = helpfulItemGlowImages.Count - 1; index >= 0; index -= 1)
+            {
+                Image glow = helpfulItemGlowImages[index];
+                if (glow == null)
+                {
+                    helpfulItemGlowImages.RemoveAt(index);
+                    continue;
+                }
+
+                if (helpfulGlowEnds.TryGetValue(glow, out float glowEnd) && Time.unscaledTime > glowEnd)
+                {
+                    helpfulGlowEnds.Remove(glow);
+                    helpfulItemGlowImages.RemoveAt(index);
+                    Destroy(glow.gameObject);
+                    continue;
+                }
+
+                Color glowColor = glow.color;
+                glowColor.a = alpha;
+                glow.color = glowColor;
+            }
         }
 
         private RectTransform CreateItemCard(string itemId, ItemLevel level, Vector2Int grid)
