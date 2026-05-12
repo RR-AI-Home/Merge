@@ -272,15 +272,15 @@ namespace MergePlatform.Client
 
         private void CreateHud()
         {
-            RectTransform hud = CreateRoundedPanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -16f), new Vector2(MobileContentWidth, 112f), new Color(0.035f, 0.06f, 0.1f, 0.94f));
-            TextMeshProUGUI title = CreateText("Title", hud, theme.config.displayName, 19, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-82f, 31f), new Vector2(226f, 28f));
+            RectTransform hud = CreateRoundedPanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f), new Vector2(MobileContentWidth, 102f), new Color(0.035f, 0.06f, 0.1f, 0.94f));
+            TextMeshProUGUI title = CreateText("Title", hud, theme.config.displayName, 22, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, 30f), new Vector2(236f, 30f));
             title.fontStyle = FontStyles.Bold | FontStyles.Italic;
 
             energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(34f, 36f), new Vector2(74f, 27f), new Color(0.95f, 0.66f, 0.18f));
             coinsLabel = CreateStatPill(hud, "COINS", new Vector2(132f, 36f), new Vector2(58f, 27f), new Color(0.25f, 0.82f, 0.58f));
             premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(212f, 36f), new Vector2(58f, 27f), new Color(0.86f, 0.26f, 0.78f));
-            statusLabel = CreateText("HUD Status", hud, "Ready", 10, new Color(0.74f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-82f, -20f), new Vector2(226f, 14f));
-            districtLabel = CreateText("District Progress", hud, "District 0/2", 10, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-82f, -38f), new Vector2(226f, 14f));
+            statusLabel = CreateText("HUD Status", hud, "Ready", 11, new Color(0.74f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -16f), new Vector2(236f, 15f));
+            districtLabel = CreateText("District Progress", hud, "District 0/2", 11, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, -32f), new Vector2(236f, 15f));
 
             coinsLabel.text = currentCoins.ToString();
             premiumLabel.text = currentPremium.ToString();
@@ -301,7 +301,7 @@ namespace MergePlatform.Client
 
         private void CreateBoard()
         {
-            boardPanel = CreateRoundedPanel("Merge Board", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -344f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.055f, 0.08f, 0.125f, 0.98f));
+            boardPanel = CreateRoundedPanel("Merge Board", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -306f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.055f, 0.08f, 0.125f, 0.98f));
 
             for (int y = 0; y < boardHeight; y += 1)
             {
@@ -337,7 +337,7 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            ordersPanel = CreateRoundedPanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -738f), new Vector2(MobileContentWidth, 168f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+            ordersPanel = CreateRoundedPanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -512f), new Vector2(MobileContentWidth, 168f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
             RefreshOrdersPanel();
         }
 
@@ -449,8 +449,8 @@ namespace MergePlatform.Client
 
             CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
-            CreateText("Order Title", card, order.title, 11, Color.white, TextAnchor.MiddleLeft, new Vector2(-58f, 19f), new Vector2(246f, 16f));
-            CreateText("Order Requirements", card, FormatRequirements(order), 8, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-58f, 1f), new Vector2(246f, 13f));
+            CreateText("Order Title", card, order.title, 13, Color.white, TextAnchor.MiddleLeft, new Vector2(-58f, 19f), new Vector2(246f, 17f));
+            CreateText("Order Requirements", card, FormatRequirements(order), 10, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-58f, 0f), new Vector2(246f, 14f));
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
         }
@@ -487,7 +487,7 @@ namespace MergePlatform.Client
         {
             int coins = order.rewards != null ? order.rewards.coins : 0;
             int xp = order.rewards != null ? order.rewards.xp : 0;
-            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 8, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-58f, -17f), new Vector2(246f, 13f));
+            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 10, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-58f, -18f), new Vector2(246f, 14f));
         }
 
         private void CreateProducerTile()
@@ -504,7 +504,7 @@ namespace MergePlatform.Client
             button.targetGraphic = root.GetComponent<Image>();
             button.onClick.AddListener(() => TryTapProducer(producer));
             CreateProducerIcon(root);
-            CreateText("Producer Label", root, "CRATE", 7, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -19f), new Vector2(TileSize - 6f, 10f));
+            CreateText("Producer Label", root, "CRATE", 8, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 6f, 12f));
         }
 
         private void SeedMergeableItems()
@@ -1146,7 +1146,7 @@ namespace MergePlatform.Client
 
         private void CreateItemDisplayLabel(RectTransform parent, string itemId, string itemName)
         {
-            CreateText("Name", parent, ItemDisplayName(itemId, itemName), 6, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -19f), new Vector2(TileSize - 8f, 10f));
+            CreateText("Name", parent, ItemDisplayName(itemId, itemName), 8, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 8f, 12f));
         }
 
         private void CreateProducerIcon(RectTransform parent)

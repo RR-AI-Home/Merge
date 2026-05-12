@@ -75,7 +75,7 @@ test('Unity MergeClient HUD keeps title above resource pills', async () => {
     'utf8'
   );
 
-  assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(-82f, 31f\)/);
+  assert.match(controller, /CreateText\("Title"[\s\S]*22[\s\S]*new Vector2\(-78f, 30f\)/);
   assert.match(controller, /CreateStatPill\(hud, "ENERGY", new Vector2\(34f, 36f\)/);
   assert.match(controller, /CreateStatPill\(hud, "COINS", new Vector2\(132f, 36f\)/);
   assert.match(controller, /CreateStatPill\(hud, "GEMS", new Vector2\(212f, 36f\)/);
@@ -104,10 +104,10 @@ test('Unity MergeClient portrait stack uses safe top margin and compact contract
     'utf8'
   );
 
-  assert.match(controller, /CreateRoundedPanel\("HUD"[\s\S]*new Vector2\(0f, -16f\)[\s\S]*new Vector2\(MobileContentWidth, 112f\)/);
-  assert.match(controller, /CreateText\("Title"[\s\S]*new Vector2\(-82f, 31f\)/);
-  assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, -344f\)/);
-  assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, -738f\)[\s\S]*new Vector2\(MobileContentWidth, 168f\)/);
+  assert.match(controller, /CreateRoundedPanel\("HUD"[\s\S]*new Vector2\(0f, -8f\)[\s\S]*new Vector2\(MobileContentWidth, 102f\)/);
+  assert.match(controller, /CreateText\("Title"[\s\S]*22[\s\S]*new Vector2\(-78f, 30f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, -306f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, -512f\)[\s\S]*new Vector2\(MobileContentWidth, 168f\)/);
   assert.match(controller, /new Vector2\(0f, -27f - index \* 72f\)/);
 });
 
@@ -189,9 +189,9 @@ test('Unity MergeClient portrait layout keeps top and bottom safe spacing', asyn
     'utf8'
   );
 
-  assert.match(controller, /CreateRoundedPanel\("HUD"[\s\S]*new Vector2\(0f, -16f\)[\s\S]*new Vector2\(MobileContentWidth, 112f\)/);
-  assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, -344f\)/);
-  assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, -738f\)[\s\S]*new Vector2\(MobileContentWidth, 168f\)/);
+  assert.match(controller, /CreateRoundedPanel\("HUD"[\s\S]*new Vector2\(0f, -8f\)[\s\S]*new Vector2\(MobileContentWidth, 102f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, -306f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, -512f\)[\s\S]*new Vector2\(MobileContentWidth, 168f\)/);
   assert.match(controller, /CreateRoundedPanel\("Bottom Nav"[\s\S]*new Vector2\(0f, 0f\)[\s\S]*new Vector2\(MobileContentWidth, 88f\)/);
   assert.match(controller, /CreateNavButton\(nav, "BOARD", new Vector2\(-144f, 48f\)/);
   assert.doesNotMatch(controller, /CreatePanel\("Bottom Nav"[\s\S]*new Vector2\(0f, 18f\)/);
@@ -254,10 +254,10 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /text\.fontStyle = FontStyles\.Bold;/);
   assert.match(controller, /text\.isTextObjectScaleStatic = true;/);
   assert.match(controller, /typeof\(TextMeshProUGUI\)/);
-  assert.match(controller, /CreateText\("Order Title"[\s\S]*11[\s\S]*new Vector2\(-58f, 19f\)[\s\S]*new Vector2\(246f, 16f\)/);
-  assert.match(controller, /CreateText\("Order Requirements"[\s\S]*8[\s\S]*new Vector2\(-58f, 1f\)[\s\S]*new Vector2\(246f, 13f\)/);
-  assert.match(controller, /CreateText\("Order Reward"[\s\S]*8[\s\S]*new Vector2\(-58f, -17f\)[\s\S]*new Vector2\(246f, 13f\)/);
-  assert.match(controller, /CreateText\("District Progress"[\s\S]*10[\s\S]*new Vector2\(-82f, -38f\)[\s\S]*new Vector2\(226f, 14f\)/);
+  assert.match(controller, /CreateText\("Order Title"[\s\S]*13[\s\S]*new Vector2\(-58f, 19f\)[\s\S]*new Vector2\(246f, 17f\)/);
+  assert.match(controller, /CreateText\("Order Requirements"[\s\S]*10[\s\S]*new Vector2\(-58f, 0f\)[\s\S]*new Vector2\(246f, 14f\)/);
+  assert.match(controller, /CreateText\("Order Reward"[\s\S]*10[\s\S]*new Vector2\(-58f, -18f\)[\s\S]*new Vector2\(246f, 14f\)/);
+  assert.match(controller, /CreateText\("District Progress"[\s\S]*11[\s\S]*new Vector2\(-78f, -32f\)[\s\S]*new Vector2\(236f, 15f\)/);
   assert.doesNotMatch(controller, /resizeTextMinSize/);
   assert.doesNotMatch(controller, /typeof\(Text\)/);
   assert.doesNotMatch(controller, /private Text /);
@@ -282,8 +282,8 @@ test('Unity MergeClient uses a stronger cyber font and larger non-overlapping mo
   assert.match(controller, /CreateRoundedPanel\(\$"Order \{order\.id\}"[\s\S]*new Vector2\(0f, -27f - index \* 72f\)[\s\S]*new Vector2\(356f, 64f\)/);
   assert.match(controller, /CreatePanel\("Order Progress Track"[\s\S]*new Vector2\(-58f, 7f\)[\s\S]*new Vector2\(246f, 3f\)/);
   assert.match(controller, /CreateRoundedPanel\("Order Action Button"[\s\S]*new Vector2\(-12f, 0f\)[\s\S]*new Vector2\(62f, 42f\)/);
-  assert.match(controller, /CreateText\("Name"[\s\S]*6[\s\S]*new Vector2\(0f, -19f\)[\s\S]*new Vector2\(TileSize - 8f, 10f\)/);
-  assert.match(controller, /CreateText\("Producer Label"[\s\S]*"CRATE"[\s\S]*7[\s\S]*new Vector2\(0f, -19f\)/);
+  assert.match(controller, /CreateText\("Name"[\s\S]*8[\s\S]*new Vector2\(0f, -20f\)[\s\S]*new Vector2\(TileSize - 8f, 12f\)/);
+  assert.match(controller, /CreateText\("Producer Label"[\s\S]*"CRATE"[\s\S]*8[\s\S]*new Vector2\(0f, -20f\)/);
 });
 
 test('Unity MergeClient procedural icons use layered depth treatment', async () => {

@@ -118,7 +118,7 @@ If text becomes blurry again, inspect the shared `CreateText()` helper before ch
 
 Use `1080 x 1920` portrait in the Unity Game view for real-device preview. The runtime layout still uses a `412 x 915` logical CanvasScaler reference, with a `386` logical-pixel content column so the 6 x 6 merge board becomes a near full-width screen element.
 
-The current target style is a dark navy cyber UI with compact currency pills, an italic bold title, a large rounded merge board, icon-first item tiles, full-width contract cards, and a floating bottom navigation bar. Keep item labels short and avoid putting long text inside board tiles.
+The current target style is a dark navy cyber UI with compact currency pills, an italic bold title, a large rounded merge board, icon-first item tiles, full-width contract cards, and a floating bottom navigation bar. The board sits directly under the HUD text, contract cards sit below the board, and mobile text should use heavier, larger labels instead of thin microtext.
 
 ## Current Proof Scope
 
