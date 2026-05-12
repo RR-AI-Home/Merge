@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -292,7 +292,7 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /private TextMeshProUGUI energyLabel;/);
   assert.match(controller, /private TMP_FontAsset uiFontAsset;/);
   assert.match(controller, /LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\)/);
-  assert.match(controller, /"Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
+  assert.match(controller, /"Fonts & Materials\/CascadiaCode-VariableFont_wght SDF", "Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
   assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(font, 96, 12, GlyphRenderMode\.SDFAA, 4096, 4096, AtlasPopulationMode\.Dynamic, true\)/);
   assert.match(controller, /uiFontAsset\.isMultiAtlasTexturesEnabled = true;/);
   assert.match(controller, /if \(fontAsset != null\)[\s\S]*text\.font = fontAsset;/);
@@ -472,10 +472,27 @@ test('Unity MergeClient uses the mockup font and keeps contract actions clear of
 
   assert.match(controller, /private static readonly string\[\] UiFontNames = \{ "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" \};/);
   assert.match(controller, /uiFontAsset = LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\);/);
-  assert.match(controller, /ProjectTmpFontResourcePaths = \{ "Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
+  assert.match(controller, /ProjectTmpFontResourcePaths = \{ "Fonts & Materials\/CascadiaCode-VariableFont_wght SDF", "Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
   assert.match(controller, /private const float OrdersPanelTopY = -532f;/);
   assert.match(controller, /private const float BottomNavBottomY = 14f;/);
   assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.129f, 0\.188f, 0\.29f, 1f\)/);
   assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.176f, 0\.239f, 0\.353f, 1f\)/);
   assert.match(controller, /CreateImage\("Slot Top Line"[\s\S]*new Color\(0\.54f, 0\.68f, 0\.88f, 0\.18f\)/);
+});
+
+test('Unity MergeClient ships the imported Cascadia TMP font asset under Resources', async () => {
+  const fontAsset = await stat(
+    path.join(
+      'unity',
+      'MergeClient',
+      'Assets',
+      'MergePlatform',
+      'Resources',
+      'Fonts & Materials',
+      'CascadiaCode-VariableFont_wght SDF.asset'
+    )
+  );
+
+  assert.ok(fontAsset.isFile());
+  assert.ok(fontAsset.size > 100000);
 });

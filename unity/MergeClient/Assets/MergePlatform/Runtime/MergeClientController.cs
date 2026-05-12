@@ -30,7 +30,7 @@ namespace MergePlatform.Client
         private const float OrderTextCenterX = -52f;
         private const float OrderTextWidth = 208f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
-        private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/Cascadia Code SDF", "Fonts/Cascadia Code SDF", "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
+        private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/CascadiaCode-VariableFont_wght SDF", "Fonts & Materials/Cascadia Code SDF", "Fonts/Cascadia Code SDF", "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
         private static readonly string[] UiFontNames = { "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" };
 
         private enum ActiveScreen
