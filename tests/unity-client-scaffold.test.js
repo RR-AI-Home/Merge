@@ -291,7 +291,7 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /using UnityEngine\.TextCore\.LowLevel;/);
   assert.match(controller, /private TextMeshProUGUI energyLabel;/);
   assert.match(controller, /private TMP_FontAsset uiFontAsset;/);
-  assert.match(controller, /LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\)/);
+  assert.match(controller, /CreateRuntimeTmpFontAsset\(\) \?\? LoadProjectTmpFontAsset\(\)/);
   assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(font, 96, 12, GlyphRenderMode\.SDFAA, 4096, 4096, AtlasPopulationMode\.Dynamic, true\)/);
   assert.match(controller, /uiFontAsset\.isMultiAtlasTexturesEnabled = true;/);
   assert.match(controller, /if \(fontAsset != null\)[\s\S]*text\.font = fontAsset;/);
@@ -318,7 +318,7 @@ test('Unity MergeClient uses a stronger cyber font and larger non-overlapping mo
     'utf8'
   );
 
-  assert.match(controller, /private static readonly string\[\] UiFontNames = \{ "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" \};/);
+  assert.match(controller, /private static readonly string\[\] UiFontNames = \{ "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" \};/);
   assert.match(controller, /Font\.CreateDynamicFontFromOSFont\(UiFontNames, 36\)/);
   assert.match(controller, /canvas\.pixelPerfect = true;/);
   assert.match(controller, /scaler\.screenMatchMode = CanvasScaler\.ScreenMatchMode\.MatchWidthOrHeight;/);
@@ -422,8 +422,8 @@ test('Unity MergeClient matches the approved first playable mockup proportions',
 
   assert.match(controller, /private const float HudHeight = 132f;/);
   assert.match(controller, /private const float BoardCenterY = -336f;/);
-  assert.match(controller, /private const float OrdersPanelTopY = -544f;/);
-  assert.match(controller, /private const float BottomNavBottomY = 20f;/);
+  assert.match(controller, /private const float OrdersPanelTopY = -532f;/);
+  assert.match(controller, /private const float BottomNavBottomY = 14f;/);
   assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(font, 96, 12, GlyphRenderMode\.SDFAA, 4096, 4096, AtlasPopulationMode\.Dynamic, true\)/);
   assert.match(controller, /Font osFont = Font\.CreateDynamicFontFromOSFont\(UiFontNames, 36\);[\s\S]*yield return osFont;[\s\S]*Resources\.GetBuiltinResource<Font>\("Arial\.ttf"\)/);
   assert.match(controller, /private TextMeshProUGUI titleLabel;/);
@@ -435,8 +435,8 @@ test('Unity MergeClient matches the approved first playable mockup proportions',
   assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, BoardCenterY\)/);
   assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, OrdersPanelTopY\)/);
   assert.match(controller, /CreateRoundedPanel\("Bottom Nav"[\s\S]*new Vector2\(0f, BottomNavBottomY\)/);
-  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.133f, 0\.188f, 0\.286f, 1f\)/);
-  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.161f, 0\.227f, 0\.345f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.129f, 0\.188f, 0\.29f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.176f, 0\.239f, 0\.353f, 1f\)/);
   assert.match(controller, /CreateText\("Name"[\s\S]*9[\s\S]*new Vector2\(0f, -20f\)/);
   assert.match(controller, /CreateText\("Producer Label"[\s\S]*9[\s\S]*new Vector2\(0f, -20f\)/);
   assert.doesNotMatch(controller, /CreateText\("District Screen Title"/);
@@ -453,12 +453,27 @@ test('Unity MergeClient uses the approved bright mockup color tokens', async () 
   assert.match(controller, /CreateRoundedPanel\("HUD"[\s\S]*new Color\(0\.024f, 0\.043f, 0\.075f, 0\.98f\)/);
   assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Color\(0\.043f, 0\.078f, 0\.125f, 0\.98f\)/);
   assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Color\(1f, 1f, 1f, 0\.035f\)/);
-  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.133f, 0\.188f, 0\.286f, 1f\)/);
-  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.161f, 0\.227f, 0\.345f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.129f, 0\.188f, 0\.29f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.176f, 0\.239f, 0\.353f, 1f\)/);
   assert.match(controller, /CreateRoundedPanel\("Producer Tile"[\s\S]*new Color\(0\.18f, 0\.49f, 1f, 1f\)/);
   assert.match(controller, /active \? new Color\(0\.063f, 0\.145f, 0\.275f, 1f\) : new Color\(0\.035f, 0\.063f, 0\.106f, 1f\)/);
   assert.match(controller, /Color\.Lerp\(new Color\(0\.13f, 0\.18f, 0\.26f\), ItemAccent\(itemId\), Mathf\.Clamp01\(0\.55f \+ level \/ 10f\)\)/);
   assert.match(controller, /itemId\.StartsWith\("wire"\)[\s\S]*return new Color\(0\.75f, 0\.49f, 1f\)/);
   assert.match(controller, /itemId\.StartsWith\("drone"\)[\s\S]*return new Color\(1f, 0\.44f, 0\.77f\)/);
   assert.match(controller, /itemId\.StartsWith\("cache"\)[\s\S]*return new Color\(0\.58f, 0\.94f, 0\.67f\)/);
+});
+
+test('Unity MergeClient uses the mockup font and keeps contract actions clear of nav', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /private static readonly string\[\] UiFontNames = \{ "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" \};/);
+  assert.match(controller, /uiFontAsset = CreateRuntimeTmpFontAsset\(\) \?\? LoadProjectTmpFontAsset\(\);/);
+  assert.match(controller, /private const float OrdersPanelTopY = -532f;/);
+  assert.match(controller, /private const float BottomNavBottomY = 14f;/);
+  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.129f, 0\.188f, 0\.29f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.176f, 0\.239f, 0\.353f, 1f\)/);
+  assert.match(controller, /CreateImage\("Slot Top Line"[\s\S]*new Color\(0\.54f, 0\.68f, 0\.88f, 0\.18f\)/);
 });

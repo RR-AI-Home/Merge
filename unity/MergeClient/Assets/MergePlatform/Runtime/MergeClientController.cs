@@ -18,8 +18,8 @@ namespace MergePlatform.Client
         private const float MobileContentWidth = 386f;
         private const float HudHeight = 132f;
         private const float BoardCenterY = -336f;
-        private const float OrdersPanelTopY = -544f;
-        private const float BottomNavBottomY = 20f;
+        private const float OrdersPanelTopY = -532f;
+        private const float BottomNavBottomY = 14f;
         private const float TileSize = 60f;
         private const float TileGap = 2f;
         private const float BoardPadding = 8f;
@@ -31,7 +31,7 @@ namespace MergePlatform.Client
         private const float OrderTextWidth = 208f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
         private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
-        private static readonly string[] UiFontNames = { "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" };
+        private static readonly string[] UiFontNames = { "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" };
 
         private enum ActiveScreen
         {
@@ -101,7 +101,7 @@ namespace MergePlatform.Client
             {
                 if (uiFontAsset == null)
                 {
-                    uiFontAsset = LoadProjectTmpFontAsset() ?? CreateRuntimeTmpFontAsset();
+                    uiFontAsset = CreateRuntimeTmpFontAsset() ?? LoadProjectTmpFontAsset();
 
                     if (uiFontAsset != null)
                     {
@@ -428,11 +428,11 @@ namespace MergePlatform.Client
 
         private void CreateBoardSlot(Vector2Int grid)
         {
-            RectTransform slot = CreateRoundedPanel($"Slot {grid.x},{grid.y}", boardPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), new Color(0.133f, 0.188f, 0.286f, 1f));
+            RectTransform slot = CreateRoundedPanel($"Slot {grid.x},{grid.y}", boardPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), new Color(0.129f, 0.188f, 0.29f, 1f));
             boardSlots[grid] = slot;
 
-            CreateRoundedPanel("Slot Inner", slot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TileSize - 4f, TileSize - 4f), new Color(0.161f, 0.227f, 0.345f, 1f));
-            Image topLine = CreateImage("Slot Top Line", slot, new Color(0.31f, 0.41f, 0.56f, 0.42f));
+            CreateRoundedPanel("Slot Inner", slot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TileSize - 4f, TileSize - 4f), new Color(0.176f, 0.239f, 0.353f, 1f));
+            Image topLine = CreateImage("Slot Top Line", slot, new Color(0.54f, 0.68f, 0.88f, 0.18f));
             SetRect(topLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -4f), new Vector2(TileSize - 8f, 2f));
 
             Image highlight = CreateImage("Slot Highlight", slot, new Color(0.64f, 0.94f, 1f, 0f));
