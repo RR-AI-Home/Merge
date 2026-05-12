@@ -19,7 +19,9 @@ namespace MergePlatform.Client
         private const float TileSize = 60f;
         private const float TileGap = 2f;
         private const float BoardPadding = 8f;
-        private const int VisibleOrderLimit = 2;
+        private const float OrderCardHeight = 76f;
+        private const float OrderCardStep = 82f;
+        private const float OrdersViewportHeight = 164f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
         private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
         private static readonly string[] UiFontNames = { "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" };
@@ -38,6 +40,7 @@ namespace MergePlatform.Client
         private RectTransform dragLayer;
         private RectTransform mergeFeedbackLayer;
         private RectTransform ordersPanel;
+        private RectTransform orderScrollContent;
         private TextMeshProUGUI energyLabel;
         private TextMeshProUGUI coinsLabel;
         private TextMeshProUGUI premiumLabel;
@@ -237,6 +240,7 @@ namespace MergePlatform.Client
             boardSlotHighlights.Clear();
             highlightedGrid = null;
             districtLabel = null;
+            orderScrollContent = null;
         }
 
         private void CreateCanvas()
@@ -337,20 +341,33 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            ordersPanel = CreateRoundedPanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -486f), new Vector2(MobileContentWidth, 150f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+            ordersPanel = CreateRoundedPanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -512f), new Vector2(MobileContentWidth, 178f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+            RectTransform viewport = CreatePanel("Orders Viewport", ordersPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
+            viewport.gameObject.AddComponent<RectMask2D>();
+            orderScrollContent = CreatePanel("Orders Content", viewport, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
+
+            ScrollRect scrollRect = ordersPanel.gameObject.AddComponent<ScrollRect>();
+            scrollRect.viewport = viewport;
+            scrollRect.content = orderScrollContent;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.inertia = true;
+            scrollRect.verticalNormalizedPosition = 1f;
+
             RefreshOrdersPanel();
         }
 
         private void RefreshOrdersPanel()
         {
-            if (ordersPanel == null)
+            if (ordersPanel == null || orderScrollContent == null)
             {
                 return;
             }
 
-            for (int childIndex = ordersPanel.childCount - 1; childIndex >= 0; childIndex -= 1)
+            for (int childIndex = orderScrollContent.childCount - 1; childIndex >= 0; childIndex -= 1)
             {
-                Destroy(ordersPanel.GetChild(childIndex).gameObject);
+                Destroy(orderScrollContent.GetChild(childIndex).gameObject);
             }
 
             if (theme.orders == null)
@@ -379,22 +396,25 @@ namespace MergePlatform.Client
             }
 
             int visibleIndex = 0;
-            RenderVisibleOrders(readyOrders, ref visibleIndex);
-            RenderVisibleOrders(waitingOrders, ref visibleIndex);
+            RenderOrderGroup(readyOrders, ref visibleIndex);
+            RenderOrderGroup(waitingOrders, ref visibleIndex);
 
             if (visibleIndex == 0)
             {
-                CreateOrderQueueEmpty(ordersPanel);
+                CreateOrderQueueEmpty(orderScrollContent);
             }
+
+            float contentHeight = Mathf.Max(OrdersViewportHeight, visibleIndex * OrderCardStep + 4f);
+            SetRect(orderScrollContent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, contentHeight));
 
             UpdateDistrictProgress();
         }
 
-        private void RenderVisibleOrders(List<OrderDefinition> orders, ref int visibleIndex)
+        private void RenderOrderGroup(List<OrderDefinition> orders, ref int visibleIndex)
         {
-            for (int index = 0; index < orders.Count && visibleIndex < VisibleOrderLimit; index += 1)
+            for (int index = 0; index < orders.Count; index += 1)
             {
-                CreateOrderCard(ordersPanel, orders[index], visibleIndex);
+                CreateOrderCard(orderScrollContent, orders[index], visibleIndex);
                 visibleIndex += 1;
             }
         }
@@ -459,13 +479,13 @@ namespace MergePlatform.Client
             bool completed = completedOrderIds.Contains(order.id);
             bool ready = !completed && CanCompleteOrder(order);
             Color cardColor = completed ? new Color(0.08f, 0.18f, 0.16f, 1f) : ready ? new Color(0.1f, 0.18f, 0.25f, 1f) : new Color(0.08f, 0.11f, 0.19f, 1f);
-            RectTransform card = CreateRoundedPanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f - index * 66f), new Vector2(356f, 60f), cardColor);
+            RectTransform card = CreateRoundedPanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -OrderCardHeight / 2f - index * OrderCardStep), new Vector2(356f, OrderCardHeight), cardColor);
             card.gameObject.AddComponent<RectMask2D>();
 
             CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
-            CreateText("Order Title", card, order.title, 14, Color.white, TextAnchor.MiddleLeft, new Vector2(-44f, 17f), new Vector2(224f, 18f));
-            CreateText("Order Requirements", card, FormatRequirements(order), 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-44f, -1f), new Vector2(224f, 15f));
+            CreateText("Order Title", card, order.title, 14, Color.white, TextAnchor.MiddleLeft, new Vector2(-44f, 24f), new Vector2(220f, 18f));
+            CreateText("Order Requirements", card, FormatRequirements(order), 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-44f, 7f), new Vector2(220f, 15f));
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
         }
@@ -473,21 +493,21 @@ namespace MergePlatform.Client
         private void CreateOrderStateStripe(RectTransform parent, bool ready, bool completed)
         {
             Color stripeColor = completed ? new Color(0.72f, 1f, 0.74f, 1f) : ready ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.45f, 0.55f, 0.72f, 1f);
-            CreatePanel("Order State Stripe", parent, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(4f, 48f), stripeColor);
+            CreatePanel("Order State Stripe", parent, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(4f, 62f), stripeColor);
         }
 
         private void CreateOrderProgressBar(RectTransform parent, bool ready, bool completed)
         {
-            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-44f, 6f), new Vector2(224f, 3f), new Color(0.04f, 0.06f, 0.1f, 1f));
-            float width = completed ? 224f : ready ? 178f : 84f;
+            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-44f, -28f), new Vector2(220f, 4f), new Color(0.04f, 0.06f, 0.1f, 1f));
+            float width = completed ? 220f : ready ? 176f : 82f;
             Color fillColor = completed ? new Color(0.72f, 1f, 0.74f, 1f) : ready ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.45f, 0.55f, 0.72f, 1f);
-            CreatePanel("Order Progress Fill", track, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(width / 2f, 0f), new Vector2(width, 3f), fillColor);
+            CreatePanel("Order Progress Fill", track, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(width / 2f, 0f), new Vector2(width, 4f), fillColor);
         }
 
         private void CreateOrderActionButton(RectTransform parent, OrderDefinition order, bool ready, bool completed)
         {
             Color buttonColor = completed ? new Color(0.16f, 0.36f, 0.28f, 1f) : ready ? new Color(0.14f, 0.42f, 0.52f, 1f) : new Color(0.18f, 0.22f, 0.32f, 1f);
-            RectTransform buttonRoot = CreateRoundedPanel("Order Action Button", parent, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-10f, 0f), new Vector2(72f, 44f), buttonColor);
+            RectTransform buttonRoot = CreateRoundedPanel("Order Action Button", parent, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-10f, 4f), new Vector2(72f, 48f), buttonColor);
             CreatePanel("Order Button Shine", buttonRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -6f), new Vector2(46f, 3f), new Color(1f, 1f, 1f, ready ? 0.28f : 0.12f));
             Button button = buttonRoot.gameObject.AddComponent<Button>();
             button.targetGraphic = buttonRoot.GetComponent<Image>();
@@ -503,7 +523,7 @@ namespace MergePlatform.Client
         {
             int coins = order.rewards != null ? order.rewards.coins : 0;
             int xp = order.rewards != null ? order.rewards.xp : 0;
-            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 11, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-44f, -18f), new Vector2(224f, 15f));
+            CreateText("Order Reward", parent, $"+{coins} coins / +{xp} xp", 11, new Color(0.48f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-44f, -10f), new Vector2(220f, 15f));
         }
 
         private void CreateProducerTile()
