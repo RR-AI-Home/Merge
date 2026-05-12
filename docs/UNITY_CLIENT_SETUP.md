@@ -114,8 +114,14 @@ Current text quality baseline:
 
 If text becomes blurry again, inspect the shared `CreateText()` helper before changing individual labels. The helper is the typography contract for HUD, board items, contracts, and navigation.
 
+## Portrait Visual Target
+
+Use `1080 x 1920` portrait in the Unity Game view for real-device preview. The runtime layout still uses a `412 x 915` logical CanvasScaler reference, with a compact `292` logical-pixel content column that matches the current premium mobile mock direction.
+
+The current target style is a dark navy cyber UI with compact currency pills, an italic bold title, rounded board and contract panels, icon-first item tiles, and a floating bottom navigation bar. Keep item labels short and avoid putting long text inside board tiles.
+
 ## Current Proof Scope
 
-The current Unity proof loads the exported `cyber-syndicate` theme and renders a Canvas-based production-style board screen. It has a HUD, fixed board slots, compact icon-first item cards, a clickable producer crate, contract cards, energy spend, item generation, drag-to-empty-slot, drag-to-merge, local save/load, producer cooldowns, order completion, district progress, bottom navigation, merge feedback, and generated icon treatments.
+The current Unity proof loads the exported `cyber-syndicate` theme and renders a Canvas-based production-style board screen. It has a compact portrait HUD, fixed rounded board slots, icon-first item cards, a clickable producer crate, contract cards, energy spend, item generation, drag-to-empty-slot, drag-to-merge, local save/load, producer cooldowns, order completion, district progress, floating bottom navigation, merge feedback, and generated icon treatments.
 
 It does not yet implement backend calls, APK/AAB output, final art assets, final audio, monetization, liveops, analytics delivery, or production store packaging.
