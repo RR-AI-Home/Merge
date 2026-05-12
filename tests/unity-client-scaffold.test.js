@@ -291,8 +291,13 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /using UnityEngine\.TextCore\.LowLevel;/);
   assert.match(controller, /private TextMeshProUGUI energyLabel;/);
   assert.match(controller, /private TMP_FontAsset uiFontAsset;/);
-  assert.match(controller, /LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\)/);
+  assert.match(controller, /CreateProjectTmpFontAsset\(\) \?\? LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\)/);
+  assert.match(controller, /private static readonly string\[\] ProjectFontResourcePaths = \{ "Fonts & Materials\/CascadiaCode-VariableFont_wght", "Fonts & Materials\/CascadiaCode-Italic-VariableFont_wght" \};/);
   assert.match(controller, /"Fonts & Materials\/CascadiaCode-VariableFont_wght SDF", "Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
+  assert.match(controller, /private static TMP_FontAsset CreateProjectTmpFontAsset\(\)/);
+  assert.match(controller, /Resources\.Load<Font>\(resourcePath\)/);
+  assert.match(controller, /return CreateHighResolutionTmpFontAsset\(font\);/);
+  assert.match(controller, /private static TMP_FontAsset CreateHighResolutionTmpFontAsset\(Font font\)/);
   assert.match(controller, /TMP_FontAsset\.CreateFontAsset\(font, 96, 12, GlyphRenderMode\.SDFAA, 4096, 4096, AtlasPopulationMode\.Dynamic, true\)/);
   assert.match(controller, /uiFontAsset\.isMultiAtlasTexturesEnabled = true;/);
   assert.match(controller, /if \(fontAsset != null\)[\s\S]*text\.font = fontAsset;/);
@@ -471,7 +476,7 @@ test('Unity MergeClient uses the mockup font and keeps contract actions clear of
   );
 
   assert.match(controller, /private static readonly string\[\] UiFontNames = \{ "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" \};/);
-  assert.match(controller, /uiFontAsset = LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\);/);
+  assert.match(controller, /uiFontAsset = CreateProjectTmpFontAsset\(\) \?\? LoadProjectTmpFontAsset\(\) \?\? CreateRuntimeTmpFontAsset\(\);/);
   assert.match(controller, /ProjectTmpFontResourcePaths = \{ "Fonts & Materials\/CascadiaCode-VariableFont_wght SDF", "Fonts & Materials\/Cascadia Code SDF", "Fonts\/Cascadia Code SDF"/);
   assert.match(controller, /private const float OrdersPanelTopY = -532f;/);
   assert.match(controller, /private const float BottomNavBottomY = 14f;/);
@@ -492,7 +497,20 @@ test('Unity MergeClient ships the imported Cascadia TMP font asset under Resourc
       'CascadiaCode-VariableFont_wght SDF.asset'
     )
   );
+  const fontSource = await stat(
+    path.join(
+      'unity',
+      'MergeClient',
+      'Assets',
+      'MergePlatform',
+      'Resources',
+      'Fonts & Materials',
+      'CascadiaCode-VariableFont_wght.ttf'
+    )
+  );
 
   assert.ok(fontAsset.isFile());
   assert.ok(fontAsset.size > 100000);
+  assert.ok(fontSource.isFile());
+  assert.ok(fontSource.size > 100000);
 });

@@ -30,6 +30,7 @@ namespace MergePlatform.Client
         private const float OrderTextCenterX = -52f;
         private const float OrderTextWidth = 208f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
+        private static readonly string[] ProjectFontResourcePaths = { "Fonts & Materials/CascadiaCode-VariableFont_wght", "Fonts & Materials/CascadiaCode-Italic-VariableFont_wght" };
         private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/CascadiaCode-VariableFont_wght SDF", "Fonts & Materials/Cascadia Code SDF", "Fonts/Cascadia Code SDF", "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
         private static readonly string[] UiFontNames = { "Cascadia Code", "Cascadia Code SemiBold", "Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial" };
 
@@ -101,7 +102,7 @@ namespace MergePlatform.Client
             {
                 if (uiFontAsset == null)
                 {
-                    uiFontAsset = LoadProjectTmpFontAsset() ?? CreateRuntimeTmpFontAsset();
+                    uiFontAsset = CreateProjectTmpFontAsset() ?? LoadProjectTmpFontAsset() ?? CreateRuntimeTmpFontAsset();
 
                     if (uiFontAsset != null)
                     {
@@ -133,6 +134,22 @@ namespace MergePlatform.Client
             return null;
         }
 
+        private static TMP_FontAsset CreateProjectTmpFontAsset()
+        {
+            foreach (string resourcePath in ProjectFontResourcePaths)
+            {
+                Font font = Resources.Load<Font>(resourcePath);
+                if (font == null)
+                {
+                    continue;
+                }
+
+                return CreateHighResolutionTmpFontAsset(font);
+            }
+
+            return null;
+        }
+
         private static TMP_FontAsset CreateRuntimeTmpFontAsset()
         {
             foreach (Font font in RuntimeFontCandidates())
@@ -142,7 +159,7 @@ namespace MergePlatform.Client
                     continue;
                 }
 
-                TMP_FontAsset fontAsset = TMP_FontAsset.CreateFontAsset(font, 96, 12, GlyphRenderMode.SDFAA, 4096, 4096, AtlasPopulationMode.Dynamic, true);
+                TMP_FontAsset fontAsset = CreateHighResolutionTmpFontAsset(font);
                 if (fontAsset != null)
                 {
                     return fontAsset;
@@ -150,6 +167,11 @@ namespace MergePlatform.Client
             }
 
             return null;
+        }
+
+        private static TMP_FontAsset CreateHighResolutionTmpFontAsset(Font font)
+        {
+            return TMP_FontAsset.CreateFontAsset(font, 96, 12, GlyphRenderMode.SDFAA, 4096, 4096, AtlasPopulationMode.Dynamic, true);
         }
 
         private static IEnumerable<Font> RuntimeFontCandidates()
