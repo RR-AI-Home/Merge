@@ -20,15 +20,15 @@ namespace MergePlatform.Client
         private const float BoardCenterY = -336f;
         private const float OrdersPanelTopY = -532f;
         private const float BottomNavBottomY = 14f;
-        private const float TileSize = 60f;
-        private const float TileGap = 2f;
+        private const float TileSize = 58f;
+        private const float TileGap = 4f;
         private const float BoardPadding = 8f;
         private const float OrderCardHeight = 76f;
         private const float OrderCardStep = 82f;
         private const float OrdersViewportHeight = 164f;
         private const float OrderScrollBottomPadding = 34f;
-        private const float OrderTextCenterX = -52f;
-        private const float OrderTextWidth = 208f;
+        private const float OrderTextCenterX = -38f;
+        private const float OrderTextWidth = 246f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
         private static readonly string[] ProjectFontResourcePaths = { "Fonts & Materials/CascadiaCode-VariableFont_wght", "Fonts & Materials/CascadiaCode-Italic-VariableFont_wght" };
         private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/CascadiaCode-VariableFont_wght SDF", "Fonts & Materials/Cascadia Code SDF", "Fonts/Cascadia Code SDF", "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
@@ -377,11 +377,12 @@ namespace MergePlatform.Client
 
         private void CreateSessionButton(RectTransform parent, string label, Vector2 position, UnityEngine.Events.UnityAction action)
         {
-            RectTransform root = CreateRoundedPanel($"Session {label}", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, new Vector2(180f, 24f), new Color(0.065f, 0.1f, 0.16f, 0.96f));
+            RectTransform root = CreateRoundedPanel($"Session {label}", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, new Vector2(178f, 28f), new Color(0.063f, 0.102f, 0.161f, 1f));
+            CreatePanel("Session Button Border", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -2f), new Vector2(166f, 1f), new Color(0.11f, 0.18f, 0.27f, 0.9f));
             Button button = root.gameObject.AddComponent<Button>();
             button.targetGraphic = root.GetComponent<Image>();
             button.onClick.AddListener(action);
-            CreateText($"Session {label} Label", root, label, 10, new Color(0.78f, 0.92f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(154f, 13f));
+            CreateText($"Session {label} Label", root, label, 11, new Color(0.78f, 0.92f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(154f, 14f));
         }
 
         private void TogglePause()
@@ -577,21 +578,21 @@ namespace MergePlatform.Client
         private void CreateBottomNav()
         {
             RectTransform nav = CreateRoundedPanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, BottomNavBottomY), new Vector2(MobileContentWidth, 76f), new Color(0.027f, 0.051f, 0.09f, 0.99f));
-            CreateNavButton(nav, "BOARD", new Vector2(-144f, 38f), activeScreen == ActiveScreen.Board, new Color(0.16f, 0.48f, 1f), () => SetActiveScreen(ActiveScreen.Board));
-            CreateNavButton(nav, "DIST", new Vector2(-48f, 38f), activeScreen == ActiveScreen.Districts, new Color(0.25f, 0.82f, 0.58f), () => SetActiveScreen(ActiveScreen.Districts));
-            CreateNavButton(nav, "BOOK", new Vector2(48f, 38f), activeScreen == ActiveScreen.Collection, new Color(0.86f, 0.26f, 0.78f), () => SetActiveScreen(ActiveScreen.Collection));
-            CreateNavButton(nav, "SHOP", new Vector2(144f, 38f), false, new Color(0.95f, 0.66f, 0.18f), () => SetStatus("Shop unlocks after the first playable loop"));
+            CreateNavButton(nav, "BOARD", new Vector2(-141f, 38f), activeScreen == ActiveScreen.Board, new Color(0.16f, 0.48f, 1f), () => SetActiveScreen(ActiveScreen.Board));
+            CreateNavButton(nav, "DIST", new Vector2(-47f, 38f), activeScreen == ActiveScreen.Districts, new Color(0.25f, 0.82f, 0.58f), () => SetActiveScreen(ActiveScreen.Districts));
+            CreateNavButton(nav, "BOOK", new Vector2(47f, 38f), activeScreen == ActiveScreen.Collection, new Color(0.86f, 0.26f, 0.78f), () => SetActiveScreen(ActiveScreen.Collection));
+            CreateNavButton(nav, "SHOP", new Vector2(141f, 38f), false, new Color(0.95f, 0.66f, 0.18f), () => SetStatus("Shop unlocks after the first playable loop"));
         }
 
         private void CreateNavButton(RectTransform parent, string label, Vector2 position, bool active, Color accent, UnityEngine.Events.UnityAction action)
         {
-            RectTransform button = CreateRoundedPanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(62f, 58f), active ? new Color(0.063f, 0.145f, 0.275f, 1f) : new Color(0.035f, 0.063f, 0.106f, 1f));
+            RectTransform button = CreateRoundedPanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(84f, 56f), active ? new Color(0.063f, 0.145f, 0.275f, 1f) : new Color(0.035f, 0.063f, 0.106f, 1f));
             Button navButton = button.gameObject.AddComponent<Button>();
             navButton.targetGraphic = button.GetComponent<Image>();
             navButton.onClick.AddListener(action);
             navButtonImages[label] = button.GetComponent<Image>();
             CreateNavIcon(button, label, active, accent);
-            navLabels[label] = CreateText("Nav Label", button, label, 9, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(54f, 13f));
+            navLabels[label] = CreateText("Nav Label", button, label, 9, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(72f, 13f));
         }
 
         private void SetActiveScreen(ActiveScreen screen)
@@ -955,8 +956,8 @@ namespace MergePlatform.Client
 
         private void CreateOrderProgressBar(RectTransform parent, bool ready, bool completed)
         {
-            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-44f, -28f), new Vector2(220f, 4f), new Color(0.04f, 0.06f, 0.1f, 1f));
-            float width = completed ? 220f : ready ? 176f : 82f;
+            RectTransform track = CreatePanel("Order Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(OrderTextCenterX, -28f), new Vector2(OrderTextWidth, 4f), new Color(0.04f, 0.06f, 0.1f, 1f));
+            float width = completed ? OrderTextWidth : ready ? OrderTextWidth * 0.8f : OrderTextWidth * 0.38f;
             Color fillColor = completed ? new Color(0.72f, 1f, 0.74f, 1f) : ready ? new Color(0.54f, 0.94f, 1f, 1f) : new Color(0.45f, 0.55f, 0.72f, 1f);
             CreatePanel("Order Progress Fill", track, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(width / 2f, 0f), new Vector2(width, 4f), fillColor);
         }

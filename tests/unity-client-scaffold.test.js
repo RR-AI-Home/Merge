@@ -62,8 +62,8 @@ test('Unity MergeClient screen is sized for mobile portrait without side panels'
   assert.match(controller, /MobileReferenceWidth = 412f/);
   assert.match(controller, /MobileReferenceHeight = 915f/);
   assert.match(controller, /MobileContentWidth = 386f/);
-  assert.match(controller, /private const float TileSize = 60f/);
-  assert.match(controller, /private const float TileGap = 2f/);
+  assert.match(controller, /private const float TileSize = 58f/);
+  assert.match(controller, /private const float TileGap = 4f/);
   assert.match(controller, /private const float BoardPadding = 8f/);
   assert.match(controller, /CreateOrdersPanel[\s\S]*new Vector2\(MobileContentWidth, 178f\)/);
   assert.doesNotMatch(controller, /new Vector2\(218f, -24f\)/);
@@ -179,8 +179,8 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
   assert.match(controller, /CreateText\("Needed Marker Label"[\s\S]*"JOB"/);
   assert.match(controller, /AnimateHelpfulItemGlows\(\);/);
   assert.match(controller, /CreateRequirementRow\(card, order\)/);
-  assert.match(controller, /private const float OrderTextCenterX = -52f;/);
-  assert.match(controller, /private const float OrderTextWidth = 208f;/);
+  assert.match(controller, /private const float OrderTextCenterX = -38f;/);
+  assert.match(controller, /private const float OrderTextWidth = 246f;/);
   assert.match(controller, /CreateText\("Order Title"[\s\S]*new Vector2\(OrderTextCenterX, 24f\)[\s\S]*new Vector2\(OrderTextWidth, 18f\)/);
   assert.match(controller, /float startX = OrderTextCenterX - OrderTextWidth \/ 2f \+ width \/ 2f;/);
   assert.match(controller, /RequirementTextColor\(requirement\.itemId\)/);
@@ -218,8 +218,8 @@ test('Unity MergeClient board polish keeps mobile items and nav readable', async
   assert.match(controller, /CreateCacheMark\(icon, tier\)/);
   assert.match(controller, /CreateOrderStateStripe/);
   assert.match(controller, /CreateNavIcon/);
-  assert.match(controller, /new Vector2\(62f, 58f\)/);
-  assert.match(controller, /CreateText\("Nav Label"[\s\S]*9[\s\S]*new Vector2\(0f, -18f\)[\s\S]*new Vector2\(54f, 13f\)/);
+  assert.match(controller, /new Vector2\(84f, 56f\)/);
+  assert.match(controller, /CreateText\("Nav Label"[\s\S]*9[\s\S]*new Vector2\(0f, -18f\)[\s\S]*new Vector2\(72f, 13f\)/);
 });
 
 test('Unity MergeClient portrait layout keeps top and bottom safe spacing', async () => {
@@ -232,7 +232,7 @@ test('Unity MergeClient portrait layout keeps top and bottom safe spacing', asyn
   assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, BoardCenterY\)/);
   assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, OrdersPanelTopY\)[\s\S]*new Vector2\(MobileContentWidth, 178f\)/);
   assert.match(controller, /CreateRoundedPanel\("Bottom Nav"[\s\S]*new Vector2\(0f, BottomNavBottomY\)[\s\S]*new Vector2\(MobileContentWidth, 76f\)/);
-  assert.match(controller, /CreateNavButton\(nav, "BOARD", new Vector2\(-144f, 38f\)/);
+  assert.match(controller, /CreateNavButton\(nav, "BOARD", new Vector2\(-141f, 38f\)/);
   assert.doesNotMatch(controller, /CreatePanel\("Bottom Nav"[\s\S]*new Vector2\(0f, 18f\)/);
 });
 
@@ -333,7 +333,7 @@ test('Unity MergeClient uses a stronger cyber font and larger non-overlapping mo
   assert.match(controller, /PixelPerfect\(position\)/);
   assert.match(controller, /PixelPerfect\(size\)/);
   assert.match(controller, /CreateRoundedPanel\(\$"Order \{order\.id\}"[\s\S]*new Vector2\(0f, -OrderCardHeight \/ 2f - index \* OrderCardStep\)[\s\S]*new Vector2\(356f, OrderCardHeight\)/);
-  assert.match(controller, /CreatePanel\("Order Progress Track"[\s\S]*new Vector2\(-44f, -28f\)[\s\S]*new Vector2\(220f, 4f\)/);
+  assert.match(controller, /CreatePanel\("Order Progress Track"[\s\S]*new Vector2\(OrderTextCenterX, -28f\)[\s\S]*new Vector2\(OrderTextWidth, 4f\)/);
   assert.match(controller, /CreateRoundedPanel\("Order Action Button"[\s\S]*new Vector2\(-10f, 4f\)[\s\S]*new Vector2\(72f, 48f\)/);
   assert.match(controller, /CreateText\("Order Action Label"[\s\S]*11[\s\S]*new Vector2\(58f, 22f\)/);
   assert.match(controller, /CreatePanel\("Order Button Shine"/);
@@ -364,8 +364,8 @@ test('Unity MergeClient follows the compact premium portrait mock direction', as
   );
 
   assert.match(controller, /MobileContentWidth = 386f/);
-  assert.match(controller, /private const float TileSize = 60f/);
-  assert.match(controller, /private const float TileGap = 2f/);
+  assert.match(controller, /private const float TileSize = 58f/);
+  assert.match(controller, /private const float TileGap = 4f/);
   assert.match(controller, /private const float BoardPadding = 8f/);
   assert.match(controller, /CreateRoundedPanel\("HUD"/);
   assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(boardPixelSize, boardPixelSize\)/);
@@ -397,6 +397,9 @@ test('Unity MergeClient includes first playable session, district, and collectio
   assert.match(controller, /CreateSessionControls\(hud\)/);
   assert.match(controller, /CreateSessionButton\(hud, "PAUSE"/);
   assert.match(controller, /CreateSessionButton\(hud, "RESET SAVE"/);
+  assert.match(controller, /CreateRoundedPanel\(\$"Session \{label\}"[\s\S]*new Vector2\(178f, 28f\)[\s\S]*new Color\(0\.063f, 0\.102f, 0\.161f, 1f\)/);
+  assert.match(controller, /CreatePanel\("Session Button Border"/);
+  assert.match(controller, /CreateText\(\$"Session \{label\} Label"[\s\S]*11[\s\S]*new Vector2\(154f, 14f\)/);
   assert.match(controller, /TogglePause\(\)/);
   assert.match(controller, /ResetLocalSave\(\)/);
   assert.match(controller, /PlayerPrefs\.DeleteKey\(SaveKey\(\)\)/);
@@ -436,6 +439,10 @@ test('Unity MergeClient matches the approved first playable mockup proportions',
   assert.match(controller, /titleLabel = CreateText\("Title"[\s\S]*24[\s\S]*new Vector2\(-78f, 12f\)/);
   assert.match(controller, /CreateStatPill\(hud, "ENERGY", new Vector2\(-120f, 44f\), new Vector2\(78f, 30f\)/);
   assert.match(controller, /CreateSessionButton\(hud, "RESET SAVE"/);
+  assert.match(controller, /CreateNavButton\(nav, "BOARD", new Vector2\(-141f, 38f\)/);
+  assert.match(controller, /CreateNavButton\(nav, "DIST", new Vector2\(-47f, 38f\)/);
+  assert.match(controller, /CreateNavButton\(nav, "BOOK", new Vector2\(47f, 38f\)/);
+  assert.match(controller, /CreateNavButton\(nav, "SHOP", new Vector2\(141f, 38f\)/);
   assert.match(controller, /SetHudTitle\(screen\)/);
   assert.match(controller, /private string HudTitleFor\(ActiveScreen screen\)/);
   assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, BoardCenterY\)/);
