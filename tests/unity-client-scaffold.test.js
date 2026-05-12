@@ -245,6 +245,7 @@ test('Unity MergeClient supports order queue, progression, producer depth, and l
   assert.match(controller, /private const float OrderCardHeight = 76f;/);
   assert.match(controller, /private const float OrderCardStep = 82f;/);
   assert.match(controller, /private const float OrdersViewportHeight = 164f;/);
+  assert.match(controller, /private const float OrderScrollBottomPadding = 34f;/);
   assert.match(controller, /CreateOrderQueueEmpty/);
   assert.match(controller, /if \(completedOrderIds\.Contains\(order\.id\)\)[\s\S]*continue;/);
   assert.match(controller, /UpdateDistrictProgress/);
@@ -261,6 +262,11 @@ test('Unity MergeClient supports order queue, progression, producer depth, and l
   assert.match(controller, /PlayerPrefs\.GetString/);
   assert.match(controller, /MergeClientSaveData/);
   assert.match(controller, /SavedBoardItem/);
+  assert.match(controller, /RefreshOrdersPanel\(true\);/);
+  assert.match(controller, /private void RefreshOrdersPanel\(bool resetScrollToTop = false\)/);
+  assert.match(controller, /float previousScrollPosition = ordersScrollRect != null \? ordersScrollRect\.verticalNormalizedPosition : 1f;/);
+  assert.match(controller, /visibleIndex \* OrderCardStep \+ OrderScrollBottomPadding/);
+  assert.match(controller, /ordersScrollRect\.verticalNormalizedPosition = resetScrollToTop \? 1f : Mathf\.Clamp01\(previousScrollPosition\);/);
 });
 
 test('Cyber Syndicate Unity source theme has enough order and producer depth for progression', async () => {

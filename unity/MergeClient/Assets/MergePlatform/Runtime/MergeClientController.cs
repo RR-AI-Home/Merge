@@ -22,6 +22,7 @@ namespace MergePlatform.Client
         private const float OrderCardHeight = 76f;
         private const float OrderCardStep = 82f;
         private const float OrdersViewportHeight = 164f;
+        private const float OrderScrollBottomPadding = 34f;
         private const float OrderTextCenterX = -52f;
         private const float OrderTextWidth = 208f;
         private const string SaveKeyPrefix = "MergePlatform.Client.Save.";
@@ -381,7 +382,7 @@ namespace MergePlatform.Client
             ordersScrollRect.verticalNormalizedPosition = 1f;
             CreateScrollHintIndicators(ordersPanel);
 
-            RefreshOrdersPanel();
+            RefreshOrdersPanel(true);
         }
 
         private void CreateScrollHintIndicators(RectTransform parent)
@@ -400,13 +401,14 @@ namespace MergePlatform.Client
             return cueImage;
         }
 
-        private void RefreshOrdersPanel()
+        private void RefreshOrdersPanel(bool resetScrollToTop = false)
         {
             if (ordersPanel == null || orderScrollContent == null)
             {
                 return;
             }
 
+            float previousScrollPosition = ordersScrollRect != null ? ordersScrollRect.verticalNormalizedPosition : 1f;
             readyOrderPulseImages.Clear();
             for (int childIndex = orderScrollContent.childCount - 1; childIndex >= 0; childIndex -= 1)
             {
@@ -447,11 +449,11 @@ namespace MergePlatform.Client
                 CreateOrderQueueEmpty(orderScrollContent);
             }
 
-            float contentHeight = Mathf.Max(OrdersViewportHeight, visibleIndex * OrderCardStep + 4f);
+            float contentHeight = Mathf.Max(OrdersViewportHeight, visibleIndex * OrderCardStep + OrderScrollBottomPadding);
             SetRect(orderScrollContent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, contentHeight));
             if (ordersScrollRect != null)
             {
-                ordersScrollRect.verticalNormalizedPosition = 1f;
+                ordersScrollRect.verticalNormalizedPosition = resetScrollToTop ? 1f : Mathf.Clamp01(previousScrollPosition);
             }
 
             UpdateDistrictProgress();
