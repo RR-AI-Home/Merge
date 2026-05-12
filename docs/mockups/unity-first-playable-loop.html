@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unity First Playable Loop</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060b13;
+      --panel: #0c1421;
+      --panel-2: #111c2e;
+      --slot: #223049;
+      --slot-2: #293a58;
+      --text: #e8f6ff;
+      --muted: #8ba5bc;
+      --blue: #2e7dff;
+      --cyan: #64e9ff;
+      --green: #62f0a2;
+      --pink: #f05abc;
+      --gold: #e7b13d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #202124;
+      color: var(--text);
+      font-family: "Cascadia Code", Bahnschrift, Segoe UI, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .wrap {
+      width: min(1320px, 100%);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 412px;
+      height: 915px;
+      margin: 0 auto;
+      background: var(--bg);
+      border: 1px solid #142033;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 22px 70px rgba(0,0,0,.42);
+      padding: 26px 24px 96px;
+    }
+
+    .screen-title {
+      font-size: 24px;
+      font-style: italic;
+      font-weight: 900;
+      letter-spacing: 0;
+      margin: 0 0 14px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      height: 30px;
+      min-width: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .dot.green { background: var(--green); }
+    .dot.pink { background: var(--pink); }
+
+    .status {
+      font-size: 11px;
+      color: #b9d8ee;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .status strong { color: var(--green); }
+
+    .mini-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .action {
+      border-radius: 8px;
+      background: #101a29;
+      border: 1px solid #1d2d45;
+      color: #cbeaff;
+      padding: 8px 10px;
+      font-size: 10px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .board {
+      background: #0b1420;
+      border-radius: 12px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      margin-bottom: 18px;
+    }
+
+    .slot, .item {
+      aspect-ratio: 1;
+      border-radius: 7px;
+      background: linear-gradient(#2d3d5a, #21304a);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.07), 0 1px 6px rgba(0,0,0,.35);
+      position: relative;
+      display: grid;
+      place-items: center;
+      font-size: 8px;
+      font-weight: 900;
+      color: white;
+      overflow: hidden;
+    }
+
+    .item.blue { background: linear-gradient(#267dff, #1450c9); }
+    .item.cyan { background: linear-gradient(#78f0ff, #4098a8); color: #06131c; }
+    .item.green { background: linear-gradient(#93f0ac, #5a9c69); color: #06150d; }
+    .item.pink { background: linear-gradient(#ff70c5, #bd3b8c); }
+    .item.purple { background: linear-gradient(#bf7cff, #744ea1); }
+
+    .job {
+      position: absolute;
+      top: 2px;
+      left: 3px;
+      font-size: 7px;
+      background: #07151e;
+      color: var(--green);
+      padding: 1px 4px;
+      border-radius: 4px;
+      border-top: 2px solid var(--cyan);
+    }
+
+    .contracts {
+      background: rgba(255,255,255,.025);
+      padding: 10px 8px;
+      border-radius: 10px;
+      display: grid;
+      gap: 8px;
+      max-height: 184px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .contract {
+      min-height: 76px;
+      background: #13233a;
+      border-radius: 8px;
+      border-left: 4px solid #6fecff;
+      padding: 9px 86px 8px 14px;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .contract.ready {
+      background: #153547;
+      box-shadow: 0 0 18px rgba(111,236,255,.18), inset 0 0 0 1px rgba(111,236,255,.25);
+    }
+
+    .contract h3 {
+      margin: 0 0 7px;
+      font-size: 14px;
+      line-height: 1.1;
+    }
+
+    .contract p {
+      margin: 0;
+      color: #b9d8ee;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contract .reward {
+      color: var(--green);
+      margin-top: 6px;
+    }
+
+    .claim {
+      position: absolute;
+      right: 10px;
+      top: 15px;
+      width: 66px;
+      height: 44px;
+      border-radius: 9px;
+      background: #247e9c;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .ready-badge {
+      position: absolute;
+      right: 84px;
+      top: 8px;
+      border-radius: 6px;
+      background: var(--cyan);
+      color: #06131c;
+      padding: 3px 7px;
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .nav {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 20px;
+      height: 76px;
+      border-radius: 14px;
+      background: rgba(7, 13, 23, .98);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .nav-btn {
+      display: grid;
+      place-items: center;
+      color: #7cb3ff;
+      background: #09101b;
+      border-radius: 8px;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .nav-btn.active { background: #102546; color: #51a0ff; }
+
+    .panel {
+      background: #0b1420;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .district {
+      background: #111c2e;
+      border-radius: 10px;
+      padding: 12px;
+      border-left: 4px solid var(--green);
+    }
+
+    .district.locked { opacity: .45; border-left-color: #5a6b83; }
+    .district.current { box-shadow: 0 0 18px rgba(98,240,162,.14); }
+
+    .district h3 {
+      margin: 0 0 5px;
+      font-size: 14px;
+    }
+
+    .district p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+    .bar {
+      height: 5px;
+      margin-top: 9px;
+      background: #07101c;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .fill {
+      width: 66%;
+      height: 100%;
+      background: var(--green);
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .chain {
+      background: #111c2e;
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 120px;
+    }
+
+    .chain h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+
+    .levels {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .level {
+      width: 31px;
+      height: 31px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 900;
+      background: #26354e;
+      color: #71849c;
+    }
+
+    .level.found {
+      background: #4e9eb0;
+      color: #06131c;
+      box-shadow: 0 0 12px rgba(100,233,255,.2);
+    }
+
+    .caption {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: #c5def0;
+      line-height: 1.5;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    @media (max-width: 980px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section>
+      <p class="caption">1. Session Structure - keep board primary, add safe test controls</p>
+      <div class="phone">
+        <div class="top-row">
+          <div class="pill"><span class="dot"></span>48/100</div>
+          <div class="pill"><span class="dot green"></span>90</div>
+          <div class="pill"><span class="dot pink"></span>0</div>
+        </div>
+        <h1 class="screen-title">Merge Syndicate</h1>
+        <div class="status">Merged into <strong>Relay Harness</strong><br><strong>Data Docks unlocked / 3 contracts</strong></div>
+        <div class="mini-actions">
+          <div class="action">PAUSE</div>
+          <div class="action">RESET SAVE</div>
+        </div>
+        <div class="board">
+          <div class="item blue">CRATE</div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="item purple"><span class="job">JOB</span>Relay</div>
+          <div class="item purple"><span class="job">JOB</span>Wire</div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="item cyan">Chip</div>
+          <div class="item purple"><span class="job">JOB</span>Wire</div><div class="item pink">Scout</div><div class="item cyan"><span class="job">JOB</span>Signal</div><div class="item cyan"><span class="job">JOB</span>Signal</div><div class="slot"></div><div class="item pink">Scout</div>
+          <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+          <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+          <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="item purple"><span class="job">JOB</span>Relay</div><div class="item cyan">Signal</div><div class="slot"></div>
+        </div>
+        <div class="contracts">
+          <div class="contract ready"><span class="ready-badge">READY</span><h3>Wire a Relay Grid</h3><p>1x Relay Harness&nbsp;&nbsp;1x Signal Board</p><p class="reward">+90 coins / +20 xp</p><div class="claim">CLAIM</div></div>
+          <div class="contract"><h3>Take the Data Docks</h3><p>1x Scout Drone&nbsp;&nbsp;1x Signal Board</p><p class="reward">+120 coins / +28 xp</p><div class="claim">CHECK</div></div>
+        </div>
+        <nav class="nav">
+          <div class="nav-btn active">BOARD</div><div class="nav-btn">DIST</div><div class="nav-btn">BOOK</div><div class="nav-btn">SHOP</div>
+        </nav>
+      </div>
+    </section>
+
+    <section>
+      <p class="caption">2. DIST - meta progression and next unlock</p>
+      <div class="phone">
+        <div class="top-row">
+          <div class="pill"><span class="dot"></span>48/100</div>
+          <div class="pill"><span class="dot green"></span>90</div>
+          <div class="pill"><span class="dot pink"></span>0</div>
+        </div>
+        <h1 class="screen-title">Districts</h1>
+        <div class="status">Current operation<br><strong>Data Docks 1/2 contracts</strong></div>
+        <div class="panel">
+          <div class="district">
+            <h3>Neon Market</h3>
+            <p>Unlocked. Black-market crate network online.</p>
+            <div class="bar"><div class="fill" style="width:100%"></div></div>
+          </div>
+          <div class="district current">
+            <h3>Data Docks</h3>
+            <p>1 of 2 contracts complete. Unlocks event rail and higher tier orders.</p>
+            <div class="bar"><div class="fill" style="width:50%"></div></div>
+          </div>
+          <div class="district locked">
+            <h3>Signal Yard</h3>
+            <p>Locked until 5 contracts. Adds stronger producers and rarer chains.</p>
+            <div class="bar"><div class="fill" style="width:0%"></div></div>
+          </div>
+          <div class="district locked">
+            <h3>Core Spire</h3>
+            <p>Locked. End of first prototype progression lane.</p>
+            <div class="bar"><div class="fill" style="width:0%"></div></div>
+          </div>
+        </div>
+        <nav class="nav">
+          <div class="nav-btn">BOARD</div><div class="nav-btn active">DIST</div><div class="nav-btn">BOOK</div><div class="nav-btn">SHOP</div>
+        </nav>
+      </div>
+    </section>
+
+    <section>
+      <p class="caption">3. BOOK - collection chains and discovery goals</p>
+      <div class="phone">
+        <div class="top-row">
+          <div class="pill"><span class="dot"></span>48/100</div>
+          <div class="pill"><span class="dot green"></span>90</div>
+          <div class="pill"><span class="dot pink"></span>0</div>
+        </div>
+        <h1 class="screen-title">Collection</h1>
+        <div class="status">Discovered items<br><strong>9 / 20 chain levels found</strong></div>
+        <div class="book-grid">
+          <div class="chain"><h3>Chip Chain</h3><div class="levels"><div class="level found">1</div><div class="level found">2</div><div class="level">3</div><div class="level">4</div></div></div>
+          <div class="chain"><h3>Wire Chain</h3><div class="levels"><div class="level found">1</div><div class="level found">2</div><div class="level found">3</div><div class="level">4</div></div></div>
+          <div class="chain"><h3>Drone Chain</h3><div class="levels"><div class="level found">1</div><div class="level found">2</div><div class="level">3</div><div class="level">4</div></div></div>
+          <div class="chain"><h3>Cache Chain</h3><div class="levels"><div class="level found">1</div><div class="level found">2</div><div class="level">3</div><div class="level">4</div></div></div>
+        </div>
+        <div class="panel">
+          <div class="district current">
+            <h3>Next Reward</h3>
+            <p>Discover 12 items to claim +50 coins and a starter crate burst.</p>
+            <div class="bar"><div class="fill" style="width:75%"></div></div>
+          </div>
+        </div>
+        <nav class="nav">
+          <div class="nav-btn">BOARD</div><div class="nav-btn">DIST</div><div class="nav-btn active">BOOK</div><div class="nav-btn">SHOP</div>
+        </nav>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

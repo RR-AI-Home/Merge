@@ -29,19 +29,32 @@ namespace MergePlatform.Client
         private static readonly string[] ProjectTmpFontResourcePaths = { "Fonts & Materials/LiberationSans SDF", "Fonts/LiberationSans SDF" };
         private static readonly string[] UiFontNames = { "Cascadia Code SemiBold", "Cascadia Mono", "Bahnschrift", "Consolas", "Arial" };
 
+        private enum ActiveScreen
+        {
+            Board,
+            Districts,
+            Collection
+        }
+
         private readonly Dictionary<string, ItemLevel> itemLookup = new Dictionary<string, ItemLevel>();
         private readonly Dictionary<string, ItemChain> chainByItemId = new Dictionary<string, ItemChain>();
         private readonly Dictionary<Vector2Int, ItemTile> boardItems = new Dictionary<Vector2Int, ItemTile>();
         private readonly Dictionary<Vector2Int, RectTransform> boardSlots = new Dictionary<Vector2Int, RectTransform>();
         private readonly Dictionary<Vector2Int, Image> boardSlotHighlights = new Dictionary<Vector2Int, Image>();
+        private readonly Dictionary<string, Image> navButtonImages = new Dictionary<string, Image>();
+        private readonly Dictionary<string, TextMeshProUGUI> navLabels = new Dictionary<string, TextMeshProUGUI>();
         private readonly Dictionary<string, float> helpfulItemGlowUntil = new Dictionary<string, float>();
         private readonly Dictionary<Image, float> helpfulGlowEnds = new Dictionary<Image, float>();
         private readonly List<Image> helpfulItemGlowImages = new List<Image>();
         private readonly List<Image> readyOrderPulseImages = new List<Image>();
         private readonly HashSet<string> completedOrderIds = new HashSet<string>();
+        private readonly HashSet<string> discoveredItemIds = new HashSet<string>();
 
         private UnityMergeTheme theme;
         private RectTransform canvasRoot;
+        private RectTransform boardScreenRoot;
+        private RectTransform districtScreenRoot;
+        private RectTransform collectionScreenRoot;
         private RectTransform boardPanel;
         private RectTransform itemLayer;
         private RectTransform dragLayer;
@@ -62,6 +75,7 @@ namespace MergePlatform.Client
         private AudioSource feedbackAudio;
         private AudioClip mergeSound;
         private ItemTile selectedTile;
+        private ActiveScreen activeScreen = ActiveScreen.Board;
         private string lastHelpfulItemId;
         private Vector2Int? highlightedGrid;
         private Vector2Int producerGrid;
@@ -226,11 +240,14 @@ namespace MergePlatform.Client
             producerCooldownReadyAt = 0;
             producerGrid = new Vector2Int(0, 0);
             completedOrderIds.Clear();
+            discoveredItemIds.Clear();
+            activeScreen = ActiveScreen.Board;
 
             ClearGeneratedObjects();
             EnsureEventSystem();
             CreateCanvas();
             CreateHud();
+            CreateScreenRoots();
             CreateBoard();
             CreateProducerTile();
             if (!TryLoadGame())
@@ -239,7 +256,10 @@ namespace MergePlatform.Client
             }
 
             CreateOrdersPanel();
+            CreateDistrictsScreen();
+            CreateCollectionScreen();
             CreateBottomNav();
+            SetActiveScreen(ActiveScreen.Board);
             UpdateEnergyLabel();
             UpdateCurrencyLabels();
             UpdateDistrictProgress();
@@ -256,6 +276,8 @@ namespace MergePlatform.Client
             boardItems.Clear();
             boardSlots.Clear();
             boardSlotHighlights.Clear();
+            navButtonImages.Clear();
+            navLabels.Clear();
             helpfulItemGlowUntil.Clear();
             helpfulGlowEnds.Clear();
             helpfulItemGlowImages.Clear();
@@ -263,6 +285,9 @@ namespace MergePlatform.Client
             lastHelpfulItemId = null;
             highlightedGrid = null;
             districtLabel = null;
+            boardScreenRoot = null;
+            districtScreenRoot = null;
+            collectionScreenRoot = null;
             orderScrollContent = null;
             ordersScrollRect = null;
             ordersScrollUpCue = null;
@@ -311,9 +336,55 @@ namespace MergePlatform.Client
             premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(212f, 36f), new Vector2(58f, 27f), new Color(0.86f, 0.26f, 0.78f));
             statusLabel = CreateText("HUD Status", hud, "Ready", 11, new Color(0.74f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -16f), new Vector2(236f, 15f));
             districtLabel = CreateText("District Progress", hud, "District 0/2", 11, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, -32f), new Vector2(236f, 15f));
+            CreateSessionControls(hud);
 
             coinsLabel.text = currentCoins.ToString();
             premiumLabel.text = currentPremium.ToString();
+        }
+
+        private void CreateSessionControls(RectTransform hud)
+        {
+            CreateSessionButton(hud, "PAUSE", new Vector2(116f, 8f), TogglePause);
+            CreateSessionButton(hud, "RESET", new Vector2(190f, 8f), ResetLocalSave);
+        }
+
+        private void CreateSessionButton(RectTransform parent, string label, Vector2 position, UnityEngine.Events.UnityAction action)
+        {
+            RectTransform root = CreateRoundedPanel($"Session {label}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), position, new Vector2(62f, 20f), new Color(0.08f, 0.13f, 0.2f, 0.96f));
+            Button button = root.gameObject.AddComponent<Button>();
+            button.targetGraphic = root.GetComponent<Image>();
+            button.onClick.AddListener(action);
+            CreateText($"Session {label} Label", root, label, 8, new Color(0.78f, 0.92f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(54f, 12f));
+        }
+
+        private void TogglePause()
+        {
+            bool shouldPause = Time.timeScale > 0f;
+            Time.timeScale = shouldPause ? 0f : 1f;
+            SetStatus(shouldPause ? "Paused" : "Resumed");
+        }
+
+        private void ResetLocalSave()
+        {
+            Time.timeScale = 1f;
+            PlayerPrefs.DeleteKey(SaveKey());
+            PlayerPrefs.Save();
+            BuildScene();
+            SetStatus("Save reset");
+        }
+
+        private void CreateScreenRoots()
+        {
+            boardScreenRoot = CreateScreenRoot("Board Screen");
+            districtScreenRoot = CreateScreenRoot("District Screen");
+            collectionScreenRoot = CreateScreenRoot("Collection Screen");
+        }
+
+        private RectTransform CreateScreenRoot(string name)
+        {
+            RectTransform root = CreateEmptyRect(name, canvasRoot);
+            Stretch(root);
+            return root;
         }
 
         private TextMeshProUGUI CreateStatPill(RectTransform parent, string label, Vector2 position, Vector2 size, Color accent)
@@ -331,7 +402,7 @@ namespace MergePlatform.Client
 
         private void CreateBoard()
         {
-            boardPanel = CreateRoundedPanel("Merge Board", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -306f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.055f, 0.08f, 0.125f, 0.98f));
+            boardPanel = CreateRoundedPanel("Merge Board", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -306f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.055f, 0.08f, 0.125f, 0.98f));
 
             for (int y = 0; y < boardHeight; y += 1)
             {
@@ -346,7 +417,7 @@ namespace MergePlatform.Client
             Stretch(itemLayer);
             mergeFeedbackLayer = CreateEmptyRect("Merge Feedback", boardPanel);
             Stretch(mergeFeedbackLayer);
-            dragLayer = CreateEmptyRect("Drag Layer", canvasRoot);
+            dragLayer = CreateEmptyRect("Drag Layer", boardScreenRoot);
             Stretch(dragLayer);
         }
 
@@ -367,7 +438,7 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            ordersPanel = CreateRoundedPanel("Orders Panel", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -512f), new Vector2(MobileContentWidth, 178f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+            ordersPanel = CreateRoundedPanel("Orders Panel", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -512f), new Vector2(MobileContentWidth, 178f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
             RectTransform viewport = CreatePanel("Orders Viewport", ordersPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
             viewport.gameObject.AddComponent<RectMask2D>();
             orderScrollContent = CreatePanel("Orders Content", viewport, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
@@ -479,17 +550,72 @@ namespace MergePlatform.Client
         private void CreateBottomNav()
         {
             RectTransform nav = CreateRoundedPanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 0f), new Vector2(MobileContentWidth, 78f), new Color(0.035f, 0.055f, 0.09f, 0.99f));
-            CreateNavButton(nav, "BOARD", new Vector2(-144f, 48f), true, new Color(0.16f, 0.48f, 1f));
-            CreateNavButton(nav, "DIST", new Vector2(-48f, 48f), false, new Color(0.25f, 0.82f, 0.58f));
-            CreateNavButton(nav, "BOOK", new Vector2(48f, 48f), false, new Color(0.86f, 0.26f, 0.78f));
-            CreateNavButton(nav, "SHOP", new Vector2(144f, 48f), false, new Color(0.95f, 0.66f, 0.18f));
+            CreateNavButton(nav, "BOARD", new Vector2(-144f, 48f), activeScreen == ActiveScreen.Board, new Color(0.16f, 0.48f, 1f), () => SetActiveScreen(ActiveScreen.Board));
+            CreateNavButton(nav, "DIST", new Vector2(-48f, 48f), activeScreen == ActiveScreen.Districts, new Color(0.25f, 0.82f, 0.58f), () => SetActiveScreen(ActiveScreen.Districts));
+            CreateNavButton(nav, "BOOK", new Vector2(48f, 48f), activeScreen == ActiveScreen.Collection, new Color(0.86f, 0.26f, 0.78f), () => SetActiveScreen(ActiveScreen.Collection));
+            CreateNavButton(nav, "SHOP", new Vector2(144f, 48f), false, new Color(0.95f, 0.66f, 0.18f), () => SetStatus("Shop unlocks after the first playable loop"));
         }
 
-        private void CreateNavButton(RectTransform parent, string label, Vector2 position, bool active, Color accent)
+        private void CreateNavButton(RectTransform parent, string label, Vector2 position, bool active, Color accent, UnityEngine.Events.UnityAction action)
         {
             RectTransform button = CreateRoundedPanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(62f, 58f), active ? new Color(0.08f, 0.16f, 0.27f, 1f) : new Color(0.035f, 0.045f, 0.065f, 1f));
+            Button navButton = button.gameObject.AddComponent<Button>();
+            navButton.targetGraphic = button.GetComponent<Image>();
+            navButton.onClick.AddListener(action);
+            navButtonImages[label] = button.GetComponent<Image>();
             CreateNavIcon(button, label, active, accent);
-            CreateText("Nav Label", button, label, 8, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(54f, 13f));
+            navLabels[label] = CreateText("Nav Label", button, label, 8, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(54f, 13f));
+        }
+
+        private void SetActiveScreen(ActiveScreen screen)
+        {
+            activeScreen = screen;
+            if (boardScreenRoot != null)
+            {
+                boardScreenRoot.gameObject.SetActive(screen == ActiveScreen.Board);
+            }
+
+            if (districtScreenRoot != null)
+            {
+                districtScreenRoot.gameObject.SetActive(screen == ActiveScreen.Districts);
+            }
+
+            if (collectionScreenRoot != null)
+            {
+                collectionScreenRoot.gameObject.SetActive(screen == ActiveScreen.Collection);
+            }
+
+            if (screen == ActiveScreen.Districts)
+            {
+                RefreshDistrictsScreen();
+            }
+            else if (screen == ActiveScreen.Collection)
+            {
+                RefreshCollectionScreen();
+            }
+
+            RefreshNavState();
+        }
+
+        private void RefreshNavState()
+        {
+            SetNavState("BOARD", activeScreen == ActiveScreen.Board, new Color(0.16f, 0.48f, 1f));
+            SetNavState("DIST", activeScreen == ActiveScreen.Districts, new Color(0.25f, 0.82f, 0.58f));
+            SetNavState("BOOK", activeScreen == ActiveScreen.Collection, new Color(0.86f, 0.26f, 0.78f));
+            SetNavState("SHOP", false, new Color(0.95f, 0.66f, 0.18f));
+        }
+
+        private void SetNavState(string label, bool active, Color accent)
+        {
+            if (navButtonImages.TryGetValue(label, out Image image))
+            {
+                image.color = active ? new Color(0.08f, 0.16f, 0.27f, 1f) : new Color(0.035f, 0.045f, 0.065f, 1f);
+            }
+
+            if (navLabels.TryGetValue(label, out TextMeshProUGUI navLabel))
+            {
+                navLabel.color = active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f);
+            }
         }
 
         private void CreateNavIcon(RectTransform parent, string label, bool active, Color accent)
@@ -521,6 +647,122 @@ namespace MergePlatform.Client
 
             CreatePanel("Nav Shop Base", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -3f), new Vector2(18f, 9f), iconColor);
             CreatePanel("Nav Shop Handle", icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 5f), new Vector2(10f, 4f), iconColor);
+        }
+
+        private void CreateDistrictsScreen()
+        {
+            RefreshDistrictsScreen();
+        }
+
+        private void RefreshDistrictsScreen()
+        {
+            if (districtScreenRoot == null)
+            {
+                return;
+            }
+
+            ClearChildren(districtScreenRoot);
+            CreateText("District Screen Title", districtScreenRoot, "Districts", 22, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -132f), new Vector2(236f, 28f));
+            RectTransform panel = CreateRoundedPanel("District Panel", districtScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -176f), new Vector2(MobileContentWidth, 430f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+
+            if (theme?.worldMap?.nodes == null || theme.worldMap.nodes.Length == 0)
+            {
+                CreateText("District Empty", panel, "No districts in this theme", 13, new Color(0.77f, 0.9f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(300f, 28f));
+                return;
+            }
+
+            for (int index = 0; index < theme.worldMap.nodes.Length; index += 1)
+            {
+                CreateDistrictCard(panel, theme.worldMap.nodes[index], index);
+            }
+        }
+
+        private void CreateDistrictCard(RectTransform parent, WorldNode node, int index)
+        {
+            string state = GetDistrictState(node);
+            bool locked = state == "LOCKED";
+            bool current = state == "CURRENT";
+            Color accent = locked ? new Color(0.38f, 0.48f, 0.6f) : current ? new Color(0.25f, 0.82f, 0.58f) : new Color(0.54f, 0.94f, 1f);
+            Color cardColor = locked ? new Color(0.07f, 0.09f, 0.13f, 0.82f) : current ? new Color(0.07f, 0.16f, 0.15f, 0.96f) : new Color(0.08f, 0.13f, 0.2f, 0.96f);
+            RectTransform card = CreateRoundedPanel($"District {node.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f - index * 92f), new Vector2(356f, 80f), cardColor);
+            CreatePanel("District State Stripe", card, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(4f, 0f), new Vector2(4f, 66f), accent);
+            CreateText("District Card Title", card, node.title, 14, locked ? new Color(0.62f, 0.72f, 0.82f) : Color.white, TextAnchor.MiddleLeft, new Vector2(-48f, 20f), new Vector2(226f, 18f));
+            CreateText("District Card State", card, $"{state} / {completedOrderIds.Count}/{Mathf.Max(1, node.unlocksAfterOrders)} contracts", 10, new Color(accent.r, accent.g, accent.b, 1f), TextAnchor.MiddleLeft, new Vector2(-48f, 3f), new Vector2(226f, 14f));
+            CreateMilestoneProgressBar(card, node.unlocksAfterOrders <= 0 ? 1f : Mathf.Clamp01(completedOrderIds.Count / (float)Mathf.Max(1, node.unlocksAfterOrders)), -22f, accent);
+        }
+
+        private void CreateMilestoneProgressBar(RectTransform parent, float progress, float y, Color accent)
+        {
+            RectTransform track = CreatePanel("Milestone Progress Track", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(-38f, y), new Vector2(250f, 5f), new Color(0.03f, 0.05f, 0.08f, 1f));
+            float width = Mathf.Clamp01(progress) * 250f;
+            CreatePanel("Milestone Progress Fill", track, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(width / 2f, 0f), new Vector2(width, 5f), accent);
+        }
+
+        private string GetDistrictState(WorldNode node)
+        {
+            if (node == null || completedOrderIds.Count < node.unlocksAfterOrders)
+            {
+                return "LOCKED";
+            }
+
+            WorldNode current = GetCurrentDistrict();
+            return current != null && current.id == node.id ? "CURRENT" : "UNLOCKED";
+        }
+
+        private void CreateCollectionScreen()
+        {
+            RefreshCollectionScreen();
+        }
+
+        private void RefreshCollectionScreen()
+        {
+            if (collectionScreenRoot == null)
+            {
+                return;
+            }
+
+            ClearChildren(collectionScreenRoot);
+            CreateText("Collection Screen Title", collectionScreenRoot, "Collection", 22, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -132f), new Vector2(236f, 28f));
+            CreateText("Collection Count", collectionScreenRoot, $"{discoveredItemIds.Count} item levels discovered", 11, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, -158f), new Vector2(236f, 16f));
+
+            if (theme?.itemChains == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < theme.itemChains.Length; index += 1)
+            {
+                CreateCollectionChainCard(collectionScreenRoot, theme.itemChains[index], index);
+            }
+        }
+
+        private void CreateCollectionChainCard(RectTransform parent, ItemChain chain, int index)
+        {
+            int column = index % 2;
+            int row = index / 2;
+            float x = column == 0 ? -96f : 96f;
+            float y = -204f - row * 130f;
+            RectTransform card = CreateRoundedPanel($"Collection Chain {chain.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(x, y), new Vector2(176f, 112f), new Color(0.07f, 0.12f, 0.19f, 0.96f));
+            CreateText("Collection Chain Title", card, chain.displayName, 12, Color.white, TextAnchor.MiddleLeft, new Vector2(-28f, 34f), new Vector2(112f, 16f));
+
+            if (chain.levels == null)
+            {
+                return;
+            }
+
+            for (int levelIndex = 0; levelIndex < chain.levels.Length; levelIndex += 1)
+            {
+                CreateCollectionLevelBadge(card, chain.levels[levelIndex], levelIndex);
+            }
+        }
+
+        private void CreateCollectionLevelBadge(RectTransform parent, ItemLevel level, int index)
+        {
+            bool found = discoveredItemIds.Contains(level.id);
+            Color accent = found ? ItemAccent(level.id) : new Color(0.28f, 0.34f, 0.43f);
+            RectTransform badge = CreateRoundedPanel($"Collection Level {level.id}", parent, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(28f + index * 36f, -4f), new Vector2(31f, 31f), new Color(accent.r, accent.g, accent.b, found ? 0.95f : 0.5f));
+            CreateText("Collection Level Text", badge, found ? level.level.ToString() : "?", 10, found ? new Color(0.04f, 0.08f, 0.12f) : new Color(0.62f, 0.72f, 0.82f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(22f, 16f));
+            CreateText("Collection Level Name", parent, found ? ItemDisplayName(level.id, level.name, level.level) : "LOCKED", 8, found ? new Color(0.78f, 0.92f, 1f) : new Color(0.45f, 0.55f, 0.68f), TextAnchor.MiddleCenter, new Vector2(28f + index * 36f, -28f), new Vector2(34f, 12f));
         }
 
         private void CreateOrderCard(RectTransform parent, OrderDefinition order, int index)
@@ -1338,6 +1580,7 @@ namespace MergePlatform.Client
 
         private ItemTile CreateItemTile(string itemId, ItemLevel level, Vector2Int grid)
         {
+            MarkItemDiscovered(itemId);
             RectTransform root = CreateItemCard(itemId, level, grid);
             string chainId = chainByItemId.TryGetValue(itemId, out ItemChain chain) ? chain.id : itemId;
             ItemTile tile = new ItemTile(root, root.GetComponent<CanvasGroup>(), itemId, chainId, level.level, grid);
@@ -1355,6 +1598,19 @@ namespace MergePlatform.Client
             }
 
             return tile;
+        }
+
+        private void MarkItemDiscovered(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId) || !discoveredItemIds.Add(itemId))
+            {
+                return;
+            }
+
+            if (activeScreen == ActiveScreen.Collection)
+            {
+                RefreshCollectionScreen();
+            }
         }
 
         private bool IsHelpfulItemRecentlyCreated(string itemId)
@@ -1420,7 +1676,7 @@ namespace MergePlatform.Client
             CreateProceduralItemIcon(card, itemId, level.level, ItemAccent(itemId));
             CreateTierPips(card, level.level, ItemAccent(itemId));
             CreateLevelBadge(card, level.level);
-            CreateItemDisplayLabel(card, itemId, level.name);
+            CreateItemDisplayLabel(card, itemId, level.name, level.level);
             return card;
         }
 
@@ -1449,9 +1705,9 @@ namespace MergePlatform.Client
             CreateText("Level Badge Text", badge, tier.ToString(), 8, new Color(0.88f, 0.98f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(10f, 10f));
         }
 
-        private void CreateItemDisplayLabel(RectTransform parent, string itemId, string itemName)
+        private void CreateItemDisplayLabel(RectTransform parent, string itemId, string itemName, int tier)
         {
-            CreateText("Name", parent, ItemDisplayName(itemId, itemName), 8, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 8f, 12f));
+            CreateText("Name", parent, ItemDisplayName(itemId, itemName, tier), 8, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 8f, 12f));
         }
 
         private void CreateProducerIcon(RectTransform parent)
@@ -1665,6 +1921,7 @@ namespace MergePlatform.Client
                 producerTapsRemaining = producerTapsRemaining,
                 producerCooldownReadyAt = producerCooldownReadyAt,
                 completedOrderIds = ToCompletedOrderArray(),
+                discoveredItemIds = ToDiscoveredItemArray(),
                 boardItems = ToSavedBoardItems()
             };
 
@@ -1713,6 +1970,19 @@ namespace MergePlatform.Client
                 }
             }
 
+            this.discoveredItemIds.Clear();
+            string[] discoveredItemIds = saveData.discoveredItemIds;
+            if (discoveredItemIds != null)
+            {
+                foreach (string itemId in discoveredItemIds)
+                {
+                    if (!string.IsNullOrWhiteSpace(itemId))
+                    {
+                        this.discoveredItemIds.Add(itemId);
+                    }
+                }
+            }
+
             if (theme.producers != null && theme.producers.Length > 0)
             {
                 RefreshProducerCooldown(theme.producers[0]);
@@ -1744,6 +2014,13 @@ namespace MergePlatform.Client
             string[] orderIds = new string[completedOrderIds.Count];
             completedOrderIds.CopyTo(orderIds);
             return orderIds;
+        }
+
+        private string[] ToDiscoveredItemArray()
+        {
+            string[] itemIds = new string[discoveredItemIds.Count];
+            discoveredItemIds.CopyTo(itemIds);
+            return itemIds;
         }
 
         private SavedBoardItem[] ToSavedBoardItems()
@@ -1830,26 +2107,66 @@ namespace MergePlatform.Client
             return value.Length <= 10 ? value : $"{value.Substring(0, 9)}.";
         }
 
-        private string ItemDisplayName(string itemId, string itemName)
+        private string ItemDisplayName(string itemId, string itemName, int tier)
         {
             if (itemId.StartsWith("chip"))
             {
-                return itemId.EndsWith("_1") ? "Chip" : "Signal";
+                if (tier <= 1)
+                {
+                    return "Chip";
+                }
+
+                if (tier == 2)
+                {
+                    return "Signal";
+                }
+
+                return "Processor";
             }
 
             if (itemId.StartsWith("wire"))
             {
-                return itemId.EndsWith("_1") ? "Wire" : "Relay";
+                if (tier <= 1)
+                {
+                    return "Wire";
+                }
+
+                if (tier == 2)
+                {
+                    return "Relay";
+                }
+
+                return "Harness";
             }
 
             if (itemId.StartsWith("drone"))
             {
-                return itemId.EndsWith("_1") ? "Shell" : "Scout";
+                if (tier <= 1)
+                {
+                    return "Shell";
+                }
+
+                if (tier == 2)
+                {
+                    return "Scout";
+                }
+
+                return "Interceptor";
             }
 
             if (itemId.StartsWith("cache"))
             {
-                return itemId.EndsWith("_1") ? "Cache" : "Vault";
+                if (tier <= 1)
+                {
+                    return "Cache";
+                }
+
+                if (tier == 2)
+                {
+                    return "Vault";
+                }
+
+                return "Archive";
             }
 
             return ShortName(itemName);
@@ -2051,6 +2368,14 @@ namespace MergePlatform.Client
             rect.offsetMax = Vector2.zero;
         }
 
+        private void ClearChildren(Transform parent)
+        {
+            for (int index = parent.childCount - 1; index >= 0; index -= 1)
+            {
+                Destroy(parent.GetChild(index).gameObject);
+            }
+        }
+
         private static void EnsureEventSystem()
         {
             if (FindAnyObjectByType<EventSystem>() != null)
@@ -2073,6 +2398,7 @@ namespace MergePlatform.Client
             public int producerTapsRemaining;
             public long producerCooldownReadyAt;
             public string[] completedOrderIds;
+            public string[] discoveredItemIds;
             public SavedBoardItem[] boardItems;
         }
 

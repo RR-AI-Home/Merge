@@ -122,6 +122,17 @@ The current target style is a dark navy cyber UI with compact currency pills, an
 
 ## Current Proof Scope
 
-The current Unity proof loads the exported `cyber-syndicate` theme and renders a Canvas-based production-style board screen. It has a compact portrait HUD, fixed rounded board slots, icon-first item cards, a clickable producer crate, contract cards, energy spend, item generation, drag-to-empty-slot, drag-to-merge, local save/load, producer cooldowns, order completion, district progress, floating bottom navigation, merge feedback, and generated icon treatments.
+The current Unity proof loads the exported `cyber-syndicate` theme and renders a Canvas-based production-style first playable loop. It has a compact portrait HUD, fixed rounded board slots, icon-first item cards, a clickable producer crate, contract cards, energy spend, item generation, drag-to-empty-slot, drag-to-merge, local save/load, producer cooldowns, order completion, district progress, floating bottom navigation, merge feedback, and generated icon treatments.
+
+First playable navigation now includes:
+
+- `BOARD`: the main merge board, producer, contracts queue, ready-state contract sorting, and claim flow.
+- `DIST`: a theme-driven district progression screen built from the exported world map.
+- `BOOK`: a collection screen that records discovered item levels and shows locked versus found chain levels.
+- `SHOP`: a placeholder button only; monetization and store inventory are not part of this proof yet.
+
+The board also has lightweight session controls for local testing: pause/resume and reset local save. Reset clears the current theme save key through `PlayerPrefs`, then rebuilds the local scene.
+
+Item chains should now read as distinct progression levels instead of duplicated labels. For example, the cyber starter chains use names such as `Chip -> Signal -> Processor` and `Wire -> Relay -> Harness`. Future themes should keep the same engine contract but provide fantasy-specific item names and icons, so each standalone game feels purpose-built rather than re-skinned.
 
 It does not yet implement backend calls, APK/AAB output, final art assets, final audio, monetization, liveops, analytics delivery, or production store packaging.

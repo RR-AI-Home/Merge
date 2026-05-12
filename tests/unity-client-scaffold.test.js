@@ -374,3 +374,42 @@ test('Unity MergeClient follows the compact premium portrait mock direction', as
   assert.match(controller, /CreateRoundedSprite/);
   assert.match(controller, /Image\.Type\.Sliced/);
 });
+
+test('Unity MergeClient includes first playable session, district, and collection screens', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /private enum ActiveScreen/);
+  assert.match(controller, /Board,\s*Districts,\s*Collection/);
+  assert.match(controller, /private ActiveScreen activeScreen = ActiveScreen\.Board;/);
+  assert.match(controller, /private RectTransform boardScreenRoot;/);
+  assert.match(controller, /private RectTransform districtScreenRoot;/);
+  assert.match(controller, /private RectTransform collectionScreenRoot;/);
+  assert.match(controller, /private readonly Dictionary<string, TextMeshProUGUI> navLabels = new Dictionary<string, TextMeshProUGUI>\(\)/);
+  assert.match(controller, /CreateSessionControls\(hud\)/);
+  assert.match(controller, /CreateSessionButton\(hud, "PAUSE"/);
+  assert.match(controller, /CreateSessionButton\(hud, "RESET"/);
+  assert.match(controller, /TogglePause\(\)/);
+  assert.match(controller, /ResetLocalSave\(\)/);
+  assert.match(controller, /PlayerPrefs\.DeleteKey\(SaveKey\(\)\)/);
+  assert.match(controller, /CreateScreenRoots\(\)/);
+  assert.match(controller, /SetActiveScreen\(ActiveScreen\.Board\)/);
+  assert.match(controller, /SetActiveScreen\(ActiveScreen\.Districts\)/);
+  assert.match(controller, /SetActiveScreen\(ActiveScreen\.Collection\)/);
+  assert.match(controller, /CreateDistrictsScreen\(\)/);
+  assert.match(controller, /CreateDistrictCard/);
+  assert.match(controller, /CreateMilestoneProgressBar/);
+  assert.match(controller, /GetDistrictState/);
+  assert.match(controller, /CreateCollectionScreen\(\)/);
+  assert.match(controller, /CreateCollectionChainCard/);
+  assert.match(controller, /CreateCollectionLevelBadge/);
+  assert.match(controller, /private readonly HashSet<string> discoveredItemIds = new HashSet<string>\(\)/);
+  assert.match(controller, /MarkItemDiscovered\(itemId\)/);
+  assert.match(controller, /discoveredItemIds = ToDiscoveredItemArray\(\)/);
+  assert.match(controller, /discoveredItemIds = saveData\.discoveredItemIds/);
+  assert.match(controller, /private string ItemDisplayName\(string itemId, string itemName, int tier\)/);
+  assert.match(controller, /return "Signal";[\s\S]*return "Processor";/);
+  assert.match(controller, /return "Relay";[\s\S]*return "Harness";/);
+});
