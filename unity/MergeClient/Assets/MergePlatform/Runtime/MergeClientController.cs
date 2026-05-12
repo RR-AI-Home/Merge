@@ -16,6 +16,10 @@ namespace MergePlatform.Client
         private const float MobileReferenceWidth = 412f;
         private const float MobileReferenceHeight = 915f;
         private const float MobileContentWidth = 386f;
+        private const float HudHeight = 132f;
+        private const float BoardCenterY = -336f;
+        private const float OrdersPanelTopY = -544f;
+        private const float BottomNavBottomY = 20f;
         private const float TileSize = 60f;
         private const float TileGap = 2f;
         private const float BoardPadding = 8f;
@@ -67,6 +71,7 @@ namespace MergePlatform.Client
         private TextMeshProUGUI energyLabel;
         private TextMeshProUGUI coinsLabel;
         private TextMeshProUGUI premiumLabel;
+        private TextMeshProUGUI titleLabel;
         private TextMeshProUGUI districtLabel;
         private TextMeshProUGUI statusLabel;
         private TMP_FontAsset uiFontAsset;
@@ -137,7 +142,7 @@ namespace MergePlatform.Client
                     continue;
                 }
 
-                TMP_FontAsset fontAsset = TMP_FontAsset.CreateFontAsset(font, 72, 9, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
+                TMP_FontAsset fontAsset = TMP_FontAsset.CreateFontAsset(font, 96, 12, GlyphRenderMode.SDFAA, 4096, 4096, AtlasPopulationMode.Dynamic, true);
                 if (fontAsset != null)
                 {
                     return fontAsset;
@@ -149,10 +154,10 @@ namespace MergePlatform.Client
 
         private static IEnumerable<Font> RuntimeFontCandidates()
         {
-            Font builtInRuntime = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (builtInRuntime != null)
+            Font osFont = Font.CreateDynamicFontFromOSFont(UiFontNames, 36);
+            if (osFont != null)
             {
-                yield return builtInRuntime;
+                yield return osFont;
             }
 
             Font builtInArial = Resources.GetBuiltinResource<Font>("Arial.ttf");
@@ -161,10 +166,10 @@ namespace MergePlatform.Client
                 yield return builtInArial;
             }
 
-            Font osFont = Font.CreateDynamicFontFromOSFont(UiFontNames, 32);
-            if (osFont != null)
+            Font builtInRuntime = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (builtInRuntime != null)
             {
-                yield return osFont;
+                yield return builtInRuntime;
             }
         }
 
@@ -327,15 +332,15 @@ namespace MergePlatform.Client
 
         private void CreateHud()
         {
-            RectTransform hud = CreateRoundedPanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f), new Vector2(MobileContentWidth, 102f), new Color(0.035f, 0.06f, 0.1f, 0.94f));
-            TextMeshProUGUI title = CreateText("Title", hud, theme.config.displayName, 22, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, 30f), new Vector2(236f, 30f));
-            title.fontStyle = FontStyles.Bold | FontStyles.Italic;
+            RectTransform hud = CreateRoundedPanel("HUD", canvasRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f), new Vector2(MobileContentWidth, HudHeight), new Color(0.024f, 0.043f, 0.075f, 0.98f));
+            titleLabel = CreateText("Title", hud, theme.config.displayName, 24, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, 12f), new Vector2(236f, 30f));
+            titleLabel.fontStyle = FontStyles.Bold | FontStyles.Italic;
 
-            energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(34f, 36f), new Vector2(74f, 27f), new Color(0.95f, 0.66f, 0.18f));
-            coinsLabel = CreateStatPill(hud, "COINS", new Vector2(132f, 36f), new Vector2(58f, 27f), new Color(0.25f, 0.82f, 0.58f));
-            premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(212f, 36f), new Vector2(58f, 27f), new Color(0.86f, 0.26f, 0.78f));
-            statusLabel = CreateText("HUD Status", hud, "Ready", 11, new Color(0.74f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -16f), new Vector2(236f, 15f));
-            districtLabel = CreateText("District Progress", hud, "District 0/2", 11, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, -32f), new Vector2(236f, 15f));
+            energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-120f, 44f), new Vector2(78f, 30f), new Color(0.95f, 0.66f, 0.18f));
+            coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, 44f), new Vector2(74f, 30f), new Color(0.25f, 0.82f, 0.58f));
+            premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(120f, 44f), new Vector2(74f, 30f), new Color(0.86f, 0.26f, 0.78f));
+            statusLabel = CreateText("HUD Status", hud, "Ready", 12, new Color(0.74f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -21f), new Vector2(236f, 16f));
+            districtLabel = CreateText("District Progress", hud, "District 0/2", 12, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, -38f), new Vector2(236f, 16f));
             CreateSessionControls(hud);
 
             coinsLabel.text = currentCoins.ToString();
@@ -344,17 +349,17 @@ namespace MergePlatform.Client
 
         private void CreateSessionControls(RectTransform hud)
         {
-            CreateSessionButton(hud, "PAUSE", new Vector2(116f, 8f), TogglePause);
-            CreateSessionButton(hud, "RESET", new Vector2(190f, 8f), ResetLocalSave);
+            CreateSessionButton(hud, "PAUSE", new Vector2(-94f, -59f), TogglePause);
+            CreateSessionButton(hud, "RESET SAVE", new Vector2(94f, -59f), ResetLocalSave);
         }
 
         private void CreateSessionButton(RectTransform parent, string label, Vector2 position, UnityEngine.Events.UnityAction action)
         {
-            RectTransform root = CreateRoundedPanel($"Session {label}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), position, new Vector2(62f, 20f), new Color(0.08f, 0.13f, 0.2f, 0.96f));
+            RectTransform root = CreateRoundedPanel($"Session {label}", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, new Vector2(180f, 24f), new Color(0.065f, 0.1f, 0.16f, 0.96f));
             Button button = root.gameObject.AddComponent<Button>();
             button.targetGraphic = root.GetComponent<Image>();
             button.onClick.AddListener(action);
-            CreateText($"Session {label} Label", root, label, 8, new Color(0.78f, 0.92f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(54f, 12f));
+            CreateText($"Session {label} Label", root, label, 10, new Color(0.78f, 0.92f, 1f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(154f, 13f));
         }
 
         private void TogglePause()
@@ -389,9 +394,9 @@ namespace MergePlatform.Client
 
         private TextMeshProUGUI CreateStatPill(RectTransform parent, string label, Vector2 position, Vector2 size, Color accent)
         {
-            RectTransform pill = CreateRoundedPanel($"Stat {label}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), position, size, new Color(0.11f, 0.13f, 0.17f, 0.94f));
+            RectTransform pill = CreateRoundedPanel($"Stat {label}", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, size, new Color(1f, 1f, 1f, 0.08f));
             CreateStatPillIcon(pill, accent);
-            return CreateText($"{label} Text", pill, label, 11, Color.white, TextAnchor.MiddleCenter, new Vector2(9f, 0f), new Vector2(size.x - 28f, 18f));
+            return CreateText($"{label} Text", pill, label, 12, Color.white, TextAnchor.MiddleCenter, new Vector2(9f, 0f), new Vector2(size.x - 28f, 18f));
         }
 
         private void CreateStatPillIcon(RectTransform pill, Color accent)
@@ -402,7 +407,7 @@ namespace MergePlatform.Client
 
         private void CreateBoard()
         {
-            boardPanel = CreateRoundedPanel("Merge Board", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -306f), new Vector2(boardPixelSize, boardPixelSize), new Color(0.055f, 0.08f, 0.125f, 0.98f));
+            boardPanel = CreateRoundedPanel("Merge Board", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, BoardCenterY), new Vector2(boardPixelSize, boardPixelSize), new Color(0.043f, 0.078f, 0.125f, 0.98f));
 
             for (int y = 0; y < boardHeight; y += 1)
             {
@@ -423,10 +428,10 @@ namespace MergePlatform.Client
 
         private void CreateBoardSlot(Vector2Int grid)
         {
-            RectTransform slot = CreateRoundedPanel($"Slot {grid.x},{grid.y}", boardPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), new Color(0.1f, 0.13f, 0.18f, 1f));
+            RectTransform slot = CreateRoundedPanel($"Slot {grid.x},{grid.y}", boardPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), new Color(0.13f, 0.19f, 0.29f, 1f));
             boardSlots[grid] = slot;
 
-            CreateRoundedPanel("Slot Inner", slot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TileSize - 4f, TileSize - 4f), new Color(0.13f, 0.17f, 0.24f, 1f));
+            CreateRoundedPanel("Slot Inner", slot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TileSize - 4f, TileSize - 4f), new Color(0.16f, 0.23f, 0.34f, 1f));
             Image topLine = CreateImage("Slot Top Line", slot, new Color(0.31f, 0.41f, 0.56f, 0.42f));
             SetRect(topLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -4f), new Vector2(TileSize - 8f, 2f));
 
@@ -438,7 +443,7 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            ordersPanel = CreateRoundedPanel("Orders Panel", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -512f), new Vector2(MobileContentWidth, 178f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+            ordersPanel = CreateRoundedPanel("Orders Panel", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, OrdersPanelTopY), new Vector2(MobileContentWidth, 178f), new Color(1f, 1f, 1f, 0.025f));
             RectTransform viewport = CreatePanel("Orders Viewport", ordersPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
             viewport.gameObject.AddComponent<RectMask2D>();
             orderScrollContent = CreatePanel("Orders Content", viewport, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
@@ -549,11 +554,11 @@ namespace MergePlatform.Client
 
         private void CreateBottomNav()
         {
-            RectTransform nav = CreateRoundedPanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 0f), new Vector2(MobileContentWidth, 78f), new Color(0.035f, 0.055f, 0.09f, 0.99f));
-            CreateNavButton(nav, "BOARD", new Vector2(-144f, 48f), activeScreen == ActiveScreen.Board, new Color(0.16f, 0.48f, 1f), () => SetActiveScreen(ActiveScreen.Board));
-            CreateNavButton(nav, "DIST", new Vector2(-48f, 48f), activeScreen == ActiveScreen.Districts, new Color(0.25f, 0.82f, 0.58f), () => SetActiveScreen(ActiveScreen.Districts));
-            CreateNavButton(nav, "BOOK", new Vector2(48f, 48f), activeScreen == ActiveScreen.Collection, new Color(0.86f, 0.26f, 0.78f), () => SetActiveScreen(ActiveScreen.Collection));
-            CreateNavButton(nav, "SHOP", new Vector2(144f, 48f), false, new Color(0.95f, 0.66f, 0.18f), () => SetStatus("Shop unlocks after the first playable loop"));
+            RectTransform nav = CreateRoundedPanel("Bottom Nav", canvasRoot, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, BottomNavBottomY), new Vector2(MobileContentWidth, 76f), new Color(0.027f, 0.051f, 0.09f, 0.99f));
+            CreateNavButton(nav, "BOARD", new Vector2(-144f, 38f), activeScreen == ActiveScreen.Board, new Color(0.16f, 0.48f, 1f), () => SetActiveScreen(ActiveScreen.Board));
+            CreateNavButton(nav, "DIST", new Vector2(-48f, 38f), activeScreen == ActiveScreen.Districts, new Color(0.25f, 0.82f, 0.58f), () => SetActiveScreen(ActiveScreen.Districts));
+            CreateNavButton(nav, "BOOK", new Vector2(48f, 38f), activeScreen == ActiveScreen.Collection, new Color(0.86f, 0.26f, 0.78f), () => SetActiveScreen(ActiveScreen.Collection));
+            CreateNavButton(nav, "SHOP", new Vector2(144f, 38f), false, new Color(0.95f, 0.66f, 0.18f), () => SetStatus("Shop unlocks after the first playable loop"));
         }
 
         private void CreateNavButton(RectTransform parent, string label, Vector2 position, bool active, Color accent, UnityEngine.Events.UnityAction action)
@@ -564,12 +569,14 @@ namespace MergePlatform.Client
             navButton.onClick.AddListener(action);
             navButtonImages[label] = button.GetComponent<Image>();
             CreateNavIcon(button, label, active, accent);
-            navLabels[label] = CreateText("Nav Label", button, label, 8, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(54f, 13f));
+            navLabels[label] = CreateText("Nav Label", button, label, 9, active ? accent : new Color(accent.r, accent.g, accent.b, 0.72f), TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(54f, 13f));
         }
 
         private void SetActiveScreen(ActiveScreen screen)
         {
             activeScreen = screen;
+            SetHudTitle(screen);
+
             if (boardScreenRoot != null)
             {
                 boardScreenRoot.gameObject.SetActive(screen == ActiveScreen.Board);
@@ -595,6 +602,29 @@ namespace MergePlatform.Client
             }
 
             RefreshNavState();
+        }
+
+        private void SetHudTitle(ActiveScreen screen)
+        {
+            if (titleLabel != null)
+            {
+                titleLabel.text = HudTitleFor(screen);
+            }
+        }
+
+        private string HudTitleFor(ActiveScreen screen)
+        {
+            if (screen == ActiveScreen.Districts)
+            {
+                return "Districts";
+            }
+
+            if (screen == ActiveScreen.Collection)
+            {
+                return "Collection";
+            }
+
+            return theme?.config != null ? theme.config.displayName : "Merge Syndicate";
         }
 
         private void RefreshNavState()
@@ -662,8 +692,7 @@ namespace MergePlatform.Client
             }
 
             ClearChildren(districtScreenRoot);
-            CreateText("District Screen Title", districtScreenRoot, "Districts", 22, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -132f), new Vector2(236f, 28f));
-            RectTransform panel = CreateRoundedPanel("District Panel", districtScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -176f), new Vector2(MobileContentWidth, 430f), new Color(0.035f, 0.055f, 0.09f, 0.94f));
+            RectTransform panel = CreateRoundedPanel("District Panel", districtScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -154f), new Vector2(MobileContentWidth, 430f), new Color(0.043f, 0.078f, 0.125f, 0.96f));
 
             if (theme?.worldMap?.nodes == null || theme.worldMap.nodes.Length == 0)
             {
@@ -722,8 +751,7 @@ namespace MergePlatform.Client
             }
 
             ClearChildren(collectionScreenRoot);
-            CreateText("Collection Screen Title", collectionScreenRoot, "Collection", 22, new Color(0.96f, 0.98f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -132f), new Vector2(236f, 28f));
-            CreateText("Collection Count", collectionScreenRoot, $"{discoveredItemIds.Count} item levels discovered", 11, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, -158f), new Vector2(236f, 16f));
+            CreateText("Collection Count", collectionScreenRoot, $"{discoveredItemIds.Count} item levels discovered", 12, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, 282f), new Vector2(236f, 16f));
 
             if (theme?.itemChains == null)
             {
@@ -741,7 +769,7 @@ namespace MergePlatform.Client
             int column = index % 2;
             int row = index / 2;
             float x = column == 0 ? -96f : 96f;
-            float y = -204f - row * 130f;
+            float y = -154f - row * 130f;
             RectTransform card = CreateRoundedPanel($"Collection Chain {chain.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(x, y), new Vector2(176f, 112f), new Color(0.07f, 0.12f, 0.19f, 0.96f));
             CreateText("Collection Chain Title", card, chain.displayName, 12, Color.white, TextAnchor.MiddleLeft, new Vector2(-28f, 34f), new Vector2(112f, 16f));
 
@@ -947,7 +975,7 @@ namespace MergePlatform.Client
             button.targetGraphic = root.GetComponent<Image>();
             button.onClick.AddListener(() => TryTapProducer(producer));
             CreateProducerIcon(root);
-            CreateText("Producer Label", root, "CRATE", 8, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 6f, 12f));
+            CreateText("Producer Label", root, "CRATE", 9, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 6f, 12f));
         }
 
         private void SeedMergeableItems()
@@ -1707,7 +1735,7 @@ namespace MergePlatform.Client
 
         private void CreateItemDisplayLabel(RectTransform parent, string itemId, string itemName, int tier)
         {
-            CreateText("Name", parent, ItemDisplayName(itemId, itemName, tier), 8, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 8f, 12f));
+            CreateText("Name", parent, ItemDisplayName(itemId, itemName, tier), 9, Color.white, TextAnchor.LowerCenter, new Vector2(0f, -20f), new Vector2(TileSize - 8f, 12f));
         }
 
         private void CreateProducerIcon(RectTransform parent)
@@ -2319,6 +2347,7 @@ namespace MergePlatform.Client
             text.color = color;
             text.alignment = ToTextAlignment(alignment);
             text.fontStyle = FontStyles.Bold;
+            text.fontWeight = FontWeight.Bold;
             text.enableAutoSizing = false;
             text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Ellipsis;
