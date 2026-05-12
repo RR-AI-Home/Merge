@@ -79,6 +79,10 @@ test('Unity MergeClient HUD keeps title above resource pills', async () => {
   assert.match(controller, /CreateStatPill\(hud, "ENERGY", new Vector2\(-120f, 44f\)/);
   assert.match(controller, /CreateStatPill\(hud, "COINS", new Vector2\(0f, 44f\)/);
   assert.match(controller, /CreateStatPill\(hud, "GEMS", new Vector2\(120f, 44f\)/);
+  assert.match(controller, /statusLabel = CreateText\("HUD Status"[\s\S]*12[\s\S]*new Vector2\(0f, -18f\)[\s\S]*new Vector2\(376f, 16f\)/);
+  assert.match(controller, /districtLabel = CreateText\("District Progress"[\s\S]*12[\s\S]*new Vector2\(0f, -35f\)[\s\S]*new Vector2\(376f, 16f\)/);
+  assert.match(controller, /CreateSessionButton\(hud, "PAUSE", new Vector2\(-94f, -64f\)/);
+  assert.match(controller, /CreateSessionButton\(hud, "RESET SAVE", new Vector2\(94f, -64f\)/);
   assert.doesNotMatch(controller, /CreateText\("Title"[\s\S]*new Vector2\(0f, -23f\)/);
 });
 
@@ -310,7 +314,7 @@ test('Unity MergeClient text stays crisp and avoids contract stripe overlap', as
   assert.match(controller, /CreateText\("Order Title"[\s\S]*14[\s\S]*new Vector2\(OrderTextCenterX, 24f\)[\s\S]*new Vector2\(OrderTextWidth, 18f\)/);
   assert.match(controller, /CreateText\("Order Requirements"[\s\S]*11[\s\S]*new Vector2\(OrderTextCenterX, 7f\)[\s\S]*new Vector2\(OrderTextWidth, 15f\)/);
   assert.match(controller, /CreateText\("Order Reward"[\s\S]*11[\s\S]*new Vector2\(OrderTextCenterX, -10f\)[\s\S]*new Vector2\(OrderTextWidth, 15f\)/);
-  assert.match(controller, /CreateText\("District Progress"[\s\S]*12[\s\S]*new Vector2\(-78f, -38f\)[\s\S]*new Vector2\(236f, 16f\)/);
+  assert.match(controller, /CreateText\("District Progress"[\s\S]*12[\s\S]*new Vector2\(0f, -35f\)[\s\S]*new Vector2\(376f, 16f\)/);
   assert.doesNotMatch(controller, /resizeTextMinSize/);
   assert.doesNotMatch(controller, /typeof\(Text\)/);
   assert.doesNotMatch(controller, /private Text /);
@@ -398,7 +402,10 @@ test('Unity MergeClient includes first playable session, district, and collectio
   assert.match(controller, /CreateSessionButton\(hud, "PAUSE"/);
   assert.match(controller, /CreateSessionButton\(hud, "RESET SAVE"/);
   assert.match(controller, /CreateRoundedPanel\(\$"Session \{label\}"[\s\S]*new Vector2\(178f, 28f\)[\s\S]*new Color\(0\.063f, 0\.102f, 0\.161f, 1f\)/);
-  assert.match(controller, /CreatePanel\("Session Button Border"/);
+  assert.match(controller, /CreatePanel\("Session Button Top Border"/);
+  assert.match(controller, /CreatePanel\("Session Button Bottom Border"/);
+  assert.match(controller, /CreatePanel\("Session Button Left Border"/);
+  assert.match(controller, /CreatePanel\("Session Button Right Border"/);
   assert.match(controller, /CreateText\(\$"Session \{label\} Label"[\s\S]*11[\s\S]*new Vector2\(154f, 14f\)/);
   assert.match(controller, /TogglePause\(\)/);
   assert.match(controller, /ResetLocalSave\(\)/);

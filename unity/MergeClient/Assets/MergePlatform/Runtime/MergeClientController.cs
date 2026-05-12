@@ -361,8 +361,8 @@ namespace MergePlatform.Client
             energyLabel = CreateStatPill(hud, "ENERGY", new Vector2(-120f, 44f), new Vector2(78f, 30f), new Color(0.95f, 0.66f, 0.18f));
             coinsLabel = CreateStatPill(hud, "COINS", new Vector2(0f, 44f), new Vector2(74f, 30f), new Color(0.25f, 0.82f, 0.58f));
             premiumLabel = CreateStatPill(hud, "GEMS", new Vector2(120f, 44f), new Vector2(74f, 30f), new Color(0.86f, 0.26f, 0.78f));
-            statusLabel = CreateText("HUD Status", hud, "Ready", 12, new Color(0.74f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-78f, -21f), new Vector2(236f, 16f));
-            districtLabel = CreateText("District Progress", hud, "District 0/2", 12, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(-78f, -38f), new Vector2(236f, 16f));
+            statusLabel = CreateText("HUD Status", hud, "Ready", 12, new Color(0.74f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(0f, -18f), new Vector2(376f, 16f));
+            districtLabel = CreateText("District Progress", hud, "District 0/2", 12, new Color(0.42f, 1f, 0.7f), TextAnchor.MiddleLeft, new Vector2(0f, -35f), new Vector2(376f, 16f));
             CreateSessionControls(hud);
 
             coinsLabel.text = currentCoins.ToString();
@@ -371,14 +371,18 @@ namespace MergePlatform.Client
 
         private void CreateSessionControls(RectTransform hud)
         {
-            CreateSessionButton(hud, "PAUSE", new Vector2(-94f, -59f), TogglePause);
-            CreateSessionButton(hud, "RESET SAVE", new Vector2(94f, -59f), ResetLocalSave);
+            CreateSessionButton(hud, "PAUSE", new Vector2(-94f, -64f), TogglePause);
+            CreateSessionButton(hud, "RESET SAVE", new Vector2(94f, -64f), ResetLocalSave);
         }
 
         private void CreateSessionButton(RectTransform parent, string label, Vector2 position, UnityEngine.Events.UnityAction action)
         {
             RectTransform root = CreateRoundedPanel($"Session {label}", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, new Vector2(178f, 28f), new Color(0.063f, 0.102f, 0.161f, 1f));
-            CreatePanel("Session Button Border", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -2f), new Vector2(166f, 1f), new Color(0.11f, 0.18f, 0.27f, 0.9f));
+            Color border = new Color(0.114f, 0.176f, 0.271f, 1f);
+            CreatePanel("Session Button Top Border", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -1f), new Vector2(166f, 1f), border);
+            CreatePanel("Session Button Bottom Border", root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 1f), new Vector2(166f, 1f), border);
+            CreatePanel("Session Button Left Border", root, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(1f, 0f), new Vector2(1f, 18f), border);
+            CreatePanel("Session Button Right Border", root, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-1f, 0f), new Vector2(1f, 18f), border);
             Button button = root.gameObject.AddComponent<Button>();
             button.targetGraphic = root.GetComponent<Image>();
             button.onClick.AddListener(action);
