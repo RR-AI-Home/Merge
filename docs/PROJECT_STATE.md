@@ -25,7 +25,7 @@ This project is not at release-candidate stage. The current target is a credible
 - existing themes keep working when the shared engine changes;
 - browser proofs remain useful as fast validation harnesses.
 
-The Unity Merge Syndicate proof now has the basic board loop, producer crate, drag/move/merge, contracts, energy, local save, district progression, collection discovery, bottom navigation, imported TMP font path, and mobile portrait layout. Visual polish is still active.
+The Unity Merge Syndicate proof now has the basic board loop, producer crate, drag/move/merge, contracts, energy, local save, district progression, collection discovery, bottom navigation, imported TMP font path, and mobile portrait layout. Visual polish is still active, and the current sprint focus is making the Unity Board screen match the saved mockup at [mockups/unity-first-playable-loop.html](./mockups/unity-first-playable-loop.html).
 
 ## Done This Phase
 
@@ -42,7 +42,7 @@ The Unity Merge Syndicate proof now has the basic board loop, producer crate, dr
 
 - [ ] Execute [UNITY_FIRST_PLAYABLE_POLISH_SPRINT.md](./sprints/active/UNITY_FIRST_PLAYABLE_POLISH_SPRINT.md).
 - [ ] Execute [PLATFORM_FACTORY_FOUNDATION_SPRINT.md](./sprints/active/PLATFORM_FACTORY_FOUNDATION_SPRINT.md).
-- [ ] Continue matching Unity Board screen to the approved browser mockup for spacing, clarity, color, buttons, contracts, and tile readability.
+- [ ] Match the Unity Board screen to the saved browser mockup for spacing, clarity, color, buttons, contracts, tile readability, and bottom navigation before expanding polish to other screens.
 - [ ] Improve Unity item icon uniqueness so chains such as `Chip -> Signal -> Processor` read as distinct item levels.
 - [ ] Add the next Unity screens needed for a first playable: usable District progression, Collection, and a non-monetized Shop placeholder.
 - [ ] Keep `npm run verify` passing after every engine/theme/client contract change.
@@ -64,6 +64,7 @@ The Unity Merge Syndicate proof now has the basic board loop, producer crate, dr
 - Unity setup: [UNITY_CLIENT_SETUP.md](./UNITY_CLIENT_SETUP.md)
 - Unity architecture: [UNITY_CLIENT_ARCHITECTURE.md](./UNITY_CLIENT_ARCHITECTURE.md)
 - Engine compatibility: [ENGINE_COMPATIBILITY.md](./ENGINE_COMPATIBILITY.md)
+- Saved Unity mockup: [mockups/unity-first-playable-loop.html](./mockups/unity-first-playable-loop.html)
 - Active sprint: [UNITY_FIRST_PLAYABLE_POLISH_SPRINT.md](./sprints/active/UNITY_FIRST_PLAYABLE_POLISH_SPRINT.md)
 - Platform sprint: [PLATFORM_FACTORY_FOUNDATION_SPRINT.md](./sprints/active/PLATFORM_FACTORY_FOUNDATION_SPRINT.md)
 - Current backlog: [TODO.md](./TODO.md)

@@ -6,7 +6,7 @@ Active.
 
 ## Objective
 
-Turn the Unity Merge Syndicate proof from a functional board into a first playable mobile screen that looks clear, sharp, readable, and intentionally designed.
+Make the Unity Merge Syndicate Board screen match the approved saved mockup as closely as Unity can reasonably support. The active sprint target is visual parity first: spacing, scale, color, typography, buttons, board slots, item tiles, contract cards, and bottom navigation should be treated as mismatches until they are intentionally matched or deliberately accepted as different.
 
 ## Current Baseline
 
@@ -16,14 +16,30 @@ Turn the Unity Merge Syndicate proof from a functional board into a first playab
 - Text rendering uses TextMeshPro and imported/project TMP font assets.
 - The approved browser mockup lives at [../../mockups/unity-first-playable-loop.html](../../mockups/unity-first-playable-loop.html).
 
+## Comparison Source
+
+Use this saved mockup as the sprint source of truth:
+
+```text
+docs\mockups\unity-first-playable-loop.html
+```
+
+When the local docs preview server is running, compare against:
+
+```text
+http://127.0.0.1:52347/unity-first-playable-loop.html
+```
+
+If the browser port changes, reopen the file from `docs/mockups/` or start a new local static server and use the same HTML file. Do not compare against memory or screenshots alone; use the saved mockup file as the reference.
+
 ## Work Items
 
-- [ ] Continue Board screen visual parity with the approved mockup.
-- [ ] Make contract cards readable with fixed text/action columns and no progress-bar overlap.
-- [ ] Keep ready/claimable contracts visually obvious while preserving scroll reachability.
-- [ ] Improve tile icon uniqueness and level readability.
-- [ ] Refine HUD/resource pill spacing and copy length for portrait.
-- [ ] Refine bottom navigation active/inactive states.
+- [ ] Match the Unity Board screen to the saved mockup top-to-bottom before expanding the sprint to other screens.
+- [ ] Match HUD/resource pill spacing, title placement, status copy line breaks, and pause/reset button shape to the mockup.
+- [ ] Match the board container, slot brightness, slot spacing, item tile size, item colors, and icon placement to the mockup.
+- [ ] Match contract cards to the mockup, including fixed text/action columns, no progress-bar overlap, ready-state emphasis, and scroll reachability.
+- [ ] Match bottom navigation button sizing, spacing, icon placement, active state, and label readability to the mockup.
+- [ ] Improve tile icon uniqueness and level readability without breaking the mockup layout.
 - [ ] Improve Districts and Collection screens to first-playable quality.
 - [ ] Define the Shop placeholder screen without monetization commitments.
 - [ ] Preserve `npm run verify` and `tests/unity-client-scaffold.test.js` coverage.
@@ -51,7 +67,8 @@ npm run unity:export-theme
 
 ## Done Criteria
 
-- User accepts the Board screen as first-playable quality.
+- User accepts the Board screen as matching the saved mockup closely enough for the first playable.
+- Any remaining Unity-vs-mockup differences are listed and explicitly accepted.
 - No known overlapping or unreadable gameplay text remains.
 - All repo verification passes.
 - Live Unity source is synced.

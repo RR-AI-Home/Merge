@@ -50,6 +50,26 @@
 
 ---
 
+## 2026-05-12 — Unity Mockup Parity Sprint Update
+
+### Scope
+
+- Active Unity first playable sprint wording.
+- Saved mockup reference path.
+- Project state and backlog alignment.
+
+### Findings
+
+- `CONFIRMED` the approved mockup is saved at `docs/mockups/unity-first-playable-loop.html`.
+- `UPDATED` the active Unity sprint so exact Board screen parity with the saved mockup is the current focus.
+- `UPDATED` project state, backlog, and docs index to point at the saved mockup as the comparison source.
+
+### Bug Doc Updates
+
+- No [BUGS.md](./BUGS.md) update. This is sprint planning/documentation alignment, not a defect.
+
+---
+
 ## Template
 
 ```md

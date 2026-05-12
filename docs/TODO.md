@@ -12,7 +12,7 @@
 
 - [ ] Execute [UNITY_FIRST_PLAYABLE_POLISH_SPRINT.md](./sprints/active/UNITY_FIRST_PLAYABLE_POLISH_SPRINT.md).
 - [ ] Execute [PLATFORM_FACTORY_FOUNDATION_SPRINT.md](./sprints/active/PLATFORM_FACTORY_FOUNDATION_SPRINT.md).
-- [ ] Keep the Unity Board screen visually close to the approved browser mockup, especially spacing, tile clarity, button shape, contract layout, and bottom navigation.
+- [ ] Make the Unity Board screen match [mockups/unity-first-playable-loop.html](./mockups/unity-first-playable-loop.html) as closely as possible, especially spacing, tile clarity, button shape, contract layout, and bottom navigation.
 - [ ] Make item levels visually unique inside each chain, starting with cyber items such as `Chip -> Signal -> Processor`, `Wire -> Relay -> Harness`, `Drone Shell -> Scout Drone -> Interceptor Drone`, and `Street Cache -> Encrypted Cache -> Vault`.
 - [ ] Improve Districts and Collection screens from proof state into first-playable production quality.
 - [ ] Define the first useful non-monetized Shop placeholder so the nav does not feel dead while monetization is deferred.

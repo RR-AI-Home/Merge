@@ -37,11 +37,10 @@
 
 ## Mockups
 
-- [mockups/unity-first-playable-loop.html](./mockups/unity-first-playable-loop.html)
+- [mockups/unity-first-playable-loop.html](./mockups/unity-first-playable-loop.html) - active Unity Board screen comparison source.
 - [mockups/merge-platform-factory.html](./mockups/merge-platform-factory.html)
 - [mockups/merge-platform-concept.html](./mockups/merge-platform-concept.html)
 
 ## AppOne Reference Material
 
 `docs/appone-reference/` contains earlier copied docs from AppOne. Use it as source inventory only. When a pattern is useful, convert it into active Merge docs under the root docs structure.
-
