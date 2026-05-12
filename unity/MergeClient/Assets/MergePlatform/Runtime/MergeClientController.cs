@@ -31,6 +31,7 @@ namespace MergePlatform.Client
         private readonly Dictionary<Vector2Int, ItemTile> boardItems = new Dictionary<Vector2Int, ItemTile>();
         private readonly Dictionary<Vector2Int, RectTransform> boardSlots = new Dictionary<Vector2Int, RectTransform>();
         private readonly Dictionary<Vector2Int, Image> boardSlotHighlights = new Dictionary<Vector2Int, Image>();
+        private readonly List<Image> readyOrderPulseImages = new List<Image>();
         private readonly HashSet<string> completedOrderIds = new HashSet<string>();
 
         private UnityMergeTheme theme;
@@ -41,6 +42,9 @@ namespace MergePlatform.Client
         private RectTransform mergeFeedbackLayer;
         private RectTransform ordersPanel;
         private RectTransform orderScrollContent;
+        private ScrollRect ordersScrollRect;
+        private Image ordersScrollUpCue;
+        private Image ordersScrollDownCue;
         private TextMeshProUGUI energyLabel;
         private TextMeshProUGUI coinsLabel;
         private TextMeshProUGUI premiumLabel;
@@ -150,6 +154,12 @@ namespace MergePlatform.Client
             BuildScene();
         }
 
+        private void Update()
+        {
+            AnimateReadyOrderPulses();
+            UpdateScrollHintIndicators();
+        }
+
         private void LoadTheme()
         {
             TextAsset themeAsset = Resources.Load<TextAsset>(themeResourcePath);
@@ -238,9 +248,13 @@ namespace MergePlatform.Client
             boardItems.Clear();
             boardSlots.Clear();
             boardSlotHighlights.Clear();
+            readyOrderPulseImages.Clear();
             highlightedGrid = null;
             districtLabel = null;
             orderScrollContent = null;
+            ordersScrollRect = null;
+            ordersScrollUpCue = null;
+            ordersScrollDownCue = null;
         }
 
         private void CreateCanvas()
@@ -346,16 +360,33 @@ namespace MergePlatform.Client
             viewport.gameObject.AddComponent<RectMask2D>();
             orderScrollContent = CreatePanel("Orders Content", viewport, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
 
-            ScrollRect scrollRect = ordersPanel.gameObject.AddComponent<ScrollRect>();
-            scrollRect.viewport = viewport;
-            scrollRect.content = orderScrollContent;
-            scrollRect.horizontal = false;
-            scrollRect.vertical = true;
-            scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            scrollRect.inertia = true;
-            scrollRect.verticalNormalizedPosition = 1f;
+            ordersScrollRect = ordersPanel.gameObject.AddComponent<ScrollRect>();
+            ordersScrollRect.viewport = viewport;
+            ordersScrollRect.content = orderScrollContent;
+            ordersScrollRect.horizontal = false;
+            ordersScrollRect.vertical = true;
+            ordersScrollRect.movementType = ScrollRect.MovementType.Clamped;
+            ordersScrollRect.inertia = true;
+            ordersScrollRect.verticalNormalizedPosition = 1f;
+            CreateScrollHintIndicators(ordersPanel);
 
             RefreshOrdersPanel();
+        }
+
+        private void CreateScrollHintIndicators(RectTransform parent)
+        {
+            ordersScrollUpCue = CreateScrollCue("Orders Scroll Up Cue", parent, new Vector2(0f, 76f), "^");
+            ordersScrollDownCue = CreateScrollCue("Orders Scroll Down Cue", parent, new Vector2(0f, -76f), "v");
+        }
+
+        private Image CreateScrollCue(string name, RectTransform parent, Vector2 position, string marker)
+        {
+            RectTransform cue = CreateRoundedPanel(name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), position, new Vector2(48f, 16f), new Color(0.08f, 0.16f, 0.24f, 0.92f));
+            Image cueImage = cue.GetComponent<Image>();
+            cueImage.raycastTarget = false;
+            CreatePanel($"{name} Glow", cue, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(34f, 3f), new Color(0.54f, 0.94f, 1f, 0.85f));
+            CreateText($"{name} Marker", cue, marker, 11, new Color(0.78f, 0.96f, 1f, 1f), TextAnchor.MiddleCenter, new Vector2(0f, 0f), new Vector2(24f, 14f));
+            return cueImage;
         }
 
         private void RefreshOrdersPanel()
@@ -365,6 +396,7 @@ namespace MergePlatform.Client
                 return;
             }
 
+            readyOrderPulseImages.Clear();
             for (int childIndex = orderScrollContent.childCount - 1; childIndex >= 0; childIndex -= 1)
             {
                 Destroy(orderScrollContent.GetChild(childIndex).gameObject);
@@ -406,6 +438,10 @@ namespace MergePlatform.Client
 
             float contentHeight = Mathf.Max(OrdersViewportHeight, visibleIndex * OrderCardStep + 4f);
             SetRect(orderScrollContent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, contentHeight));
+            if (ordersScrollRect != null)
+            {
+                ordersScrollRect.verticalNormalizedPosition = 1f;
+            }
 
             UpdateDistrictProgress();
         }
@@ -481,6 +517,10 @@ namespace MergePlatform.Client
             Color cardColor = completed ? new Color(0.08f, 0.18f, 0.16f, 1f) : ready ? new Color(0.1f, 0.18f, 0.25f, 1f) : new Color(0.08f, 0.11f, 0.19f, 1f);
             RectTransform card = CreateRoundedPanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -OrderCardHeight / 2f - index * OrderCardStep), new Vector2(356f, OrderCardHeight), cardColor);
             card.gameObject.AddComponent<RectMask2D>();
+            if (ready)
+            {
+                CreateReadyOrderPulse(card);
+            }
 
             CreateOrderStateStripe(card, ready, completed);
             CreateOrderProgressBar(card, ready, completed);
@@ -488,6 +528,54 @@ namespace MergePlatform.Client
             CreateText("Order Requirements", card, FormatRequirements(order), 11, new Color(0.78f, 0.9f, 1f), TextAnchor.MiddleLeft, new Vector2(-44f, 7f), new Vector2(220f, 15f));
             CreateRewardRow(card, order);
             CreateOrderActionButton(card, order, ready, completed);
+        }
+
+        private void CreateReadyOrderPulse(RectTransform parent)
+        {
+            RectTransform pulseRoot = CreateRoundedPanel("Order Ready Pulse", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(350f, OrderCardHeight - 6f), new Color(0.54f, 0.94f, 1f, 0.12f));
+            pulseRoot.SetAsFirstSibling();
+            Image pulse = pulseRoot.GetComponent<Image>();
+            pulse.raycastTarget = false;
+            readyOrderPulseImages.Add(pulse);
+        }
+
+        private void AnimateReadyOrderPulses()
+        {
+            if (readyOrderPulseImages.Count == 0)
+            {
+                return;
+            }
+
+            float alpha = 0.08f + (Mathf.Sin(Time.unscaledTime * 4.5f) + 1f) * 0.055f;
+            for (int index = readyOrderPulseImages.Count - 1; index >= 0; index -= 1)
+            {
+                Image pulse = readyOrderPulseImages[index];
+                if (pulse == null)
+                {
+                    readyOrderPulseImages.RemoveAt(index);
+                    continue;
+                }
+
+                Color pulseColor = pulse.color;
+                pulseColor.a = alpha;
+                pulse.color = pulseColor;
+            }
+        }
+
+        private void UpdateScrollHintIndicators()
+        {
+            if (ordersScrollRect == null || orderScrollContent == null || ordersScrollUpCue == null || ordersScrollDownCue == null)
+            {
+                return;
+            }
+
+            bool hasOverflow = orderScrollContent.rect.height > OrdersViewportHeight + 2f;
+            bool canScrollUp = hasOverflow && ordersScrollRect.verticalNormalizedPosition < 0.98f;
+            bool canScrollDown = hasOverflow && ordersScrollRect.verticalNormalizedPosition > 0.02f;
+            ordersScrollUpCue.enabled = canScrollUp;
+            ordersScrollDownCue.enabled = canScrollDown;
+            ordersScrollUpCue.gameObject.SetActive(canScrollUp);
+            ordersScrollDownCue.gameObject.SetActive(canScrollDown);
         }
 
         private void CreateOrderStateStripe(RectTransform parent, bool ready, bool completed)

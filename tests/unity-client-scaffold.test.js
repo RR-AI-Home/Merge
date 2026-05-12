@@ -110,8 +110,11 @@ test('Unity MergeClient portrait stack uses safe top margin and compact contract
   assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, -512f\)[\s\S]*new Vector2\(MobileContentWidth, 178f\)/);
   assert.match(controller, /CreatePanel\("Orders Viewport"/);
   assert.match(controller, /viewport\.gameObject\.AddComponent<RectMask2D>\(\)/);
-  assert.match(controller, /scrollRect\.viewport = viewport;/);
-  assert.match(controller, /scrollRect\.content = orderScrollContent;/);
+  assert.match(controller, /ordersScrollRect\.viewport = viewport;/);
+  assert.match(controller, /ordersScrollRect\.content = orderScrollContent;/);
+  assert.match(controller, /CreateScrollHintIndicators\(ordersPanel\)/);
+  assert.match(controller, /CreateScrollCue\("Orders Scroll Up Cue"/);
+  assert.match(controller, /CreateScrollCue\("Orders Scroll Down Cue"/);
   assert.match(controller, /new Vector2\(0f, -OrderCardHeight \/ 2f - index \* OrderCardStep\)/);
 });
 
@@ -154,6 +157,10 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
 
   assert.match(controller, /private RectTransform ordersPanel;/);
   assert.match(controller, /private RectTransform orderScrollContent;/);
+  assert.match(controller, /private ScrollRect ordersScrollRect;/);
+  assert.match(controller, /private Image ordersScrollUpCue;/);
+  assert.match(controller, /private Image ordersScrollDownCue;/);
+  assert.match(controller, /private readonly List<Image> readyOrderPulseImages = new List<Image>\(\)/);
   assert.match(controller, /private readonly HashSet<string> completedOrderIds/);
   assert.match(controller, /RefreshOrdersPanel/);
   assert.match(controller, /List<OrderDefinition> readyOrders = new List<OrderDefinition>\(\)/);
@@ -167,6 +174,12 @@ test('Unity MergeClient contracts can be claimed without overlapping reward UI',
   assert.match(controller, /currentCoins \+= order\.rewards != null \? order\.rewards\.coins : 0;/);
   assert.match(controller, /coinsLabel\.text = currentCoins\.ToString\(\)/);
   assert.match(controller, /SetStatus\(BuildCompletionStatus\(order\)\)/);
+  assert.match(controller, /CreateReadyOrderPulse\(card\)/);
+  assert.match(controller, /readyOrderPulseImages\.Add\(pulse\)/);
+  assert.match(controller, /private void Update\(\)[\s\S]*AnimateReadyOrderPulses\(\);[\s\S]*UpdateScrollHintIndicators\(\);/);
+  assert.match(controller, /Mathf\.Sin\(Time\.unscaledTime \* 4\.5f\)/);
+  assert.match(controller, /ordersScrollUpCue\.enabled = canScrollUp;/);
+  assert.match(controller, /ordersScrollDownCue\.enabled = canScrollDown;/);
   assert.doesNotMatch(controller, /CreatePanel\("Coin Reward Icon"/);
   assert.doesNotMatch(controller, /CreateText\("XP Reward Text"/);
 });
