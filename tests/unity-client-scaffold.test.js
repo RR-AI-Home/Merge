@@ -435,10 +435,30 @@ test('Unity MergeClient matches the approved first playable mockup proportions',
   assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Vector2\(0f, BoardCenterY\)/);
   assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Vector2\(0f, OrdersPanelTopY\)/);
   assert.match(controller, /CreateRoundedPanel\("Bottom Nav"[\s\S]*new Vector2\(0f, BottomNavBottomY\)/);
-  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.13f, 0\.19f, 0\.29f, 1f\)/);
-  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.16f, 0\.23f, 0\.34f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.133f, 0\.188f, 0\.286f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.161f, 0\.227f, 0\.345f, 1f\)/);
   assert.match(controller, /CreateText\("Name"[\s\S]*9[\s\S]*new Vector2\(0f, -20f\)/);
   assert.match(controller, /CreateText\("Producer Label"[\s\S]*9[\s\S]*new Vector2\(0f, -20f\)/);
   assert.doesNotMatch(controller, /CreateText\("District Screen Title"/);
   assert.doesNotMatch(controller, /CreateText\("Collection Screen Title"/);
+});
+
+test('Unity MergeClient uses the approved bright mockup color tokens', async () => {
+  const controller = await readFile(
+    path.join('unity', 'MergeClient', 'Assets', 'MergePlatform', 'Runtime', 'MergeClientController.cs'),
+    'utf8'
+  );
+
+  assert.match(controller, /CreateImage\("Background", canvasRoot, new Color\(0\.024f, 0\.043f, 0\.075f, 1f\)\)/);
+  assert.match(controller, /CreateRoundedPanel\("HUD"[\s\S]*new Color\(0\.024f, 0\.043f, 0\.075f, 0\.98f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Merge Board"[\s\S]*new Color\(0\.043f, 0\.078f, 0\.125f, 0\.98f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Orders Panel"[\s\S]*new Color\(1f, 1f, 1f, 0\.035f\)/);
+  assert.match(controller, /CreateRoundedPanel\(\$"Slot \{grid\.x\},\{grid\.y\}"[\s\S]*new Color\(0\.133f, 0\.188f, 0\.286f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Slot Inner"[\s\S]*new Color\(0\.161f, 0\.227f, 0\.345f, 1f\)/);
+  assert.match(controller, /CreateRoundedPanel\("Producer Tile"[\s\S]*new Color\(0\.18f, 0\.49f, 1f, 1f\)/);
+  assert.match(controller, /active \? new Color\(0\.063f, 0\.145f, 0\.275f, 1f\) : new Color\(0\.035f, 0\.063f, 0\.106f, 1f\)/);
+  assert.match(controller, /Color\.Lerp\(new Color\(0\.13f, 0\.18f, 0\.26f\), ItemAccent\(itemId\), Mathf\.Clamp01\(0\.55f \+ level \/ 10f\)\)/);
+  assert.match(controller, /itemId\.StartsWith\("wire"\)[\s\S]*return new Color\(0\.75f, 0\.49f, 1f\)/);
+  assert.match(controller, /itemId\.StartsWith\("drone"\)[\s\S]*return new Color\(1f, 0\.44f, 0\.77f\)/);
+  assert.match(controller, /itemId\.StartsWith\("cache"\)[\s\S]*return new Color\(0\.58f, 0\.94f, 0\.67f\)/);
 });

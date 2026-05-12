@@ -323,7 +323,7 @@ namespace MergePlatform.Client
             canvasRoot.offsetMin = Vector2.zero;
             canvasRoot.offsetMax = Vector2.zero;
 
-            Image background = CreateImage("Background", canvasRoot, new Color(0.035f, 0.055f, 0.095f, 1f));
+            Image background = CreateImage("Background", canvasRoot, new Color(0.024f, 0.043f, 0.075f, 1f));
             Stretch(background.rectTransform);
             feedbackAudio = canvasObject.AddComponent<AudioSource>();
             feedbackAudio.playOnAwake = false;
@@ -428,10 +428,10 @@ namespace MergePlatform.Client
 
         private void CreateBoardSlot(Vector2Int grid)
         {
-            RectTransform slot = CreateRoundedPanel($"Slot {grid.x},{grid.y}", boardPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), new Color(0.13f, 0.19f, 0.29f, 1f));
+            RectTransform slot = CreateRoundedPanel($"Slot {grid.x},{grid.y}", boardPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(grid), new Vector2(TileSize, TileSize), new Color(0.133f, 0.188f, 0.286f, 1f));
             boardSlots[grid] = slot;
 
-            CreateRoundedPanel("Slot Inner", slot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TileSize - 4f, TileSize - 4f), new Color(0.16f, 0.23f, 0.34f, 1f));
+            CreateRoundedPanel("Slot Inner", slot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(TileSize - 4f, TileSize - 4f), new Color(0.161f, 0.227f, 0.345f, 1f));
             Image topLine = CreateImage("Slot Top Line", slot, new Color(0.31f, 0.41f, 0.56f, 0.42f));
             SetRect(topLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -4f), new Vector2(TileSize - 8f, 2f));
 
@@ -443,7 +443,7 @@ namespace MergePlatform.Client
 
         private void CreateOrdersPanel()
         {
-            ordersPanel = CreateRoundedPanel("Orders Panel", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, OrdersPanelTopY), new Vector2(MobileContentWidth, 178f), new Color(1f, 1f, 1f, 0.025f));
+            ordersPanel = CreateRoundedPanel("Orders Panel", boardScreenRoot, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, OrdersPanelTopY), new Vector2(MobileContentWidth, 178f), new Color(1f, 1f, 1f, 0.035f));
             RectTransform viewport = CreatePanel("Orders Viewport", ordersPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
             viewport.gameObject.AddComponent<RectMask2D>();
             orderScrollContent = CreatePanel("Orders Content", viewport, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(356f, OrdersViewportHeight), new Color(0f, 0f, 0f, 0f));
@@ -563,7 +563,7 @@ namespace MergePlatform.Client
 
         private void CreateNavButton(RectTransform parent, string label, Vector2 position, bool active, Color accent, UnityEngine.Events.UnityAction action)
         {
-            RectTransform button = CreateRoundedPanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(62f, 58f), active ? new Color(0.08f, 0.16f, 0.27f, 1f) : new Color(0.035f, 0.045f, 0.065f, 1f));
+            RectTransform button = CreateRoundedPanel($"Nav {label}", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), position, new Vector2(62f, 58f), active ? new Color(0.063f, 0.145f, 0.275f, 1f) : new Color(0.035f, 0.063f, 0.106f, 1f));
             Button navButton = button.gameObject.AddComponent<Button>();
             navButton.targetGraphic = button.GetComponent<Image>();
             navButton.onClick.AddListener(action);
@@ -639,7 +639,7 @@ namespace MergePlatform.Client
         {
             if (navButtonImages.TryGetValue(label, out Image image))
             {
-                image.color = active ? new Color(0.08f, 0.16f, 0.27f, 1f) : new Color(0.035f, 0.045f, 0.065f, 1f);
+                image.color = active ? new Color(0.063f, 0.145f, 0.275f, 1f) : new Color(0.035f, 0.063f, 0.106f, 1f);
             }
 
             if (navLabels.TryGetValue(label, out TextMeshProUGUI navLabel))
@@ -797,7 +797,7 @@ namespace MergePlatform.Client
         {
             bool completed = completedOrderIds.Contains(order.id);
             bool ready = !completed && CanCompleteOrder(order);
-            Color cardColor = completed ? new Color(0.08f, 0.18f, 0.16f, 1f) : ready ? new Color(0.1f, 0.18f, 0.25f, 1f) : new Color(0.08f, 0.11f, 0.19f, 1f);
+            Color cardColor = completed ? new Color(0.08f, 0.22f, 0.18f, 1f) : ready ? new Color(0.082f, 0.208f, 0.278f, 1f) : new Color(0.075f, 0.137f, 0.227f, 1f);
             RectTransform card = CreateRoundedPanel($"Order {order.id}", parent, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -OrderCardHeight / 2f - index * OrderCardStep), new Vector2(356f, OrderCardHeight), cardColor);
             card.gameObject.AddComponent<RectMask2D>();
             if (ready)
@@ -969,7 +969,7 @@ namespace MergePlatform.Client
             }
 
             ProducerDefinition producer = theme.producers[0];
-            RectTransform root = CreateRoundedPanel("Producer Tile", itemLayer, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(producerGrid), new Vector2(TileSize, TileSize), new Color(0.08f, 0.32f, 0.86f, 1f));
+            RectTransform root = CreateRoundedPanel("Producer Tile", itemLayer, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), GridToAnchoredPosition(producerGrid), new Vector2(TileSize, TileSize), new Color(0.18f, 0.49f, 1f, 1f));
             root.gameObject.AddComponent<RectMask2D>();
             Button button = root.gameObject.AddComponent<Button>();
             button.targetGraphic = root.GetComponent<Image>();
@@ -2234,17 +2234,17 @@ namespace MergePlatform.Client
 
             if (itemId.StartsWith("wire"))
             {
-                return new Color(0.78f, 0.56f, 1f);
+                return new Color(0.75f, 0.49f, 1f);
             }
 
             if (itemId.StartsWith("drone"))
             {
-                return new Color(1f, 0.48f, 0.78f);
+                return new Color(1f, 0.44f, 0.77f);
             }
 
             if (itemId.StartsWith("cache"))
             {
-                return new Color(0.7f, 1f, 0.75f);
+                return new Color(0.58f, 0.94f, 0.67f);
             }
 
             return new Color(0.85f, 0.9f, 1f);
@@ -2252,7 +2252,7 @@ namespace MergePlatform.Client
 
         private Color ItemCardColor(string itemId, int level)
         {
-            Color baseColor = Color.Lerp(new Color(0.08f, 0.12f, 0.18f), ItemAccent(itemId), Mathf.Clamp01(0.28f + level / 8f));
+            Color baseColor = Color.Lerp(new Color(0.13f, 0.18f, 0.26f), ItemAccent(itemId), Mathf.Clamp01(0.55f + level / 10f));
             baseColor.a = 1f;
             return baseColor;
         }
